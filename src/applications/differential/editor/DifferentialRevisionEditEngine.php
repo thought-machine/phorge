@@ -175,34 +175,8 @@ final class DifferentialRevisionEditEngine
       ->setConduitDescription(pht('Retitle the revision.'))
       ->setConduitTypeDescription(pht('New revision title.'))
       ->setValue($object->getTitle());
-
-    $author_field = id(new PhabricatorDatasourceEditField())
-      ->setKey(DifferentialRevisionAuthorTransaction::EDITKEY)
-      ->setLabel(pht('Author'))
-      ->setDatasource(new PhabricatorPeopleDatasource())
-      ->setTransactionType(
-        DifferentialRevisionAuthorTransaction::TRANSACTIONTYPE)
-      ->setDescription(pht('Make someone else the author of this revision.'))
-      ->setConduitDescription(
-        pht('Make another user the author of this revision.'))
-      ->setConduitTypeDescription(pht('New author.'))
-      ->setSingleValue($object->getAuthorPHID());
-
-    // Don't show the "Author" field when creating a revision using the web
-    // workflow, since it adds more noise than signal to this workflow.
-    if ($is_create) {
-      $author_field->setIsHidden(true);
-    }
-
-    // Only show the "Change Author" comment action to the current revision
-    // author. Other users can use "Edit Revision", it's just very unlikely
-    // that they're interested in this action.
-    if ($viewer->getPHID() === $object->getAuthorPHID()) {
-      $author_field->setCommentActionLabel(pht('Change Author'));
-    }
-
-    $fields[] = $author_field;
-
+    // TM CHANGES (remove foist upon)
+    // TM CHANGES END
     $fields[] = id(new PhabricatorRemarkupEditField())
       ->setKey(DifferentialRevisionSummaryTransaction::EDITKEY)
       ->setLabel(pht('Summary'))

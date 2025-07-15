@@ -89,6 +89,9 @@ final class PhabricatorProjectBoardViewController
             $project->getDisplayName(),
             pht('Workboard'),
           ))
+        // TM CHANGES BEGIN: Allow external sites to embed this page
+        ->setFrameable(true)
+        // TM CHANGES END 
         ->setNavigation($nav)
         ->setCrumbs($crumbs)
         ->appendChild($content);
