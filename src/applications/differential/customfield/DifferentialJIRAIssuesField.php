@@ -139,7 +139,7 @@ final class DifferentialJIRAIssuesField
       $type,
       $xactions);
 
-    if ($this->getViewer()->isSystemAgent()) {
+    if ($this->getViewer()->getIsSystemAgent()) {
       // Skip further validation if user is a bot
       return $errors;
     }
