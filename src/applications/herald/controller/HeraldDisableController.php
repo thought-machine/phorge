@@ -29,38 +29,71 @@ final class HeraldDisableController extends HeraldController {
 
     $is_disable = ($action === 'disable');
 
+    $e_reason = null;
+    $errors  = array();
+
     if ($request->isFormPost()) {
-      $xaction = id(new HeraldRuleTransaction())
+      $reason = trim($request->getStr('reason', ''));
+      if (phutil_nonempty_string($reason)) {
+        $transactions = array();
+
+        $transactions[] = id(new HeraldRuleTransaction())
         ->setTransactionType(HeraldRuleDisableTransaction::TRANSACTIONTYPE)
         ->setNewValue($is_disable);
 
-      id(new HeraldRuleEditor())
+        $transactions[] = id(new HeraldRuleTransaction())
+        ->setTransactionType(HeraldRuleDisableTransaction::TRANSACTIONTYPE)
+        ->setNewValue($reason);
+
+        id(new HeraldRuleEditor())
         ->setActor($viewer)
         ->setContinueOnNoEffect(true)
         ->setContentSourceFromRequest($request)
-        ->applyTransactions($rule, array($xaction));
+        ->applyTransactions($rule, $transactions);
 
-      return id(new AphrontRedirectResponse())->setURI($view_uri);
+        return id(new AphrontRedirectResponse())->setURI($view_uri);
+      }
+      $e_reason = pht('Required');
+      $errors[] = pht('A reason is required.');
     }
 
     if ($is_disable) {
       $title = pht('Really disable this rule?');
       $body = pht('This rule will no longer activate.');
       $button = pht('Disable Rule');
+      $verb = pht("disabling");
     } else {
       $title = pht('Really enable this rule?');
       $body = pht('This rule will become active again.');
       $button = pht('Enable Rule');
+      $verb = pht("enabling");
     }
+
+    if ($errors) {
+      $errors = id(new PHUIInfoView())
+      ->setErrors($errors);
+    }
+
+    $form = id(new PHUIFormLayoutView())
+      ->setUser($viewer)
+      ->setFullWidth(true)
+      ->appendChild(
+        id(new AphrontFormTextControl())
+          ->setLabel(pht('Reason for %s this rule', $verb))
+          ->setName('reason')
+          ->setDisableAutocomplete(true)
+          ->setAutofocus(true)
+          ->setError($e_reason));
 
     $dialog = id(new AphrontDialogView())
       ->setUser($viewer)
       ->setTitle($title)
       ->appendChild($body)
+      ->appendChild($errors)
+      ->appendChild($form)
       ->addSubmitButton($button)
       ->addCancelButton($view_uri);
 
     return id(new AphrontDialogResponse())->setDialog($dialog);
   }
-
 }
