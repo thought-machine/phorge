@@ -59,8 +59,6 @@ final class DifferentialRevisionUpdateTransaction
     }
 
     $should_update =
-      $object->isNeedsRevision() ||
-      $object->isChangePlanned() ||
       $object->isAbandoned();
     if ($should_update) {
       return true;
