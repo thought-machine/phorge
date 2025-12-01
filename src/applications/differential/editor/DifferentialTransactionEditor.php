@@ -471,9 +471,9 @@ final class DifferentialTransactionEditor
       // reviewer resigns or is removed.
       $new_status = DifferentialRevisionStatus::NEEDS_REVIEW;
     } else if ($was_revision) {
-      // This revision was "Needs Revision", but no longer has any rejecting
+      // This revision no longer has any rejecting
       // reviewers. This usually happens after the last rejecting reviewer
-      // resigns or is removed. Put the revision back in "Needs Review".
+      // resigns or is removed. Put the revision in "Changes Planned".
       $new_status = DifferentialRevisionStatus::CHANGES_PLANNED;
     }
 
