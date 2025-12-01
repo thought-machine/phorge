@@ -536,11 +536,11 @@ final class DifferentialTransactionEditor
   protected function shouldSendMail(
     PhabricatorLiskDAO $object,
     array $xactions) {
-      // Don't notify reviewers for revisions in "changes planned" / "request changes" state
-      if ($object->isChangePlanned() || $object->isNeedsRevision()) {
-        return false;
-      }
-      return true;
+    // Don't notify reviewers for revisions in "changes planned" / "request changes" state
+    if ($object->isChangePlanned() || $object->isNeedsRevision()) {
+      return false;
+    }
+    return true;
   }
 
   protected function getMailTo(PhabricatorLiskDAO $object) {
