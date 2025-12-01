@@ -474,7 +474,7 @@ final class DifferentialTransactionEditor
       // This revision was "Needs Revision", but no longer has any rejecting
       // reviewers. This usually happens after the last rejecting reviewer
       // resigns or is removed. Put the revision back in "Needs Review".
-      $new_status = DifferentialRevisionStatus::NEEDS_REVIEW;
+      $new_status = DifferentialRevisionStatus::CHANGES_PLANNED;
     }
 
     if ($new_status === null) {
