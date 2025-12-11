@@ -270,6 +270,11 @@ final class DrydockWorkingCopyBlueprintImplementation
     DrydockBlueprint $blueprint,
     DrydockResource $resource,
     DrydockLease $lease) {
+    /**
+     * activateLease() prepares the Working Copy for the action to be performed.
+     * Meaning that it cleans the git repository and makes sure it's on the
+     * correct reference.
+     */
 
     $host_lease = $this->loadHostLease($resource);
     $command_type = DrydockCommandInterface::INTERFACE_TYPE;
@@ -313,6 +318,7 @@ final class DrydockWorkingCopyBlueprintImplementation
         $arg[] = $branch;
       }
 
+      // TODO: log this
       $this->newExecvFuture($interface, $cmd, $arg)
         ->setTimeout($repository->getEffectiveCopyTimeLimit())
         ->resolvex();
@@ -339,9 +345,10 @@ final class DrydockWorkingCopyBlueprintImplementation
         $arg[] = $ref_ref;
 
         try {
-          $this->newExecvFuture($interface, $cmd, $arg)
+          [$stdout, $stderr] = $this->newExecvFuture($interface, $cmd, $arg)
             ->setTimeout($repository->getEffectiveCopyTimeLimit())
             ->resolvex();
+          // TODO: log this
         } catch (CommandException $ex) {
           $display_command = csprintf(
             'git fetch %R %R',
@@ -650,6 +657,7 @@ final class DrydockWorkingCopyBlueprintImplementation
     $commands = implode(' && ', $commands);
     $argv = array_merge(array($commands), $arguments);
 
+    // TODO: could log here
     return call_user_func_array(array($interface, 'getExecFuture'), $argv);
   }
 
