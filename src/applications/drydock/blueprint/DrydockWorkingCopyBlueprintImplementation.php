@@ -318,7 +318,6 @@ final class DrydockWorkingCopyBlueprintImplementation
         $arg[] = $branch;
       }
 
-      // TODO: log this
       $this->newExecvFuture($interface, $cmd, $arg)
         ->setTimeout($repository->getEffectiveCopyTimeLimit())
         ->resolvex();
@@ -348,7 +347,6 @@ final class DrydockWorkingCopyBlueprintImplementation
           [$stdout, $stderr] = $this->newExecvFuture($interface, $cmd, $arg)
             ->setTimeout($repository->getEffectiveCopyTimeLimit())
             ->resolvex();
-          // TODO: log this
         } catch (CommandException $ex) {
           $display_command = csprintf(
             'git fetch %R %R',
@@ -657,7 +655,6 @@ final class DrydockWorkingCopyBlueprintImplementation
     $commands = implode(' && ', $commands);
     $argv = array_merge(array($commands), $arguments);
 
-    // TODO: could log here
     return call_user_func_array(array($interface, 'getExecFuture'), $argv);
   }
 
