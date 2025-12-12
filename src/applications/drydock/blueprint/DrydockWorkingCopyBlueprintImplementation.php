@@ -344,7 +344,7 @@ final class DrydockWorkingCopyBlueprintImplementation
         $arg[] = $ref_ref;
 
         try {
-          [$stdout, $stderr] = $this->newExecvFuture($interface, $cmd, $arg)
+          $this->newExecvFuture($interface, $cmd, $arg)
             ->setTimeout($repository->getEffectiveCopyTimeLimit())
             ->resolvex();
         } catch (CommandException $ex) {
