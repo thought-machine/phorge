@@ -52,7 +52,7 @@ final class DrydockSSHCommandInterface extends DrydockCommandInterface {
 
     $ssh_host = $this->getConfig('host');
 
-    fwrite(STDERR, tsprintf(
+    error_log(tsprintf(
       "Drydock running command over SSH on host %s. Command: %s",
       $ssh_host,
       $full_command->getMaskedString(),
