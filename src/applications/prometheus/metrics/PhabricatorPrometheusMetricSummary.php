@@ -13,7 +13,7 @@ abstract class PhabricatorPrometheusMetricSummary extends PhabricatorPrometheusM
       $this->getName(),
       $this->getHelp(),
       $this->getLabels(),
-      maxAgeSeconds: $this->getMaxAgeSeconds());
+      $this->getMaxAgeSeconds());
   }
 
   public function getMaxAgeSeconds(): int {
