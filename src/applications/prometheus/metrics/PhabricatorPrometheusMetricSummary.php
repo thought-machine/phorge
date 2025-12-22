@@ -12,7 +12,12 @@ abstract class PhabricatorPrometheusMetricSummary extends PhabricatorPrometheusM
       self::METRIC_NAMESPACE,
       $this->getName(),
       $this->getHelp(),
-      $this->getLabels());
+      $this->getLabels(),
+      maxAgeSeconds: $this->getMaxAgeSeconds());
+  }
+
+  public function getMaxAgeSeconds(): int {
+    return 600;
   }
 
   final public function observe(float $value, array $labels): void

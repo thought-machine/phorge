@@ -15,6 +15,11 @@ final class PhabricatorPrometheusDrydockTimingMetric extends PhabricatorPromethe
     return [self::CMD_KEY];
   }
 
+  public function getMaxAgeSeconds(): int
+  {
+    return 86400;
+  }
+
   public function getValues(): array
   {
     // This function is not used, instead we call observe() for each observation.
