@@ -320,12 +320,12 @@ final class DrydockWorkingCopyBlueprintImplementation
         $arg[] = $branch;
       }
 
-      $clean_future = $this->newExecvFuture($interface, $cmd, $arg)
-        ->setTimeout($repository->getEffectiveCopyTimeLimit());
       $timer_metric->timeCommand(
         "activate_lease_git_clean",
-        function () use ($clean_future) {
-          $clean_future->resolvex();
+        function () use ($interface, $cmd, $arg, $repository) {
+          $this->newExecvFuture($interface, $cmd, $arg)
+            ->setTimeout($repository->getEffectiveCopyTimeLimit())
+            ->resolvex();
         }
       );
 
@@ -351,12 +351,12 @@ final class DrydockWorkingCopyBlueprintImplementation
         $arg[] = $ref_ref;
 
         try {
-          $fetch_future = $this->newExecvFuture($interface, $cmd, $arg)
-            ->setTimeout($repository->getEffectiveCopyTimeLimit());
           $timer_metric->timeCommand(
             "activate_lease_git_fetch_reference",
-            function () use ($fetch_future) {
-              $fetch_future->resolvex();
+            function () use ($interface, $cmd, $arg, $repository) {
+              $this->newExecvFuture($interface, $cmd, $arg)
+                ->setTimeout($repository->getEffectiveCopyTimeLimit())
+                ->resolvex();
             }
           );
         } catch (CommandException $ex) {
