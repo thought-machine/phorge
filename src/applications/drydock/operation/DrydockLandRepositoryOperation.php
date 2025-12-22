@@ -123,8 +123,13 @@ final class DrydockLandRepositoryOperation
 
     $future->write($commit_message);
 
+    $timer_metric = new PhabricatorPrometheusDrydockTimingMetric();
     try {
-      $future->resolvex();
+      $timer_metric->timeCommand(
+        "land_operation",
+        function() use ($future) {
+          $future->resolvex();
+        });
     } catch (CommandException $ex) {
       $display_command = csprintf('git commit');
 
