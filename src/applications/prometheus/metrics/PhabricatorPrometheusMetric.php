@@ -68,7 +68,7 @@ abstract class PhabricatorPrometheusMetric extends Phobject {
         function (string $name) use ($labels) {
           return $labels[$name];
         },
-	$this->getLabels());
+        $this->getLabels());
       $this->observe($value, $labels);
     }
   }
