@@ -4554,6 +4554,7 @@ phutil_register_library_map(array(
     'PhabricatorPrometheusMetric' => 'applications/prometheus/metrics/PhabricatorPrometheusMetric.php',
     'PhabricatorPrometheusMetricCounter' => 'applications/prometheus/metrics/PhabricatorPrometheusMetricCounter.php',
     'PhabricatorPrometheusMetricGauge' => 'applications/prometheus/metrics/PhabricatorPrometheusMetricGauge.php',
+    'PhabricatorPrometheusMetricSummary' => 'applications/prometheus/metrics/PhabricatorPrometheusMetricSummary.php',
     'PhabricatorPrometheusMetricsController' => 'applications/prometheus/controller/PhabricatorPrometheusMetricsController.php',
     'PhabricatorPronounSetting' => 'applications/settings/setting/PhabricatorPronounSetting.php',
     'PhabricatorProtocolLog' => 'infrastructure/log/PhabricatorProtocolLog.php',
