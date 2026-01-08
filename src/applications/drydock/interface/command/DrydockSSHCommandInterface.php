@@ -55,7 +55,8 @@ final class DrydockSSHCommandInterface extends DrydockCommandInterface {
     error_log(tsprintf(
       "Drydock running command over SSH on host %s. Command: %s",
       $ssh_host,
-      $full_command->getMaskedString()));
+      $full_command->getMaskedString(),
+    ));
     return new ExecFuture(
       'ssh %Ls -l %P -p %s -i %P %s -- %s',
       $flags,
