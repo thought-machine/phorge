@@ -270,11 +270,6 @@ final class DrydockWorkingCopyBlueprintImplementation
     DrydockBlueprint $blueprint,
     DrydockResource $resource,
     DrydockLease $lease) {
-    /**
-     * activateLease() prepares the Working Copy for the action to be performed.
-     * Meaning that it cleans the git repository and makes sure it's on the
-     * correct reference.
-     */
 
     $host_lease = $this->loadHostLease($resource);
     $command_type = DrydockCommandInterface::INTERFACE_TYPE;

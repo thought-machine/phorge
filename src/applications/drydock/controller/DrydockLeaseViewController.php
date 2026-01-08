@@ -195,7 +195,7 @@ final class DrydockLeaseViewController extends DrydockLeaseController {
       $view->addSectionHeader(
         pht('Attributes'), 'fa-list-ul');
       foreach ($attributes as $key => $value) {
-        $view->addProperty($key, json_encode($value));
+        $view->addProperty($key, $value);
       }
     }
 
