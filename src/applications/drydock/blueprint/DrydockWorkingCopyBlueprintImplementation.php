@@ -270,11 +270,6 @@ final class DrydockWorkingCopyBlueprintImplementation
     DrydockBlueprint $blueprint,
     DrydockResource $resource,
     DrydockLease $lease) {
-    /**
-     * activateLease() prepares the Working Copy for the action to be performed.
-     * Meaning that it cleans the git repository and makes sure it's on the
-     * correct reference.
-     */
 
     $host_lease = $this->loadHostLease($resource);
     $command_type = DrydockCommandInterface::INTERFACE_TYPE;
@@ -284,8 +279,6 @@ final class DrydockWorkingCopyBlueprintImplementation
     $root = $resource->getAttribute('workingcopy.root');
 
     $repositories = $this->loadRepositories(ipull($map, 'phid'));
-
-    $timer_metric = new PhabricatorPrometheusDrydockTimingMetric();
 
     $default = null;
     foreach ($map as $directory => $spec) {
@@ -320,14 +313,9 @@ final class DrydockWorkingCopyBlueprintImplementation
         $arg[] = $branch;
       }
 
-      $timer_metric->timeCommand(
-        "activate_lease_git_clean",
-        function () use ($interface, $cmd, $arg, $repository) {
-          $this->newExecvFuture($interface, $cmd, $arg)
-            ->setTimeout($repository->getEffectiveCopyTimeLimit())
-            ->resolvex();
-        }
-      );
+      $this->newExecvFuture($interface, $cmd, $arg)
+        ->setTimeout($repository->getEffectiveCopyTimeLimit())
+        ->resolvex();
 
       if (idx($spec, 'default')) {
         $default = $directory;
@@ -351,14 +339,9 @@ final class DrydockWorkingCopyBlueprintImplementation
         $arg[] = $ref_ref;
 
         try {
-          $timer_metric->timeCommand(
-            "activate_lease_git_fetch_reference",
-            function () use ($interface, $cmd, $arg, $repository) {
-              $this->newExecvFuture($interface, $cmd, $arg)
-                ->setTimeout($repository->getEffectiveCopyTimeLimit())
-                ->resolvex();
-            }
-          );
+          $this->newExecvFuture($interface, $cmd, $arg)
+            ->setTimeout($repository->getEffectiveCopyTimeLimit())
+            ->resolvex();
         } catch (CommandException $ex) {
           $display_command = csprintf(
             'git fetch %R %R',
@@ -516,18 +499,12 @@ final class DrydockWorkingCopyBlueprintImplementation
     $src_ref = $merge['src.ref'];
 
 
-    $timer_metric = new PhabricatorPrometheusDrydockTimingMetric();
     try {
-      $timer_metric->timeCommand(
-        "wc_merge_git_fetch",
-        function () use ($interface, $src_uri, $src_ref) {
-          $interface->execx(
-            'git fetch --no-tags -- %s +%s:%s',
-            $src_uri,
-            $src_ref,
-            $src_ref);
-        }
-      );
+      $interface->execx(
+        'git fetch --no-tags -- %s +%s:%s',
+        $src_uri,
+        $src_ref,
+        $src_ref);
     } catch (CommandException $ex) {
       $display_command = csprintf(
         'git fetch %R +%R:%R',
@@ -551,34 +528,24 @@ final class DrydockWorkingCopyBlueprintImplementation
       // NOTE: This can never actually generate a commit because we pass
       // "--squash", but git sometimes runs code to check that a username and
       // email are configured anyway.
-      $timer_metric->timeCommand(
-        "wc_merge_squash_commit",
-        function () use ($interface, $src_ref) {
-          $interface->execx(
-            'git -c user.name=%s -c user.email=%s merge --no-stat --squash -- %s',
-            'drydock',
-            'drydock@phabricator',
-            $src_ref);
-        }
-      );
+      $interface->execx(
+        'git -c user.name=%s -c user.email=%s merge --no-stat --squash -- %s',
+        'drydock',
+        'drydock@phabricator',
+        $src_ref);
     } catch (CommandException $ex) {
       $tmp_branch_name = sprintf(
         '%s-%d',
         self::TMP_BRANCH_PREFIX,
         rand());
       try {
-        // First we reset HEAD --hard because we may have succeded to git merge --squash
-        // some changes onto HEAD above but failed eg due to merge conflicts so make sure
-        // the HEAD is clean before attempting the rebase
-        $timer_metric->timeCommand(
-          "wc_merge_reset_after_squash",
-          function () use ($interface, $tmp_branch_name, $src_ref) {
-            $interface->execx(
-              'git reset HEAD --hard && git checkout -b %s %s',
-              $tmp_branch_name,
-              $src_ref);
-          }
-        );
+        $interface->execx(
+          // First we reset HEAD --hard because we may have succeded to git merge --squash
+          // some changes onto HEAD above but failed eg due to merge conflicts so make sure
+          // the HEAD is clean before attempting the rebase
+          'git reset HEAD --hard && git checkout -b %s %s',
+          $tmp_branch_name,
+          $src_ref);
       } catch (CommandException $ex) {
         $display_command = csprintf(
           'git reset HEAD --hard && git checkout -b %s %R',
@@ -593,43 +560,23 @@ final class DrydockWorkingCopyBlueprintImplementation
       }
 
       try {
-        $timer_metric->timeCommand(
-          "wc_merge_rebase",
-          function () use ($interface) {
-            $interface->execx('git rebase -');
-          }
-        );
+        $interface->execx('git rebase -');
       } catch (CommandException $ex) {
         $error = DrydockCommandError::newFromCommandException($ex)
           ->setPhase(self::PHASE_REBASE)
           ->setDisplayCommand('git rebase -');
         $lease->setAttribute('workingcopy.vcs.error', $error->toDictionary());
 
-        $timer_metric->timeCommand(
-          "wc_merge_abort_rebase",
-          function () use ($interface) {
-            $interface->execx('git rebase --abort && git checkout -');
-          }
-        );
-        $timer_metric->timeCommand(
-          "wc_merge_delete_tmp_branch",
-          function () use ($interface) {
-            $interface->execx(
-              'git branch -D `git branch | grep -E "%s-.*"`',
-              self::TMP_BRANCH_PREFIX);
-          }
-        );
+        $interface->execx('git rebase --abort && git checkout -');
+        $interface->execx(
+          'git branch -D `git branch | grep -E "%s-.*"`',
+          self::TMP_BRANCH_PREFIX);
 
         throw $ex;
       }
 
       try {
-        $timer_metric->timeCommand(
-          "wc_merge_squashmerge_checkout",
-          function () use ($interface) {
-            $interface->execx('git checkout -');
-          }
-        );
+        $interface->execx('git checkout -');
       } catch (CommandException $ex) {
 
         $error = DrydockCommandError::newFromCommandException($ex)
@@ -650,12 +597,7 @@ final class DrydockWorkingCopyBlueprintImplementation
         $tmp_branch_name);
 
       try {
-        $timer_metric->timeCommand(
-          "wc_merge_squashmerge_merge",
-          function () use ($interface, $real_command) {
-            $interface->execx('%C', $real_command);
-          }
-        );
+        $interface->execx('%C', $real_command);
       } catch (CommandException $ex) {
         // display the full rebase command so the user can debug the full flow
         $display_command = csprintf(
@@ -670,27 +612,17 @@ final class DrydockWorkingCopyBlueprintImplementation
           ->setDisplayCommand($display_command);
 
         $lease->setAttribute('workingcopy.vcs.error', $error->toDictionary());
-        $timer_metric->timeCommand(
-          "wc_merge_delete_tmp_branch",
-          function () use ($interface) {
-            $interface->execx(
-              'git branch -D `git branch | grep -E "%s-.*"`',
-              self::TMP_BRANCH_PREFIX);
-          }
-        );
+        $interface->execx(
+          'git branch -D `git branch | grep -E "%s-.*"`',
+          self::TMP_BRANCH_PREFIX);
 
         throw $ex;
       }
 
       try {
-        $timer_metric->timeCommand(
-          "wc_merge_delete_tmp_branch",
-          function () use ($interface) {
-            $interface->execx(
-              'git branch -D `git branch | grep -E "%s-.*"`',
-              self::TMP_BRANCH_PREFIX);
-          }
-        );
+        $interface->execx(
+          'git branch -D `git branch | grep -E "%s-.*"`',
+          self::TMP_BRANCH_PREFIX);
       } catch (CommandExeption $ex) {
         // ignore it we were just trying to tidy up after ourselves
       }

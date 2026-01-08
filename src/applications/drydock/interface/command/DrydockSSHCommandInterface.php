@@ -50,19 +50,13 @@ final class DrydockSSHCommandInterface extends DrydockCommandInterface {
       $flags[] = 'ConnectTimeout='.$this->connectTimeout;
     }
 
-    $ssh_host = $this->getConfig('host');
-
-    error_log(tsprintf(
-      "Drydock running command over SSH on host %s. Command: %s",
-      $ssh_host,
-      $full_command->getMaskedString()));
     return new ExecFuture(
       'ssh %Ls -l %P -p %s -i %P %s -- %s',
       $flags,
       $credential->getUsernameEnvelope(),
       $this->getConfig('port'),
       $credential->getKeyfileEnvelope(),
-      $ssh_host,
+      $this->getConfig('host'),
       $full_command);
   }
 }

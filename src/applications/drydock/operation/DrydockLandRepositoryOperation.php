@@ -123,13 +123,8 @@ final class DrydockLandRepositoryOperation
 
     $future->write($commit_message);
 
-    $timer_metric = new PhabricatorPrometheusDrydockTimingMetric();
     try {
-      $timer_metric->timeCommand(
-        "land_operation_git_commit",
-        function() use ($future) {
-          $future->resolvex();
-        });
+      $future->resolvex();
     } catch (CommandException $ex) {
       $display_command = csprintf('git commit');
 
@@ -146,15 +141,10 @@ final class DrydockLandRepositoryOperation
     }
 
     try {
-      $timer_metric->timeCommand(
-        "land_operation_git_push",
-        function() use ($interface, $push_dst) {
-          $interface->execx(
-            'git push origin -- %s:%s',
-            'HEAD',
-            $push_dst);
-        }
-      );
+      $interface->execx(
+        'git push origin -- %s:%s',
+        'HEAD',
+        $push_dst);
     } catch (CommandException $ex) {
       $display_command = csprintf(
         'git push origin %R:%R',
