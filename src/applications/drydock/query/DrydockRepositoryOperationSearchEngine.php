@@ -30,6 +30,10 @@ final class DrydockRepositoryOperationSearchEngine
       $query->withOperationStates($map['states']);
     }
 
+    if ($map['objectPHIDs']) {
+      $query->withObjectPHIDs($map['objectPHIDs']);
+    }
+
     return $query;
   }
 
@@ -53,6 +57,10 @@ final class DrydockRepositoryOperationSearchEngine
         ->setKey('states')
         ->setAliases(array('state'))
         ->setOptions(DrydockRepositoryOperation::getOperationStateNameMap()),
+      id(new PhabricatorSearchDatasourceField())
+        ->setLabel(pht('Objects'))
+        ->setKey('objectPHIDs')
+        ->setAliases(array('object', 'objects', 'objectPHID', 'revision', 'revisionPHID', 'revisions', 'revisionPHIDs')),
     );
   }
 
