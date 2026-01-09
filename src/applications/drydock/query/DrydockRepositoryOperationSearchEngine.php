@@ -57,10 +57,11 @@ final class DrydockRepositoryOperationSearchEngine
         ->setKey('states')
         ->setAliases(array('state'))
         ->setOptions(DrydockRepositoryOperation::getOperationStateNameMap()),
-      id(new PhabricatorSearchDatasourceField())
+      id(new PhabricatorPHIDsSearchField())
         ->setLabel(pht('Objects'))
         ->setKey('objectPHIDs')
-        ->setAliases(array('object', 'objects', 'objectPHID', 'revision', 'revisionPHID', 'revisions', 'revisionPHIDs')),
+        ->setAliases(array('object', 'objects', 'objectPHID', 'revision', 'revisionPHID', 'revisions', 'revisionPHIDs'))
+        ->setDescription(pht('Search for operations applied on a specified object')),
     );
   }
 
