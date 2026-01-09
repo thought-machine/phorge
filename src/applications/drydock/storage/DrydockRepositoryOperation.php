@@ -6,7 +6,8 @@
  */
 final class DrydockRepositoryOperation extends DrydockDAO
   implements
-    PhabricatorPolicyInterface {
+    PhabricatorPolicyInterface,
+    PhabricatorConduitResultInterface {
 
   const STATE_WAIT = 'wait';
   const STATE_WORK = 'work';
@@ -285,4 +286,35 @@ final class DrydockRepositoryOperation extends DrydockDAO
   }
 
 
+  public function getFieldSpecificationsForConduit()
+  {
+    return array(
+      id(new PhabricatorConduitSearchFieldSpecification())
+        ->setKey('objectPHID')
+        ->setType('string')
+        ->setDescription(pht('PHID of the object this operation is working on.')),
+      id(new PhabricatorConduitSearchFieldSpecification())
+        ->setKey('leasePHID')
+        ->setType('string')
+        ->setDescription(pht('PHID of the working copy lease this operation has requested.')),
+      id(new PhabricatorConduitSearchFieldSpecification())
+        ->setKey('repositoryPHID')
+        ->setType('string')
+        ->setDescription(pht('PHID of the repository this operation is working on.')),
+    );
+  }
+
+  public function getFieldValuesForConduit()
+  {
+    return array(
+      'objectPHID' => $this->getObjectPHID(),
+      'leasePHID' => $this->getWorkingCopyLeasePHID(),
+      'repositoryPHID' => $this->getRepositoryPHID(),
+    );
+  }
+
+  public function getConduitSearchAttachments()
+  {
+    return array();
+  }
 }
