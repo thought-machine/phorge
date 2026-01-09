@@ -7364,6 +7364,7 @@ phutil_register_library_map(array(
     'DrydockRepositoryOperation' => array(
       'DrydockDAO',
       'PhabricatorPolicyInterface',
+      'PhabricatorConduitResultInterface',
     ),
     'DrydockRepositoryOperationController' => 'DrydockController',
     'DrydockRepositoryOperationDismissController' => 'DrydockRepositoryOperationController',
