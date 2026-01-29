@@ -811,6 +811,10 @@ final class PhabricatorProject extends PhabricatorProjectDAO
         ->setKey('color')
         ->setType('map<string, wild>')
         ->setDescription(pht('Information about the project color.')),
+      id(new PhabricatorConduitSearchFieldSpecification())
+        ->setKey('archived')
+        ->setType('bool')
+        ->setDescription(pht('Whether the project is archived')),
     );
   }
 
@@ -847,6 +851,7 @@ final class PhabricatorProject extends PhabricatorProjectDAO
         'key' => $color_key,
         'name' => $color_name,
       ),
+      'archived' => $this->isArchived(),
     );
   }
 
