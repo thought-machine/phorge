@@ -34,7 +34,8 @@ final class DifferentialRevisionQuery
   private $needDiffIDs        = false;
   private $needCommitPHIDs    = false;
   private $needHashes         = false;
-  private $needReviewers = false;
+  private $needReviewers      = false;
+  private $needReview         = false;
   private $needReviewerAuthority;
   private $needDrafts;
   private $needFlags;
@@ -282,6 +283,22 @@ final class DifferentialRevisionQuery
    */
   public function needReviewers($need_reviewers) {
     $this->needReviewers = $need_reviewers;
+    return $this;
+  }
+
+
+  /**
+   * Set whether or not the query is ready for review and
+   * should send notifications to associated reviewers.
+   *
+   * @param bool True to mark revision as "Needs Review" and
+   * send notifications to reviewers.
+   *
+   * @return this
+   * @task config
+   */
+  public function needReview($need_review) {
+    $this->needReview = $need_review;
     return $this;
   }
 

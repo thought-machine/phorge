@@ -36,6 +36,7 @@ final class DifferentialRevision extends DifferentialDAO
   protected $branchName;
   protected $repositoryPHID;
   protected $activeDiffPHID;
+  protected $needs_review;
 
   protected $viewPolicy = PhabricatorPolicies::POLICY_USER;
   protected $editPolicy = PhabricatorPolicies::POLICY_USER;
@@ -698,6 +699,16 @@ final class DifferentialRevision extends DifferentialDAO
     return $this->setProperty(
       self::PROPERTY_SHOULD_BROADCAST,
       $should_broadcast);
+  }
+
+  public function getNeedsReview() {
+    return $this->getProperty(self::PROPERTY_NEEDS_REVIEW, false);
+  }
+
+  public function setNeedsReview($needs_review) {
+    return $this->setProperty(
+      self::PROPERTY_NEEDS_REVIEW,
+      $needs_review);
   }
 
   public function setAddedLineCount($count) {

@@ -56,15 +56,11 @@ final class DifferentialUpdateRevisionConduitAPIMethod
       throw new ConduitException('ERR_BAD_DIFF');
     }
 
-    $xactions[] = id(new DifferentialTransaction())
-      ->setTransactionType(DifferentialTransaction::TYPE_UPDATE)
-      ->setMetadataValue('needs-review', $needs_review)
-      ->setNewValue($diff);
-
     $revision = id(new DifferentialRevisionQuery())
       ->setViewer($request->getUser())
       ->withIDs(array($request->getValue('id')))
       ->needReviewers(true)
+      ->needReview($request->getValue('needs-review'))
       ->needActiveDiffs(true)
       ->requireCapabilities(
         array(
