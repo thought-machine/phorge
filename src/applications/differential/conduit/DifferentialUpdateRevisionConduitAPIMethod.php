@@ -27,6 +27,7 @@ final class DifferentialUpdateRevisionConduitAPIMethod
       'diffid'    => 'required diffid',
       'fields'    => 'required dict',
       'message'   => 'required string',
+      'needs-review' => 'optional bool',
     );
   }
 
@@ -45,6 +46,7 @@ final class DifferentialUpdateRevisionConduitAPIMethod
 
   protected function execute(ConduitAPIRequest $request) {
     $viewer = $request->getUser();
+    $needs_review = $request->getValue('needs-review', false);
 
     $diff = id(new DifferentialDiffQuery())
       ->setViewer($viewer)
@@ -53,6 +55,11 @@ final class DifferentialUpdateRevisionConduitAPIMethod
     if (!$diff) {
       throw new ConduitException('ERR_BAD_DIFF');
     }
+
+    $xactions[] = id(new DifferentialTransaction())
+      ->setTransactionType(DifferentialTransaction::TYPE_UPDATE)
+      ->setMetadataValue('needs-review', $needs_review)
+      ->setNewValue($diff);
 
     $revision = id(new DifferentialRevisionQuery())
       ->setViewer($request->getUser())
