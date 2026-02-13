@@ -50,6 +50,7 @@ final class DifferentialUpdateRevisionConduitAPIMethod
 
     $diff = id(new DifferentialDiffQuery())
       ->setViewer($viewer)
+      ->needReview($needs_review)
       ->withIDs(array($request->getValue('diffid')))
       ->executeOne();
     if (!$diff) {
@@ -60,7 +61,6 @@ final class DifferentialUpdateRevisionConduitAPIMethod
       ->setViewer($request->getUser())
       ->withIDs(array($request->getValue('id')))
       ->needReviewers(true)
-      ->needReview($request->getValue('needs-review'))
       ->needActiveDiffs(true)
       ->requireCapabilities(
         array(

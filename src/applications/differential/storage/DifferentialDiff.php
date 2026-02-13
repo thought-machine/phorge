@@ -39,6 +39,8 @@ final class DifferentialDiff
 
   protected $viewPolicy;
 
+  protected $requestReview;
+
   private $unsavedChangesets = array();
   private $changesets = self::ATTACHABLE;
   private $revision = self::ATTACHABLE;
@@ -66,6 +68,7 @@ final class DifferentialDiff
         'bookmark' => 'text255?',
         'repositoryUUID' => 'text64?',
         'commitPHID' => 'phid?',
+        'requestReview' => 'bool?',
 
         // T6203/NULLABILITY
         // These should be non-null; all diffs should have a creation method
@@ -361,6 +364,16 @@ final class DifferentialDiff
 
   public function getDiffProperties() {
     return $this->assertAttached($this->properties);
+  }
+
+    public function getRequestReview() {
+    return $this->getProperty(self::PROPERTY_REQUEST_REVIEW, false);
+  }
+
+  public function setRequestReview($requestReview) {
+    return $this->setProperty(
+      self::PROPERTY_REQUEST_REVIEW,
+      $requestReview);
   }
 
   public function attachBuildable(HarbormasterBuildable $buildable = null) {

@@ -409,23 +409,23 @@ final class DifferentialTransactionEditor
     $was_revision = $revision->isNeedsRevision();
     $was_review = $revision->isNeedsReview();
 
-    // Revisions should not transition out of "Request Changes"
-    // or "Changes Planned" state unless the "needs-review" flag
-    // has been passed from arcanist
-    if ($was_change_planned || $was_revision) {
-      $needs_review = false;
-      // Check if any transaction has needs-review flag
-      foreach ($xactions as $xaction) {
-        if ($xaction->getMetadataValue('needs-review')) {
-          $needs_review = true;
-          break;
-        }
-      }
+    // // Revisions should not transition out of "Request Changes"
+    // // or "Changes Planned" state unless the "needs-review" flag
+    // // has been passed from arcanist
+    // if ($was_change_planned || $was_revision) {
+    //   $needs_review = false;
+    //   // Check if any transaction has needs-review flag
+    //   foreach ($xactions as $xaction) {
+    //     if ($xaction->getMetadataValue('needs-review')) {
+    //       $needs_review = true;
+    //       break;
+    //     }
+    //   }
 
-      if (!$needs_review) {
-        return $xactions;
-      }
-    }
+    //   if (!$needs_review) {
+    //     return $xactions;
+    //   }
+    // }
 
     if (!$was_accepted && !$was_revision && !$was_review) {
       // Revisions can't transition out of other statuses (like closed or

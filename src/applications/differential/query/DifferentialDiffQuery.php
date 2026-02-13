@@ -12,6 +12,7 @@ final class DifferentialDiffQuery
 
   private $needChangesets = false;
   private $needProperties;
+  private $requestReview = false;
 
   public function withIDs(array $ids) {
     $this->ids = $ids;
@@ -50,6 +51,22 @@ final class DifferentialDiffQuery
 
   public function needProperties($need_properties) {
     $this->needProperties = $need_properties;
+    return $this;
+  }
+
+  /**
+   * Set whether or not the user has passed --needs-review flag,
+   * indicating query is ready for review and
+   * should send notifications to associated reviewers.
+   *
+   * @param bool True to update revision to "Needs Review" and
+   * send notifications to reviewers.
+   *
+   * @return this
+   * @task config
+   */
+  public function requestReview($requestReview) {
+    $this->requestReview = $requestReview;
     return $this;
   }
 
