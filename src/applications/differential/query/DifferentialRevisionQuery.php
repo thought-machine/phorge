@@ -34,7 +34,7 @@ final class DifferentialRevisionQuery
   private $needDiffIDs        = false;
   private $needCommitPHIDs    = false;
   private $needHashes         = false;
-  private $needReviewers = false;
+  private $needReviewers      = false;
   private $needReviewerAuthority;
   private $needDrafts;
   private $needFlags;

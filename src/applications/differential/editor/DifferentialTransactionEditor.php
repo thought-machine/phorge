@@ -404,9 +404,29 @@ final class DifferentialTransactionEditor
     DifferentialRevision $revision,
     array $xactions) {
 
+    $was_change_planned = $revision->isChangePlanned();
     $was_accepted = $revision->isAccepted();
     $was_revision = $revision->isNeedsRevision();
     $was_review = $revision->isNeedsReview();
+
+    // // Revisions should not transition out of "Request Changes"
+    // // or "Changes Planned" state unless the "needs-review" flag
+    // // has been passed from arcanist
+    // if ($was_change_planned || $was_revision) {
+    //   $needs_review = false;
+    //   // Check if any transaction has needs-review flag
+    //   foreach ($xactions as $xaction) {
+    //     if ($xaction->getMetadataValue('needs-review')) {
+    //       $needs_review = true;
+    //       break;
+    //     }
+    //   }
+
+    //   if (!$needs_review) {
+    //     return $xactions;
+    //   }
+    // }
+
     if (!$was_accepted && !$was_revision && !$was_review) {
       // Revisions can't transition out of other statuses (like closed or
       // abandoned) as a side effect of reviewer status changes.
@@ -471,10 +491,10 @@ final class DifferentialTransactionEditor
       // reviewer resigns or is removed.
       $new_status = DifferentialRevisionStatus::NEEDS_REVIEW;
     } else if ($was_revision) {
-      // This revision was "Needs Revision", but no longer has any rejecting
+      // This revision was "Needs Revision", and no longer has any rejecting
       // reviewers. This usually happens after the last rejecting reviewer
-      // resigns or is removed. Put the revision back in "Needs Review".
-      $new_status = DifferentialRevisionStatus::NEEDS_REVIEW;
+      // resigns or is removed. Put the revision in "Changes Planned".
+      $new_status = DifferentialRevisionStatus::CHANGES_PLANNED;
     }
 
     if ($new_status === null) {
@@ -536,6 +556,19 @@ final class DifferentialTransactionEditor
   protected function shouldSendMail(
     PhabricatorLiskDAO $object,
     array $xactions) {
+
+    // Check if any transaction has needs-review flag
+    foreach ($xactions as $xaction) {
+      if ($xaction->getMetadataValue('needs-review')) {
+        return true;
+      }
+    }
+
+    // Don't notify reviewers for revisions in "changes planned" / "request changes" state
+    if ($object->isChangePlanned() || $object->isNeedsRevision()) {
+      return false;
+    }
+
     return true;
   }
 
