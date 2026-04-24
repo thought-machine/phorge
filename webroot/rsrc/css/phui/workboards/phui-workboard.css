@@ -21,6 +21,12 @@
   padding: 16px;
 }
 
+.phui-workboard-view-shadow {
+  scrollbar-width: thin;
+}
+
+/* Alternative thin scrollbar when `scrollbar-width: thin` is not supported */
+/* (Use the same selector as above for consistent behavior on Chrome/Firefox) */
 .phui-workboard-view-shadow::-webkit-scrollbar {
   height: 8px;
   width: 8px;
@@ -82,6 +88,11 @@
 .device-desktop .phui-workboard-fullscreen .phui-profile-menu
   .phabricator-nav-local {
     display: none;
+}
+
+.device-desktop .phui-profile-menu .project-board-nav .phabricator-side-menu {
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
 }
 
 .device .phui-workboard-expand-icon {

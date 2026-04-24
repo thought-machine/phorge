@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorPaste>
+ */
 final class PhabricatorPasteQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -390,7 +393,7 @@ final class PhabricatorPasteQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorPasteApplication';
+    return PhabricatorPasteApplication::class;
   }
 
 }

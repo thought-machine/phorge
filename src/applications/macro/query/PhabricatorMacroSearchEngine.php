@@ -8,7 +8,7 @@ final class PhabricatorMacroSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorMacroApplication';
+    return PhabricatorMacroApplication::class;
   }
 
   public function newQuery() {
@@ -127,12 +127,17 @@ final class PhabricatorMacroSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<PhabricatorFileImageMacro> $macros
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $macros,
     PhabricatorSavedQuery $query,
     array $handles) {
 
-    assert_instances_of($macros, 'PhabricatorFileImageMacro');
+    assert_instances_of($macros, PhabricatorFileImageMacro::class);
     $viewer = $this->requireViewer();
     $handles = $viewer->loadHandles(mpull($macros, 'getAuthorPHID'));
 

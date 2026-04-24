@@ -18,7 +18,7 @@ final class PhabricatorRepositoryRepositoryPHIDType
   }
 
   public function getPHIDTypeApplicationClass() {
-    return 'PhabricatorDiffusionApplication';
+    return PhabricatorDiffusionApplication::class;
   }
 
   protected function buildQueryForObjects(
@@ -53,6 +53,11 @@ final class PhabricatorRepositoryRepositoryPHIDType
     }
   }
 
+  /**
+   * Check whether a named object is of this PHID type
+   * @param string $name Object name
+   * @return bool True if the named object is of this PHID type
+   */
   public function canLoadNamedObject($name) {
     return preg_match('/^(r[A-Z]+|R[1-9]\d*)\z/', $name);
   }

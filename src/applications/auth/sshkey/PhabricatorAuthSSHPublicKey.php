@@ -55,11 +55,15 @@ final class PhabricatorAuthSSHPublicKey extends Phobject {
 
     list($type, $body, $comment) = $parts;
 
+    // The only goal is to prevent user error by nonsense input.
+    // This is just a meaningful subset from 'ssh -Q key'.
     $recognized_keys = array(
       'ssh-dsa',
       'ssh-dss',
       'ssh-rsa',
       'ssh-ed25519',
+      'sk-ssh-ed25519@openssh.com',
+      'sk-ecdsa-sha2-nistp256@openssh.com',
       'ecdsa-sha2-nistp256',
       'ecdsa-sha2-nistp384',
       'ecdsa-sha2-nistp521',
@@ -126,13 +130,14 @@ final class PhabricatorAuthSSHPublicKey extends Phobject {
         $tmp);
     } catch (CommandException $ex) {
       unset($tmp);
-      throw new PhutilProxyException(
+      throw new Exception(
         pht(
           'Failed to convert public key into PKCS8 format. If you are '.
           'developing on OSX, you may be able to use `%s` '.
           'to work around this issue. %s',
           'bin/auth cache-pkcs8',
           $ex->getMessage()),
+        0,
         $ex);
     }
     unset($tmp);

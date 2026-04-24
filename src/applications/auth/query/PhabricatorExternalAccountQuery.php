@@ -9,6 +9,8 @@
  * ExternalAccounts have a permissive CAN_VIEW policy (like users) because they
  * interact directly with objects and can leave comments, sign documents, etc.
  * However, CAN_EDIT is restricted to users who own the accounts.
+ *
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorExternalAccount>
  */
 final class PhabricatorExternalAccountQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
@@ -241,7 +243,7 @@ final class PhabricatorExternalAccountQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorPeopleApplication';
+    return PhabricatorPeopleApplication::class;
   }
 
 }

@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<DifferentialViewState>
+ */
 final class DifferentialViewStateQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -54,7 +57,7 @@ final class DifferentialViewStateQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDifferentialApplication';
+    return PhabricatorDifferentialApplication::class;
   }
 
 }

@@ -35,7 +35,7 @@ final class ManiphestTaskSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorManiphestApplication';
+    return PhabricatorManiphestApplication::class;
   }
 
   public function newQuery() {
@@ -89,11 +89,15 @@ final class ManiphestTaskSearchEngine
       id(new PhabricatorPHIDsSearchField())
         ->setLabel(pht('Columns'))
         ->setKey('columnPHIDs')
-        ->setAliases(array('column', 'columnPHID', 'columns')),
+        ->setAliases(array('column', 'columnPHID', 'columns'))
+        ->setDescription(
+          pht('Search for tasks in specific workboard columns.')),
       id(new PhabricatorSearchThreeStateField())
         ->setLabel(pht('Open Parents'))
         ->setKey('hasParents')
         ->setAliases(array('blocking'))
+        ->setDescription(
+          pht('Search for tasks which block open parent tasks.'))
         ->setOptions(
           pht('(Show All)'),
           pht('Show Only Tasks With Open Parents'),
@@ -102,6 +106,8 @@ final class ManiphestTaskSearchEngine
         ->setLabel(pht('Open Subtasks'))
         ->setKey('hasSubtasks')
         ->setAliases(array('blocked'))
+        ->setDescription(
+          pht('Search for tasks blocked by open subtasks.'))
         ->setOptions(
           pht('(Show All)'),
           pht('Show Only Tasks With Open Subtasks'),
@@ -109,39 +115,56 @@ final class ManiphestTaskSearchEngine
       id(new PhabricatorIDsSearchField())
         ->setLabel(pht('Parent IDs'))
         ->setKey('parentIDs')
-        ->setAliases(array('parentID')),
+        ->setAliases(array('parentID'))
+        ->setDescription(
+          pht('Search for tasks which have specific parent tasks.')),
       id(new PhabricatorIDsSearchField())
         ->setLabel(pht('Subtask IDs'))
         ->setKey('subtaskIDs')
-        ->setAliases(array('subtaskID')),
+        ->setAliases(array('subtaskID'))
+        ->setDescription(
+          pht('Search for tasks which have specific subtasks.')),
       id(new PhabricatorSearchSelectField())
         ->setLabel(pht('Group By'))
         ->setKey('group')
+        ->setDescription(pht('Group results by a certain parameter.'))
         ->setOptions($this->getGroupOptions()),
       id(new PhabricatorSearchDateField())
         ->setLabel(pht('Created After'))
-        ->setKey('createdStart'),
+        ->setKey('createdStart')
+        ->setDescription(
+          pht('Search for tasks created after a certain date.')),
       id(new PhabricatorSearchDateField())
         ->setLabel(pht('Created Before'))
-        ->setKey('createdEnd'),
+        ->setKey('createdEnd')
+        ->setDescription(
+          pht('Search for tasks created before a certain date.')),
       id(new PhabricatorSearchDateField())
         ->setLabel(pht('Updated After'))
-        ->setKey('modifiedStart'),
+        ->setKey('modifiedStart')
+        ->setDescription(
+          pht('Search for tasks updated after a certain date.')),
       id(new PhabricatorSearchDateField())
         ->setLabel(pht('Updated Before'))
-        ->setKey('modifiedEnd'),
+        ->setKey('modifiedEnd')
+        ->setDescription(
+          pht('Search for tasks updated before a certain date.')),
       id(new PhabricatorSearchDateField())
         ->setLabel(pht('Closed After'))
-        ->setKey('closedStart'),
+        ->setKey('closedStart')
+        ->setDescription(
+          pht('Search for tasks closed after a certain date.')),
       id(new PhabricatorSearchDateField())
         ->setLabel(pht('Closed Before'))
-        ->setKey('closedEnd'),
+        ->setKey('closedEnd')
+        ->setDescription(
+          pht('Search for tasks closed before a certain date.')),
       id(new PhabricatorUsersSearchField())
         ->setLabel(pht('Closed By'))
         ->setKey('closerPHIDs')
         ->setAliases(array('closer', 'closerPHID', 'closers'))
         ->setDescription(pht('Search for tasks closed by certain users.')),
-      id(new PhabricatorSearchTextField())
+      id(new PhabricatorSearchIntField())
         ->setLabel(pht('Page Size'))
         ->setKey('limit'),
     );
@@ -260,8 +283,8 @@ final class ManiphestTaskSearchEngine
       $query->setGroupBy($group);
     }
 
-    if ($map['ids']) {
-      $ids = $map['ids'];
+    $ids = idx($map, 'ids');
+    if ($ids) {
       foreach ($ids as $key => $id) {
         $id = trim($id, ' Tt');
         if (!$id || !is_numeric($id)) {
@@ -374,17 +397,41 @@ final class ManiphestTaskSearchEngine
         ManiphestBulkEditCapability::CAPABILITY);
     }
 
+    $custom_field_lists = $this->loadCustomFields(
+      $tasks,
+      PhabricatorCustomField::ROLE_LIST);
+
     $list = id(new ManiphestTaskResultListView())
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->setTasks($tasks)
+      ->setHandles($handles)
       ->setSavedQuery($saved)
       ->setCanBatchEdit($can_bulk_edit)
+      ->setCustomFieldLists($custom_field_lists)
       ->setShowBatchControls($this->showBatchControls);
 
     $result = new PhabricatorApplicationSearchResultView();
     $result->setContent($list);
 
     return $result;
+  }
+
+  protected function getRequiredHandlePHIDsForResultList(
+    array $objects,
+    PhabricatorSavedQuery $query) {
+
+    $phids = array();
+    foreach ($objects as $task) {
+      $assigned_phid = $task->getOwnerPHID();
+      if ($assigned_phid) {
+        $phids[] = $assigned_phid;
+      }
+      foreach ($task->getProjectPHIDs() as $project_phid) {
+        $phids[] = $project_phid;
+      }
+    }
+
+    return $phids;
   }
 
   protected function willUseSavedQuery(PhabricatorSavedQuery $saved) {

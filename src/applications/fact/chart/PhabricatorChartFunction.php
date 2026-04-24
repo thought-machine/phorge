@@ -10,9 +10,15 @@ abstract class PhabricatorChartFunction
     return $this->getPhobjectClassConstant('FUNCTIONKEY', 32);
   }
 
+  /**
+   * Get all available PhabricatorChartFunction subclasses
+   *
+   * @return array<PhabricatorChartFunction> All Phabricator*ChartFunction
+   *         classes which implement getFunctionKey()
+   */
   final public static function getAllFunctions() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setUniqueMethod('getFunctionKey')
       ->execute();
   }
@@ -32,7 +38,7 @@ abstract class PhabricatorChartFunction
           phutil_describe_type($specs)));
     }
 
-    assert_instances_of($specs, 'PhabricatorChartFunctionArgument');
+    assert_instances_of($specs, PhabricatorChartFunctionArgument::class);
 
     foreach ($specs as $spec) {
       $parser->addArgument($spec);
@@ -49,6 +55,9 @@ abstract class PhabricatorChartFunction
     return $this;
   }
 
+  /**
+   * @return PhabricatorChartFunctionLabel
+   */
   public function getFunctionLabel() {
     if (!$this->functionLabel) {
       $this->functionLabel = id(new PhabricatorChartFunctionLabel())
@@ -127,6 +136,11 @@ abstract class PhabricatorChartFunction
     return $results;
   }
 
+  /**
+   * Return arrays of x,y data points for a two-dimensional chart
+   * @param PhabricatorChartDataQuery $query
+   * @return array<array<int,int>> x => epoch value; y => incremental number
+   */
   public function newDatapoints(PhabricatorChartDataQuery $query) {
     $xv = $this->newInputValues($query);
 
@@ -220,14 +234,14 @@ abstract class PhabricatorChartFunction
 
     $is_reversed = ($src > $dst);
     if ($is_reversed) {
-      $min = (double)$dst;
-      $max = (double)$src;
+      $min = (float)$dst;
+      $max = (float)$src;
     } else {
-      $min = (double)$src;
-      $max = (double)$dst;
+      $min = (float)$src;
+      $max = (float)$dst;
     }
 
-    $step = (double)($max - $min) / (double)($count - 1);
+    $step = (float)($max - $min) / (float)($count - 1);
 
     $steps = array();
     for ($cursor = $min; $cursor <= $max; $cursor += $step) {

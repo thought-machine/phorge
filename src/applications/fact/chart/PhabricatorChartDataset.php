@@ -13,8 +13,11 @@ abstract class PhabricatorChartDataset
     return $this->functions;
   }
 
+  /**
+   * @param array<PhabricatorComposeChartFunction> $functions
+   */
   final public function setFunctions(array $functions) {
-    assert_instances_of($functions, 'PhabricatorComposeChartFunction');
+    assert_instances_of($functions, PhabricatorComposeChartFunction::class);
 
     $this->functions = $functions;
 
@@ -23,7 +26,7 @@ abstract class PhabricatorChartDataset
 
   final public static function getAllDatasetTypes() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setUniqueMethod('getDatasetTypeKey')
       ->execute();
   }
@@ -67,7 +70,10 @@ abstract class PhabricatorChartDataset
   abstract protected function newChartDisplayData(
     PhabricatorChartDataQuery $data_query);
 
-
+  /**
+   * @param PhabricatorChartDataQuery $data_query
+   * @return PhabricatorChartDisplayData
+   */
   final public function getTabularDisplayData(
     PhabricatorChartDataQuery $data_query) {
     $results = array();

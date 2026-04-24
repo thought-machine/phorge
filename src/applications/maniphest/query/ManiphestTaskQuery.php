@@ -3,6 +3,8 @@
 /**
  * Query tasks by specific criteria. This class uses the higher-performance
  * but less-general Maniphest indexes to satisfy queries.
+ *
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<ManiphestTask>
  */
 final class ManiphestTaskQuery extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -358,6 +360,10 @@ final class ManiphestTaskQuery extends PhabricatorCursorPagedPolicyAwareQuery {
     $where[] = $this->buildOwnerWhereClause($conn);
 
     if ($this->taskIDs !== null) {
+      if (!ctype_digit(implode('', $this->taskIDs))) {
+        throw new PhutilSearchQueryCompilerSyntaxException(
+          pht('Task IDs must be integer numbers.'));
+      }
       $where[] = qsprintf(
         $conn,
         'task.id in (%Ld)',
@@ -805,8 +811,8 @@ final class ManiphestTaskQuery extends PhabricatorCursorPagedPolicyAwareQuery {
    * ...we ignore the single project, as every result is in that project. (In
    * the case that there are several "any" projects, we do not ignore them.)
    *
-   * @return list<phid> Project PHIDs which should be ignored in query
-   *                    construction.
+   * @return list<string> Project PHIDs which should be ignored in query
+   *                      construction.
    */
   private function getIgnoreGroupedProjectPHIDs() {
     // Maybe we should also exclude the "OPERATOR_NOT" PHIDs? It won't
@@ -1048,7 +1054,7 @@ final class ManiphestTaskQuery extends PhabricatorCursorPagedPolicyAwareQuery {
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorManiphestApplication';
+    return PhabricatorManiphestApplication::class;
   }
 
 }

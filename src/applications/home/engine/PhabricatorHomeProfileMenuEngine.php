@@ -19,7 +19,7 @@ final class PhabricatorHomeProfileMenuEngine
     // the home page or any home dashboard to upload them.
 
     $upload = id(new PhabricatorGlobalUploadTargetView())
-      ->setUser($viewer);
+      ->setViewer($viewer);
 
     $content = parent::buildItemViewContent($item);
 
@@ -29,6 +29,11 @@ final class PhabricatorHomeProfileMenuEngine
     );
   }
 
+  /**
+   * Returns the menu items in the default home sidebar
+   *
+   * @return array<PhabricatorProfileMenuItemConfiguration>
+   */
   protected function getBuiltinProfileItems($object) {
     $viewer = $this->getViewer();
     $items = array();

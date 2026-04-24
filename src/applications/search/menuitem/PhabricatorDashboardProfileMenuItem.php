@@ -11,7 +11,7 @@ final class PhabricatorDashboardProfileMenuItem
   private $dashboardHandle;
 
   public function getMenuItemTypeIcon() {
-    return 'fa-dashboard';
+    return 'fa-tachometer';
   }
 
   public function getMenuItemTypeName() {
@@ -27,7 +27,7 @@ final class PhabricatorDashboardProfileMenuItem
     return true;
   }
 
-  private function attachDashboard(PhabricatorDashboard $dashboard = null) {
+  private function attachDashboard(?PhabricatorDashboard $dashboard = null) {
     $this->dashboard = $dashboard;
     return $this;
   }

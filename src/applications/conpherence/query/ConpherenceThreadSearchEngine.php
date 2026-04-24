@@ -8,7 +8,7 @@ final class ConpherenceThreadSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorConpherenceApplication';
+    return PhabricatorConpherenceApplication::class;
   }
 
   public function newQuery() {
@@ -91,11 +91,16 @@ final class ConpherenceThreadSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<ConpherenceThread> $conpherences
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $conpherences,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($conpherences, 'ConpherenceThread');
+    assert_instances_of($conpherences, ConpherenceThread::class);
 
     $viewer = $this->requireViewer();
 
@@ -151,7 +156,7 @@ final class ConpherenceThreadSearchEngine
       $icon = id(new PHUIIconView())
         ->setIcon($icon_name);
 
-      if (!strlen($fulltext)) {
+      if (!phutil_nonempty_string($fulltext)) {
         $item = id(new PHUIObjectItemView())
           ->setObjectName($conpherence->getMonogram())
           ->setHeader($title)

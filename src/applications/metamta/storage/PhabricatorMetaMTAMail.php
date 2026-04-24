@@ -88,8 +88,8 @@ final class PhabricatorMetaMTAMail
    * These tags are used to allow users to opt out of receiving certain types
    * of mail, like updates when a task's projects change.
    *
-   * @param list<const>
-   * @return this
+   * @param list<string> $tags Tag constants.
+   * @return $this
    */
   public function setMailTags(array $tags) {
     $this->setParam('mailtags', array_unique($tags));
@@ -109,8 +109,8 @@ final class PhabricatorMetaMTAMail
    * needs to be set whenever an action is triggered by an email message. See
    * T251 for more details.
    *
-   * @param   string The "Message-ID" of the email which precedes this one.
-   * @return  this
+   * @param   string $id The "Message-ID" of the email which precedes this one.
+   * @return  $this
    */
   public function setParentMessageID($id) {
     $this->setParam('parent-message-id', $id);
@@ -239,8 +239,11 @@ final class PhabricatorMetaMTAMail
       ->execute();
   }
 
+  /**
+   * @param array<PhabricatorMailAttachment> $attachments
+   */
   public function setAttachments(array $attachments) {
-    assert_instances_of($attachments, 'PhabricatorMailAttachment');
+    assert_instances_of($attachments, PhabricatorMailAttachment::class);
     $this->setParam('attachments', mpull($attachments, 'toDictionary'));
     return $this;
   }
@@ -419,8 +422,8 @@ final class PhabricatorMetaMTAMail
    * This is primarily intended to let users who don't want any email still
    * receive things like password resets.
    *
-   * @param bool  True to force delivery despite user preferences.
-   * @return this
+   * @param bool $force True to force delivery despite user preferences.
+   * @return $this
    */
   public function setForceDelivery($force) {
     $this->setParam('force', $force);
@@ -437,8 +440,8 @@ final class PhabricatorMetaMTAMail
    * "Precedence: bulk" or similar, but is implementation and configuration
    * dependent.
    *
-   * @param bool  True if the mail is automated bulk mail.
-   * @return this
+   * @param bool $is_bulk True if the mail is automated bulk mail.
+   * @return $this
    */
   public function setIsBulk($is_bulk) {
     $this->setParam('is-bulk', $is_bulk);
@@ -454,10 +457,11 @@ final class PhabricatorMetaMTAMail
    * set appropriate headers (Message-ID, In-Reply-To, References and
    * Thread-Index) based on the capabilities of the underlying mailer.
    *
-   * @param string  Unique identifier, appropriate for use in a Message-ID,
-   *                In-Reply-To or References headers.
-   * @param bool    If true, indicates this is the first message in the thread.
-   * @return this
+   * @param string  $thread_id Unique identifier, appropriate for use in a
+   *                Message-ID, In-Reply-To or References headers.
+   * @param bool    $is_first_message (optional) If true, indicates this is the
+   *                first message in the thread.
+   * @return $this
    */
   public function setThreadID($thread_id, $is_first_message = false) {
     $this->setParam('thread-id', $thread_id);
@@ -477,14 +481,14 @@ final class PhabricatorMetaMTAMail
    * Save a newly created mail to the database. The mail will eventually be
    * delivered by the MetaMTA daemon.
    *
-   * @return this
+   * @return $this
    */
   public function saveAndSend() {
     return $this->save();
   }
 
   /**
-   * @return this
+   * @return $this
    */
   public function save() {
     if ($this->getID()) {
@@ -530,8 +534,6 @@ final class PhabricatorMetaMTAMail
 
   /**
    * Attempt to deliver an email immediately, in this process.
-   *
-   * @return void
    */
   public function sendNow() {
     if ($this->getStatus() != PhabricatorMailOutboundStatus::STATUS_QUEUE) {
@@ -825,8 +827,8 @@ final class PhabricatorMetaMTAMail
    * Note that this expands recipients into their members, because delivery
    * is never directly attempted to aggregate actors like projects.
    *
-   * @return  list<phid>  A list of all recipients to whom delivery will be
-   *                      attempted.
+   * @return  list<string>  A list of all recipients to whom delivery will be
+   *                        attempted.
    * @task recipients
    */
   public function buildRecipientList() {
@@ -845,9 +847,12 @@ final class PhabricatorMetaMTAMail
     return $this->expandRecipients($actor_phids);
   }
 
+  /**
+   * @return array<string> PHIDs and/or empty strings
+   */
   private function getAllActorPHIDs() {
     return array_merge(
-      array($this->getParam('from')),
+      array($this->getParam('from', '')),
       $this->getToPHIDs(),
       $this->getCcPHIDs());
   }
@@ -858,9 +863,9 @@ final class PhabricatorMetaMTAMail
    * For example, this will expand project PHIDs into a list of the project's
    * members.
    *
-   * @param list<phid>  List of recipient PHIDs, possibly including aggregate
-   *                    recipients.
-   * @return list<phid> Deaggregated list of mailable recipients.
+   * @param list<string>  $phids List of recipient PHIDs, possibly including
+   *                    aggregate recipients.
+   * @return list<string> Deaggregated list pf PHIDs of mailable recipients.
    */
   public function expandRecipients(array $phids) {
     if ($this->recipientExpansionMap === null) {
@@ -881,8 +886,11 @@ final class PhabricatorMetaMTAMail
     return array_keys($results);
   }
 
+  /**
+   * @param array<PhabricatorMetaMTAActor> $actors
+   */
   private function filterDeliverableActors(array $actors) {
-    assert_instances_of($actors, 'PhabricatorMetaMTAActor');
+    assert_instances_of($actors, PhabricatorMetaMTAActor::class);
     $deliverable_actors = array();
     foreach ($actors as $phid => $actor) {
       if ($actor->isDeliverable()) {
@@ -1089,11 +1097,14 @@ final class PhabricatorMetaMTAMail
     return $this->setParam('headers.unfiltered', $headers);
   }
 
+  /**
+   * @param array<PhabricatorMailHeader> $headers
+   */
   private function flattenHeaders(array $headers) {
-    assert_instances_of($headers, 'PhabricatorMailHeader');
+    assert_instances_of($headers, PhabricatorMailHeader::class);
 
     $list = array();
-    foreach ($list as $header) {
+    foreach ($headers as $header) {
       $list[] = array(
         $header->getName(),
         $header->getValue(),

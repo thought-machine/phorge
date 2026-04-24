@@ -8,7 +8,7 @@ final class AlmanacDeviceSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorAlmanacApplication';
+    return PhabricatorAlmanacApplication::class;
   }
 
   public function newQuery() {
@@ -93,11 +93,16 @@ final class AlmanacDeviceSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<AlmanacDevice> $devices
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $devices,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($devices, 'AlmanacDevice');
+    assert_instances_of($devices, AlmanacDevice::class);
 
     $viewer = $this->requireViewer();
 
@@ -137,4 +142,30 @@ final class AlmanacDeviceSearchEngine
     return $result;
   }
 
+  protected function getNewUserBody() {
+    $see_network = id(new PHUIButtonView())
+      ->setTag('a')
+      ->setText(pht('See Networks'))
+      ->setHref('/almanac/network/');
+
+    $create_button = id(new PHUIButtonView())
+      ->setTag('a')
+      ->setText(pht('Create a Device'))
+      ->setHref('/almanac/device/edit/')
+      ->setIcon('fa-plus')
+      ->setColor(PHUIButtonView::GREEN);
+
+    $app_name = pht('Devices');
+    $view = id(new PHUIBigInfoView())
+      ->setIcon('fa-server')
+      ->setTitle(pht('Welcome to %s', $app_name))
+      ->setDescription(
+        pht(
+          'Use Almanac devices to catalogue your build hosts '.
+          'and their SSH ports your network, and more.'))
+      ->addAction($see_network)
+      ->addAction($create_button);
+
+      return $view;
+  }
 }

@@ -75,13 +75,26 @@ final class PhabricatorConfigSettingsListController
 
   private function newConfigOptionView(
     PhabricatorConfigOption $option,
-    PhabricatorConfigEntry $stored_value = null) {
+    ?PhabricatorConfigEntry $stored_value = null) {
 
     $summary = $option->getSummary();
+
+    $stack = PhabricatorEnv::getConfigSourceStack();
+    $stack = $stack->getStack();
+    $key = $option->getKey();
+    $byline = null;
+    foreach ($stack as $source) {
+      $value = $source->getKeys(array($key));
+      if ($value) {
+        $byline = $source->getName();
+        break;
+      }
+    }
 
     $item = id(new PHUIObjectItemView())
       ->setHeader($option->getKey())
       ->setClickable(true)
+      ->addByline($byline)
       ->setHref('/config/edit/'.$option->getKey().'/')
       ->addAttribute($summary);
 

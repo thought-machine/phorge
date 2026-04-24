@@ -437,7 +437,7 @@ final class DivinerAtomController extends DivinerController {
     $tasks = $symbol->getAtom()->getDocblockMetaValue('task');
 
     if (!is_array($tasks)) {
-      if (strlen($tasks)) {
+      if (phutil_nonempty_string($tasks)) {
         $tasks = array($tasks);
       } else {
         $tasks = array();
@@ -446,7 +446,11 @@ final class DivinerAtomController extends DivinerController {
 
     if ($tasks) {
       foreach ($tasks as $task) {
-        list($name, $title) = explode(' ', $task, 2);
+        if (strpos($task, ' ') !== false) {
+          list($name, $title) = explode(' ', $task, 2);
+        } else {
+          list($name, $title) = array($task, '');
+        }
         $name = trim($name);
         $title = trim($title);
 
@@ -565,8 +569,11 @@ final class DivinerAtomController extends DivinerController {
       $out);
   }
 
+  /**
+   * @param array<DivinerLiveSymbol> $symbols
+   */
   private function buildParametersAndReturn(array $symbols) {
-    assert_instances_of($symbols, 'DivinerLiveSymbol');
+    assert_instances_of($symbols, DivinerLiveSymbol::class);
 
     $symbols = array_reverse($symbols);
     $out = array();

@@ -8,7 +8,7 @@ final class DifferentialDiffSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorDifferentialApplication';
+    return PhabricatorDifferentialApplication::class;
   }
 
   public function newQuery() {
@@ -62,11 +62,16 @@ final class DifferentialDiffSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<DifferentialDiff> $revisions
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $revisions,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($revisions, 'DifferentialDiff');
+    assert_instances_of($revisions, DifferentialDiff::class);
 
     $viewer = $this->requireViewer();
 

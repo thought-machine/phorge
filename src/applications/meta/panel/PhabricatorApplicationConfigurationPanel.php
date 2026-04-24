@@ -27,7 +27,7 @@ abstract class PhabricatorApplicationConfigurationPanel
   /**
    * Get the URI for this application configuration panel.
    *
-   * @param string? Optional path to append.
+   * @param string $path (optional) Path to append.
    * @return string Relative URI for the panel.
    */
   public function getPanelURI($path = '') {
@@ -54,7 +54,7 @@ abstract class PhabricatorApplicationConfigurationPanel
 
   public static function loadAllPanels() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setUniqueMethod('getPanelKey')
       ->execute();
   }

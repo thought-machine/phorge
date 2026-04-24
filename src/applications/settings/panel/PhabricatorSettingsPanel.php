@@ -25,6 +25,9 @@ abstract class PhabricatorSettingsPanel extends Phobject {
     return $this;
   }
 
+  /**
+   * @return PhabricatorUser
+   */
   public function getUser() {
     return $this->user;
   }
@@ -34,6 +37,9 @@ abstract class PhabricatorSettingsPanel extends Phobject {
     return $this;
   }
 
+  /**
+   * @return PhabricatorUser
+   */
   public function getViewer() {
     return $this->viewer;
   }
@@ -48,6 +54,9 @@ abstract class PhabricatorSettingsPanel extends Phobject {
     return $this;
   }
 
+  /**
+   * @return PhabricatorController
+   */
   final public function getController() {
     return $this->controller;
   }
@@ -57,6 +66,9 @@ abstract class PhabricatorSettingsPanel extends Phobject {
     return $this;
   }
 
+  /**
+   * @return AphrontSideNavFilterView
+   */
   final public function getNavigation() {
     return $this->navigation;
   }
@@ -66,13 +78,16 @@ abstract class PhabricatorSettingsPanel extends Phobject {
     return $this;
   }
 
+  /**
+   * @return PhabricatorUserPreferences
+   */
   public function getPreferences() {
     return $this->preferences;
   }
 
   final public static function getAllPanels() {
     $panels = id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setUniqueMethod('getPanelKey')
       ->execute();
     return msortv($panels, 'getPanelOrderVector');
@@ -144,7 +159,7 @@ abstract class PhabricatorSettingsPanel extends Phobject {
   /**
    * Return a panel group key constant for this panel.
    *
-   * @return const Panel group key.
+   * @return string Panel group key.
    * @task config
    */
   abstract public function getPanelGroupKey();
@@ -222,9 +237,9 @@ abstract class PhabricatorSettingsPanel extends Phobject {
    * Generally, render your settings panel by returning a form, then return
    * a redirect when the user saves settings.
    *
-   * @param   AphrontRequest  Incoming request.
-   * @return  wild            Response to request, either as an
-   *                          @{class:AphrontResponse} or something which can
+   * @param   AphrontRequest  $request Incoming request.
+   * @return  AphrontResponse|AphrontView|array Response to request, either as
+   *                          an @{class:AphrontResponse} or something which can
    *                          be composed into a @{class:AphrontView}.
    * @task panel
    */
@@ -234,7 +249,7 @@ abstract class PhabricatorSettingsPanel extends Phobject {
   /**
    * Get the URI for this panel.
    *
-   * @param string? Optional path to append.
+   * @param string $path (optional) Path to append.
    * @return string Relative URI for the panel.
    * @task panel
    */

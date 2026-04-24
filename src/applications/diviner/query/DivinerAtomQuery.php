@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<DivinerLiveSymbol>
+ */
 final class DivinerAtomQuery extends PhabricatorCursorPagedPolicyAwareQuery {
 
   private $ids;
@@ -93,8 +96,8 @@ final class DivinerAtomQuery extends PhabricatorCursorPagedPolicyAwareQuery {
    * have been generated incorrectly by accident. In these cases, we can
    * restore the original data.
    *
-   * @param bool
-   * @return this
+   * @param bool $ghosts
+   * @return $this
    */
   public function withGhosts($ghosts) {
     $this->isGhost = $ghosts;
@@ -136,8 +139,11 @@ final class DivinerAtomQuery extends PhabricatorCursorPagedPolicyAwareQuery {
     return $table->loadAllFromArray($data);
   }
 
+  /**
+   * @param array<DivinerLiveSymbol> $atoms
+   */
   protected function willFilterPage(array $atoms) {
-    assert_instances_of($atoms, 'DivinerLiveSymbol');
+    assert_instances_of($atoms, DivinerLiveSymbol::class);
 
     $books = array_unique(mpull($atoms, 'getBookPHID'));
 
@@ -288,7 +294,7 @@ final class DivinerAtomQuery extends PhabricatorCursorPagedPolicyAwareQuery {
 
         if (!$repository) {
           $this->didRejectResult($atom);
-          unset($atom[$key]);
+          unset($atoms[$key]);
           continue;
         }
 
@@ -437,13 +443,14 @@ final class DivinerAtomQuery extends PhabricatorCursorPagedPolicyAwareQuery {
    * children. When recursing, also walk up the tree and collect children of
    * atoms they extend.
    *
-   * @param list<DivinerLiveSymbol> List of symbols to collect child hashes of.
-   * @param bool                    True to collect children of extended atoms,
-   *                                as well.
-   * @return map<string, string>    Hashes of atoms' children.
+   * @param array<DivinerLiveSymbol> $symbols List of symbols to collect child
+   *                                 hashes of.
+   * @param bool                     $recurse_up True to collect children of
+   *                                 extended atoms, as well.
+   * @return map<string, string>     Hashes of atoms' children.
    */
   private function getAllChildHashes(array $symbols, $recurse_up) {
-    assert_instances_of($symbols, 'DivinerLiveSymbol');
+    assert_instances_of($symbols, DivinerLiveSymbol::class);
 
     $hashes = array();
     foreach ($symbols as $symbol) {
@@ -469,9 +476,12 @@ final class DivinerAtomQuery extends PhabricatorCursorPagedPolicyAwareQuery {
    * Attach child atoms to existing atoms. In recursive mode, also attach child
    * atoms to atoms that these atoms extend.
    *
-   * @param list<DivinerLiveSymbol> List of symbols to attach children to.
-   * @param map<string, DivinerLiveSymbol> Map of symbols, keyed by node hash.
-   * @param bool True to attach children to extended atoms, as well.
+   * @param array<DivinerLiveSymbol> $symbols List of symbols to attach
+   *   children to.
+   * @param map<string, DivinerLiveSymbol> $children Map of symbols, keyed by
+   *   node hash.
+   * @param bool $recurse_up True to attach children to extended atoms, as
+   *   well.
    * @return void
    */
   private function attachAllChildren(
@@ -479,8 +489,8 @@ final class DivinerAtomQuery extends PhabricatorCursorPagedPolicyAwareQuery {
     array $children,
     $recurse_up) {
 
-    assert_instances_of($symbols, 'DivinerLiveSymbol');
-    assert_instances_of($children, 'DivinerLiveSymbol');
+    assert_instances_of($symbols, DivinerLiveSymbol::class);
+    assert_instances_of($children, DivinerLiveSymbol::class);
 
     foreach ($symbols as $symbol) {
       $child_hashes = array();
@@ -505,7 +515,7 @@ final class DivinerAtomQuery extends PhabricatorCursorPagedPolicyAwareQuery {
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDivinerApplication';
+    return PhabricatorDivinerApplication::class;
   }
 
 }

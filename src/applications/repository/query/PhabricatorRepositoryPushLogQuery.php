@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorRepositoryPushLog>
+ */
 final class PhabricatorRepositoryPushLogQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -184,7 +187,7 @@ final class PhabricatorRepositoryPushLogQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDiffusionApplication';
+    return PhabricatorDiffusionApplication::class;
   }
 
   protected function getPrimaryTableAlias() {

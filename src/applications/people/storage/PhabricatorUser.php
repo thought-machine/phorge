@@ -26,6 +26,7 @@ final class PhabricatorUser
   const SESSION_TABLE = 'phabricator_session';
   const NAMETOKEN_TABLE = 'user_nametoken';
   const MAXIMUM_USERNAME_LENGTH = 64;
+  const MAXIMUM_REALNAME_LENGTH = 256;
 
   protected $userName;
   protected $realName;
@@ -429,8 +430,8 @@ final class PhabricatorUser
   /**
    * Test if a given setting is set to a particular value.
    *
-   * @param const Setting key.
-   * @param wild Value to compare.
+   * @param string $key Setting key constant.
+   * @param mixed $value Value to compare.
    * @return bool True if the setting has the specified value.
    * @task settings
    */
@@ -477,8 +478,8 @@ final class PhabricatorUser
    *
    * This is primarily useful for unit tests.
    *
-   * @param string New timezone identifier.
-   * @return this
+   * @param string $identifier New timezone identifier.
+   * @return $this
    * @task settings
    */
   public function overrideTimezoneIdentifier($identifier) {
@@ -527,12 +528,23 @@ final class PhabricatorUser
     }
   }
 
-  public static function describeValidUsername() {
+  public static function describeValidUsername($bad_username) {
+    if (strlen($bad_username) > self::MAXIMUM_USERNAME_LENGTH) {
+      return pht(
+        'Usernames must have no more than %s characters.',
+         new PhutilNumber(self::MAXIMUM_USERNAME_LENGTH));
+    }
+    if (strpos($bad_username, ' ') !== false) {
+      return pht('Usernames cannot contain spaces. Please replace them '.
+      'with underscores, hyphens, periods, or some other way of separating '.
+      'words.');
+    }
+    if (substr($bad_username, -1) === '.') {
+      return pht('Usernames cannot end with a period.');
+    }
     return pht(
-      'Usernames must contain only numbers, letters, period, underscore, and '.
-      'hyphen, and can not end with a period. They must have no more than %d '.
-      'characters.',
-      new PhutilNumber(self::MAXIMUM_USERNAME_LENGTH));
+      'Usernames must contain only numbers, Latin letters, period, '.
+      'underscore and hyphen.');
   }
 
   public static function validateUsername($username) {
@@ -548,6 +560,16 @@ final class PhabricatorUser
     }
 
     return (bool)preg_match('/^[a-zA-Z0-9._-]*[a-zA-Z0-9_-]\z/', $username);
+  }
+
+  public static function describeValidRealName() {
+    return pht(
+      'Real Name must have no more than %d characters.',
+      new PhutilNumber(self::MAXIMUM_REALNAME_LENGTH));
+  }
+
+  public static function validateRealName($realname) {
+    return strlen($realname) <= self::MAXIMUM_REALNAME_LENGTH;
   }
 
   public static function getDefaultProfileImageURI() {
@@ -641,6 +663,28 @@ final class PhabricatorUser
     return $this->getUsername();
   }
 
+  /**
+   * Load one user from their verified email address.
+   * @param string $address
+   * @return PhabricatorUser|null
+   */
+  public static function loadOneWithVerifiedEmailAddress($address) {
+    $email = id(new PhabricatorUserEmail())->loadOneWhere(
+      'address = %s AND isVerified = 1',
+      $address);
+    if (!$email) {
+      return null;
+    }
+    return id(new self())->loadOneWhere(
+      'phid = %s',
+      $email->getUserPHID());
+  }
+
+  /**
+   * Load one user from their potentially unverified email address.
+   * @param string $address
+   * @return PhabricatorUser|null
+   */
   public static function loadOneWithEmailAddress($address) {
     $email = id(new PhabricatorUserEmail())->loadOneWhere(
       'address = %s',
@@ -750,7 +794,7 @@ final class PhabricatorUser
   /**
    * Get cached availability, if present.
    *
-   * @return wild|null Cache data, or null if no cache is available.
+   * @return array|null Cache data, or null if no cache is available.
    * @task availability
    */
   public function getAvailabilityCache() {
@@ -770,9 +814,9 @@ final class PhabricatorUser
   /**
    * Write to the availability cache.
    *
-   * @param wild Availability cache data.
-   * @param int|null Cache TTL.
-   * @return this
+   * @param array $availability Availability cache data.
+   * @param int|null $ttl Cache TTL.
+   * @return $this
    * @task availability
    */
   public function writeAvailabilityCache(array $availability, $ttl) {
@@ -916,7 +960,7 @@ final class PhabricatorUser
    * Get a @{class:PhabricatorHandleList} which benefits from this viewer's
    * internal handle pool.
    *
-   * @param list<phid> List of PHIDs to load.
+   * @param list<string> $phids List of PHIDs to load.
    * @return PhabricatorHandleList Handle list object.
    * @task handle
    */
@@ -935,7 +979,7 @@ final class PhabricatorUser
    *
    * This benefits from the viewer's internal handle pool.
    *
-   * @param phid PHID to render a handle for.
+   * @param string $phid PHID to render a handle for.
    * @return PHUIHandleView View of the handle.
    * @task handle
    */
@@ -949,7 +993,7 @@ final class PhabricatorUser
    *
    * This benefits from the viewer's internal handle pool.
    *
-   * @param list<phid> List of PHIDs to render.
+   * @param list<string> $phids List of PHIDs to render.
    * @return PHUIHandleListView View of the handles.
    * @task handle
    */

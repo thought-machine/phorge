@@ -56,10 +56,11 @@ final class PhabricatorMarkupEngine extends Phobject {
    * Convenience method for pushing a single object through the markup
    * pipeline.
    *
-   * @param PhabricatorMarkupInterface  The object to render.
-   * @param string                      The field to render.
-   * @param PhabricatorUser             User viewing the markup.
-   * @param object                      A context object for policy checks
+   * @param PhabricatorMarkupInterface  $object The object to render.
+   * @param string                      $field The field to render.
+   * @param PhabricatorUser             $viewer User viewing the markup.
+   * @param object                      $context_object (optional) A context
+   *                                    object for policy checks.
    * @return string                     Marked up output.
    * @task markup
    */
@@ -81,9 +82,9 @@ final class PhabricatorMarkupEngine extends Phobject {
    * Queue an object for markup generation when @{method:process} is
    * called. You can retrieve the output later with @{method:getOutput}.
    *
-   * @param PhabricatorMarkupInterface  The object to render.
-   * @param string                      The field to render.
-   * @return this
+   * @param PhabricatorMarkupInterface  $object The object to render.
+   * @param string                      $field The field to render.
+   * @return $this
    * @task markup
    */
   public function addObject(PhabricatorMarkupInterface $object, $field) {
@@ -101,7 +102,7 @@ final class PhabricatorMarkupEngine extends Phobject {
    * Process objects queued with @{method:addObject}. You can then retrieve
    * the output with @{method:getOutput}.
    *
-   * @return this
+   * @return $this
    * @task markup
    */
   public function process() {
@@ -175,8 +176,8 @@ final class PhabricatorMarkupEngine extends Phobject {
    * @{method:addObject}. Before you can call this method, you must call
    * @{method:process}.
    *
-   * @param PhabricatorMarkupInterface  The object to retrieve.
-   * @param string                      The field to retrieve.
+   * @param PhabricatorMarkupInterface  $object The object to retrieve.
+   * @param string                      $field The field to retrieve.
    * @return string                     Processed output.
    * @task markup
    */
@@ -191,10 +192,11 @@ final class PhabricatorMarkupEngine extends Phobject {
   /**
    * Retrieve engine metadata for a given field.
    *
-   * @param PhabricatorMarkupInterface  The object to retrieve.
-   * @param string                      The field to retrieve.
-   * @param string                      The engine metadata field to retrieve.
-   * @param wild                        Optional default value.
+   * @param PhabricatorMarkupInterface  $object The object to retrieve.
+   * @param string                      $field The field to retrieve.
+   * @param string                      $metadata_key The engine metadata field
+   *                                    to retrieve.
+   * @param mixed                       $default (optional) Default value.
    * @task markup
    */
   public function getEngineMetadata(
@@ -316,8 +318,8 @@ final class PhabricatorMarkupEngine extends Phobject {
   /**
    * Set the viewing user. Used to implement object permissions.
    *
-   * @param PhabricatorUser The viewing user.
-   * @return this
+   * @param PhabricatorUser $viewer The viewing user.
+   * @return $this
    * @task markup
    */
   public function setViewer(PhabricatorUser $viewer) {
@@ -328,8 +330,8 @@ final class PhabricatorMarkupEngine extends Phobject {
   /**
    * Set the context object. Used to implement object permissions.
    *
-   * @param The object in which context this remarkup is used.
-   * @return this
+   * @param $object The object in which context this remarkup is used.
+   * @return $this
    * @task markup
    */
   public function setContextObject($object) {
@@ -526,7 +528,7 @@ final class PhabricatorMarkupEngine extends Phobject {
     $rules[] = new PhutilRemarkupEscapeRemarkupRule();
     $rules[] = new PhutilRemarkupEvalRule();
     $rules[] = new PhutilRemarkupMonospaceRule();
-
+    $rules[] = new PhutilRemarkupHexColorCodeRule();
 
     $rules[] = new PhutilRemarkupDocumentLinkRule();
     $rules[] = new PhabricatorNavigationRemarkupRule();
@@ -670,7 +672,7 @@ final class PhabricatorMarkupEngine extends Phobject {
    *
    * TODO: We could do a better job of this.
    *
-   * @param string  Remarkup corpus to summarize.
+   * @param string $corpus Remarkup corpus to summarize.
    * @return string Summarized corpus.
    */
   public static function summarize($corpus) {
@@ -715,13 +717,13 @@ final class PhabricatorMarkupEngine extends Phobject {
 
   private static function loadCustomInlineRules() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass('PhabricatorRemarkupCustomInlineRule')
+      ->setAncestorClass(PhabricatorRemarkupCustomInlineRule::class)
       ->execute();
   }
 
   private static function loadCustomBlockRules() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass('PhabricatorRemarkupCustomBlockRule')
+      ->setAncestorClass(PhabricatorRemarkupCustomBlockRule::class)
       ->execute();
   }
 

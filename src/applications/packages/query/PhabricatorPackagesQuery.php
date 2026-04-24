@@ -1,10 +1,14 @@
 <?php
 
+/**
+ * @template R of PhabricatorPolicyInterface
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<R>
+ */
 abstract class PhabricatorPackagesQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorPackagesApplication';
+    return PhabricatorPackagesApplication::class;
   }
 
   protected function buildFullKeyClauseParts(

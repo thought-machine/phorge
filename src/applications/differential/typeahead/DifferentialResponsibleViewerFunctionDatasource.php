@@ -12,7 +12,7 @@ final class DifferentialResponsibleViewerFunctionDatasource
   }
 
   public function getDatasourceApplicationClass() {
-    return 'PhabricatorPeopleApplication';
+    return PhabricatorPeopleApplication::class;
   }
 
   public function getDatasourceFunctions() {
@@ -28,8 +28,12 @@ final class DifferentialResponsibleViewerFunctionDatasource
     );
   }
 
+  protected function isFunctionWithLoginRequired($function) {
+    return true;
+  }
+
   public function loadResults() {
-    if ($this->getViewer()->getPHID()) {
+    if ($this->getViewer()->isLoggedIn()) {
       $results = array($this->renderViewerFunctionToken());
     } else {
       $results = array();
@@ -39,7 +43,7 @@ final class DifferentialResponsibleViewerFunctionDatasource
   }
 
   protected function canEvaluateFunction($function) {
-    if (!$this->getViewer()->getPHID()) {
+    if (!$this->getViewer()->isLoggedIn()) {
       return false;
     }
 

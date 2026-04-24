@@ -116,6 +116,9 @@ final class PhabricatorDashboardPanelRenderingEngine extends Phobject {
     return $this->panelPHID;
   }
 
+  /**
+   * @return PHUIObjectBoxView
+   */
   public function renderPanel() {
     $panel = $this->getPanel();
 
@@ -240,6 +243,9 @@ final class PhabricatorDashboardPanelRenderingEngine extends Phobject {
       $header);
   }
 
+  /**
+   * @return PHUIObjectBoxView
+   */
   private function renderPanelDiv(
     $content,
     $header = null,
@@ -409,6 +415,7 @@ final class PhabricatorDashboardPanelRenderingEngine extends Phobject {
     $action_menu = id(new PHUIButtonView())
       ->setTag('a')
       ->setIcon('fa-cog')
+      ->setHref('#')
       ->setText(pht('Manage Panel'))
       ->setDropdownMenu($dropdown_menu);
 
@@ -427,7 +434,7 @@ final class PhabricatorDashboardPanelRenderingEngine extends Phobject {
    * panel. Generally, all of this stuff is ridiculous and we just want to
    * shut it down.
    *
-   * @param PhabricatorDashboardPanel Panel being rendered.
+   * @param PhabricatorDashboardPanel $panel Panel being rendered.
    * @return void
    */
   private function detectRenderingCycle(PhabricatorDashboardPanel $panel) {

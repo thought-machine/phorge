@@ -28,13 +28,10 @@
 
 .phui-badge-card-container {
   transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
 
   transition: transform 0.5s;
-  -webkit-transition: -webkit-transform 0.5s;
 
   transform-origin: right center;
-  -webkit-transform-origin: right center;
 
   width: 100%;
   height: 100%;
@@ -55,7 +52,6 @@
 
 .card-flipped .phui-badge-card-container {
   transform: translateX( -100% ) rotateY( -180deg );
-  -webkit-transform: translateX( -100% ) rotateY( -180deg );
 }
 
 .phui-badge-card-front,
@@ -68,14 +64,12 @@
 
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  -moz-backface-visibility: hidden;
 }
 
 
 /* Firefox Fix */
 .phui-badge-card-front {
   transform: rotateY(0deg);
-  -webkit-trasform: rotateY(0deg);
 }
 
 .phui-badge-front-view,
@@ -90,7 +84,7 @@
 }
 
 .phui-badge-illustration {
-  background-color: #fff;
+  background-color: {$page.content};
   box-shadow: inset 0 -1px 1px 0 rgba({$alphablack},.1);
   text-align: center;
   height: 100px;
@@ -134,7 +128,6 @@
 
 .phui-badge-card-back {
   transform: rotateY( 180deg );
-  -webkit-transform: rotateY( 180deg );
 }
 
 /** Quality Levels ***********************************************************/
@@ -185,7 +178,7 @@
 }
 
 .phui-badge-mini .phui-icon-view {
-  color: #fff;
+  color: {$page.content};
   font-size: 12px;
   margin: 0;
 }

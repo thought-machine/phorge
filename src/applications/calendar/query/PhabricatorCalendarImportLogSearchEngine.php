@@ -8,7 +8,7 @@ final class PhabricatorCalendarImportLogSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorCalendarApplication';
+    return PhabricatorCalendarApplication::class;
   }
 
   public function canUseInPanelContext() {
@@ -62,12 +62,17 @@ final class PhabricatorCalendarImportLogSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<PhabricatorCalendarImportLog> $logs
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $logs,
     PhabricatorSavedQuery $query,
     array $handles) {
 
-    assert_instances_of($logs, 'PhabricatorCalendarImportLog');
+    assert_instances_of($logs, PhabricatorCalendarImportLog::class);
     $viewer = $this->requireViewer();
 
     $view = id(new PhabricatorCalendarImportLogView())

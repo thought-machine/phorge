@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorFileChunk>
+ */
 final class PhabricatorFileChunkQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -128,7 +131,7 @@ final class PhabricatorFileChunkQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorFilesApplication';
+    return PhabricatorFilesApplication::class;
   }
 
 }

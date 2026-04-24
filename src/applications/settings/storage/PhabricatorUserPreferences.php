@@ -93,7 +93,7 @@ final class PhabricatorUserPreferences
     return $this;
   }
 
-  public function attachUser(PhabricatorUser $user = null) {
+  public function attachUser(?PhabricatorUser $user = null) {
     $this->user = $user;
     return $this;
   }
@@ -119,7 +119,7 @@ final class PhabricatorUserPreferences
   /**
    * Load or create a preferences object for the given user.
    *
-   * @param PhabricatorUser User to load or create preferences for.
+   * @param PhabricatorUser $user User to load or create preferences for.
    */
   public static function loadUserPreferences(PhabricatorUser $user) {
     return id(new PhabricatorUserPreferencesQuery())
@@ -134,7 +134,7 @@ final class PhabricatorUserPreferences
    *
    * If no global preferences exist, an empty preferences object is returned.
    *
-   * @param PhabricatorUser Viewing user.
+   * @param PhabricatorUser $viewer Viewing user.
    */
   public static function loadGlobalPreferences(PhabricatorUser $viewer) {
     $global = id(new PhabricatorUserPreferencesQuery())

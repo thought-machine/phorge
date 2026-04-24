@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PonderAnswer>
+ */
 final class PonderAnswerQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -78,7 +81,7 @@ final class PonderAnswerQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorPonderApplication';
+    return PhabricatorPonderApplication::class;
   }
 
 }

@@ -17,7 +17,7 @@ final class PhabricatorApplicationTransactionTransactionPHIDType
   }
 
   public function getPHIDTypeApplicationClass() {
-    return 'PhabricatorTransactionsApplication';
+    return PhabricatorTransactionsApplication::class;
   }
 
   protected function buildQueryForObjects(
@@ -33,7 +33,7 @@ final class PhabricatorApplicationTransactionTransactionPHIDType
     static $queries;
     if ($queries === null) {
       $objects = id(new PhutilClassMapQuery())
-        ->setAncestorClass('PhabricatorApplicationTransactionQuery')
+        ->setAncestorClass(PhabricatorApplicationTransactionQuery::class)
         ->execute();
 
       $queries = array();

@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorPolicy>
+ */
 final class PhabricatorPolicyQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -286,7 +289,7 @@ final class PhabricatorPolicyQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorPolicyApplication';
+    return PhabricatorPolicyApplication::class;
   }
 
   public static function isSpecialPolicy($identifier) {
@@ -351,7 +354,7 @@ final class PhabricatorPolicyQuery
 
   public static function getObjectPolicyRules($object) {
     $rules = id(new PhutilClassMapQuery())
-      ->setAncestorClass('PhabricatorPolicyRule')
+      ->setAncestorClass(PhabricatorPolicyRule::class)
       ->execute();
 
     $results = array();

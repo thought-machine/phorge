@@ -13,7 +13,7 @@ final class PhrictionDocumentPHIDType extends PhabricatorPHIDType {
   }
 
   public function getPHIDTypeApplicationClass() {
-    return 'PhabricatorPhrictionApplication';
+    return PhabricatorPhrictionApplication::class;
   }
 
   protected function buildQueryForObjects(
@@ -46,5 +46,32 @@ final class PhrictionDocumentPHIDType extends PhabricatorPHIDType {
       }
     }
   }
+
+  /**
+   * Check whether a named object is of this PHID type
+   * @param string $name Object name
+   * @return bool True if the named object is of this PHID type
+   */
+  public function canLoadNamedObject($name) {
+    return preg_match('/.*\/$/', $name);
+  }
+
+  public function loadNamedObjects(
+    PhabricatorObjectQuery $query,
+    array $names) {
+      $objects = id(new PhrictionDocumentQuery())
+        ->setViewer($query->getViewer())
+        ->withSlugs($names)
+        ->execute();
+
+      $results = array();
+      foreach ($objects as $id => $object) {
+        foreach ($names as $name) {
+          $results[$name] = $object;
+        }
+      }
+
+      return $results;
+    }
 
 }

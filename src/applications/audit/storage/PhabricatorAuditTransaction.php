@@ -21,7 +21,7 @@ final class PhabricatorAuditTransaction
   }
 
   public function getBaseTransactionClass() {
-    return 'DiffusionCommitTransactionType';
+    return DiffusionCommitTransactionType::class;
   }
 
   public function getApplicationTransactionType() {
@@ -148,11 +148,10 @@ final class PhabricatorAuditTransaction
           case PhabricatorAuditActionConstants::CONCERN:
             return 'fa-exclamation-circle';
           case PhabricatorAuditActionConstants::ACCEPT:
+          case PhabricatorAuditActionConstants::CLOSE:
             return 'fa-check';
           case PhabricatorAuditActionConstants::RESIGN:
             return 'fa-plane';
-          case PhabricatorAuditActionConstants::CLOSE:
-            return 'fa-check';
         }
     }
 
@@ -427,8 +426,13 @@ final class PhabricatorAuditTransaction
   public function getBodyForFeed(PhabricatorFeedStory $story) {
     switch ($this->getTransactionType()) {
       case self::TYPE_COMMIT:
-        $data = $this->getNewValue();
-        return $story->renderSummary($data['summary']);
+        // At the moment commits have the very same title,
+        // and the very same body in web feeds.
+        // Maybe better to just show one of them.
+        // https://we.phorge.it/T15489
+        // $data = $this->getNewValue();
+        // return $story->renderSummary($data['summary']);
+        return null;
     }
     return parent::getBodyForFeed($story);
   }
@@ -465,6 +469,7 @@ final class PhabricatorAuditTransaction
         $tags[] = self::MAILTAG_ACTION_RESIGN;
         break;
       case DiffusionCommitAuditorsTransaction::TRANSACTIONTYPE:
+      case PhabricatorAuditActionConstants::ADD_AUDITORS:
         $tags[] = self::MAILTAG_ADD_AUDITORS;
         break;
       case PhabricatorAuditActionConstants::ACTION:
@@ -482,9 +487,6 @@ final class PhabricatorAuditTransaction
             $tags[] = self::MAILTAG_ACTION_CLOSE;
             break;
         }
-        break;
-      case PhabricatorAuditActionConstants::ADD_AUDITORS:
-        $tags[] = self::MAILTAG_ADD_AUDITORS;
         break;
       case PhabricatorAuditActionConstants::ADD_CCS:
         $tags[] = self::MAILTAG_ADD_CCS;

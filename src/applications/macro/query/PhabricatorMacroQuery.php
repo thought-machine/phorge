@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorFileImageMacro>
+ */
 final class PhabricatorMacroQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -230,7 +233,7 @@ final class PhabricatorMacroQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorMacroApplication';
+    return PhabricatorMacroApplication::class;
   }
 
   public function getOrderableColumns() {

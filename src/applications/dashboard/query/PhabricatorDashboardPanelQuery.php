@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorDashboardPanel>
+ */
 final class PhabricatorDashboardPanelQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -95,7 +98,7 @@ final class PhabricatorDashboardPanelQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDashboardApplication';
+    return PhabricatorDashboardApplication::class;
   }
 
   protected function getPrimaryTableAlias() {

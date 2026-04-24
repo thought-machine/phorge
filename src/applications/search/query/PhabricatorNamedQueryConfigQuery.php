@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorNamedQueryConfig>
+ */
 final class PhabricatorNamedQueryConfigQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -54,7 +57,7 @@ final class PhabricatorNamedQueryConfigQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorSearchApplication';
+    return PhabricatorSearchApplication::class;
   }
 
 }

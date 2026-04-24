@@ -41,7 +41,7 @@ final class DiffusionRepositoryEditEngine
   }
 
   public function getEngineApplicationClass() {
-    return 'PhabricatorDiffusionApplication';
+    return PhabricatorDiffusionApplication::class;
   }
 
   protected function newEditableObject() {
@@ -287,6 +287,9 @@ final class DiffusionRepositoryEditEngine
       id(new PhabricatorTextEditField())
         ->setKey('callsign')
         ->setLabel(pht('Callsign'))
+        ->setControlInstructions(
+          pht('Callsign is the monogram rXXXX for this repository. '.
+          'It cannot contain spaces.'))
         ->setTransactionType(
           PhabricatorRepositoryCallsignTransaction::TRANSACTIONTYPE)
         ->setDescription(pht('The repository callsign.'))
@@ -296,6 +299,9 @@ final class DiffusionRepositoryEditEngine
       id(new PhabricatorTextEditField())
         ->setKey('shortName')
         ->setLabel(pht('Short Name'))
+        ->setControlInstructions(
+          pht('Short Name is part of the URI paths for this repository. '.
+            'It cannot contain spaces.'))
         ->setTransactionType(
           PhabricatorRepositorySlugTransaction::TRANSACTIONTYPE)
         ->setDescription(pht('Short, unique repository name.'))

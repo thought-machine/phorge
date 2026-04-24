@@ -3,6 +3,8 @@
 final class ManiphestTaskResultListView extends ManiphestView {
 
   private $tasks;
+  private $handles;
+  private $customFieldLists = array();
   private $savedQuery;
   private $canBatchEdit;
   private $showBatchControls;
@@ -14,6 +16,16 @@ final class ManiphestTaskResultListView extends ManiphestView {
 
   public function setTasks(array $tasks) {
     $this->tasks = $tasks;
+    return $this;
+  }
+
+  public function setHandles(array $handles) {
+    $this->handles = $handles;
+    return $this;
+  }
+
+  public function setCustomFieldLists(array $lists) {
+    $this->customFieldLists = $lists;
     return $this;
   }
 
@@ -42,11 +54,10 @@ final class ManiphestTaskResultListView extends ManiphestView {
     $group_parameter = nonempty($query->getParameter('group'), 'priority');
     $order_parameter = nonempty($query->getParameter('order'), 'priority');
 
-    $handles = ManiphestTaskListView::loadTaskHandles($viewer, $tasks);
     $groups = $this->groupTasks(
       $tasks,
       $group_parameter,
-      $handles);
+      $this->handles);
 
     $result = array();
 
@@ -54,9 +65,10 @@ final class ManiphestTaskResultListView extends ManiphestView {
     foreach ($groups as $group => $list) {
       $task_list = new ManiphestTaskListView();
       $task_list->setShowBatchControls($this->showBatchControls);
-      $task_list->setUser($viewer);
+      $task_list->setViewer($viewer);
       $task_list->setTasks($list);
-      $task_list->setHandles($handles);
+      $task_list->setHandles($this->handles);
+      $task_list->setCustomFieldLists($this->customFieldLists);
 
       $header = id(new PHUIHeaderView())
         ->addSigil('task-group')
@@ -75,10 +87,15 @@ final class ManiphestTaskResultListView extends ManiphestView {
     );
   }
 
-
+  /**
+   * @param array<ManiphestTask> $tasks
+   * @param string $group
+   * @param array<PhabricatorObjectHandle> $handles
+   * @return array<string,array<ManiphestTask>>
+   */
   private function groupTasks(array $tasks, $group, array $handles) {
-    assert_instances_of($tasks, 'ManiphestTask');
-    assert_instances_of($handles, 'PhabricatorObjectHandle');
+    assert_instances_of($tasks, ManiphestTask::class);
+    assert_instances_of($handles, PhabricatorObjectHandle::class);
 
     $groups = $this->getTaskGrouping($tasks, $group);
 

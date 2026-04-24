@@ -26,10 +26,10 @@ final class PHUIFeedStoryExample extends PhabricatorUIExample {
     $story1 = id(new PHUIFeedStoryView())
       ->setTitle($text)
       ->setImage(celerity_get_resource_uri('/rsrc/image/people/harding.png'))
-      ->setImageHref('http://en.wikipedia.org/wiki/Warren_G._Harding')
+      ->setImageHref('https://en.wikipedia.org/wiki/Warren_G._Harding')
       ->setEpoch(1)
       ->setAppIcon('fa-star')
-      ->setUser($user);
+      ->setViewer($user);
 
     /* Text Story, useful in Blogs, Ponders, Status */
     $tokens = array(
@@ -51,10 +51,10 @@ final class PHUIFeedStoryExample extends PhabricatorUIExample {
     $story2 = id(new PHUIFeedStoryView())
       ->setTitle($text)
       ->setImage(celerity_get_resource_uri('/rsrc/image/people/lincoln.png'))
-      ->setImageHref('http://en.wikipedia.org/wiki/Abraham_Lincoln')
+      ->setImageHref('https://en.wikipedia.org/wiki/Abraham_Lincoln')
       ->setEpoch(strtotime('November 19, 1863'))
       ->setAppIcon('fa-star')
-      ->setUser($user)
+      ->setViewer($user)
       ->setTokenBar($tokenview)
       ->setPontification(
         'Four score and seven years ago our fathers brought '.
@@ -83,12 +83,12 @@ final class PHUIFeedStoryExample extends PhabricatorUIExample {
     $story3 = id(new PHUIFeedStoryView())
       ->setTitle($text)
       ->setImage(celerity_get_resource_uri('/rsrc/image/people/harding.png'))
-      ->setImageHref('http://en.wikipedia.org/wiki/Warren_G._Harding')
+      ->setImageHref('https://en.wikipedia.org/wiki/Warren_G._Harding')
       ->appendChild($token)
       ->setEpoch(1)
       ->addAction($action1)
       ->setAppIcon('fa-trophy')
-      ->setUser($user);
+      ->setViewer($user);
 
     /* Image Story, used in Pholio, Macro */
     $text = hsprintf(
@@ -103,14 +103,14 @@ final class PHUIFeedStoryExample extends PhabricatorUIExample {
     $story4 = id(new PHUIFeedStoryView())
       ->setTitle($text)
       ->setImage(celerity_get_resource_uri('/rsrc/image/people/harding.png'))
-      ->setImageHref('http://en.wikipedia.org/wiki/Warren_G._Harding')
+      ->setImageHref('https://en.wikipedia.org/wiki/Warren_G._Harding')
       ->setEpoch(1)
       ->setAppIcon('fa-cogs')
       ->setPontification(
         'Why does inline-block add space under my spans and anchors?')
       ->addAction($action1)
       ->addAction($action2)
-      ->setUser($user);
+      ->setViewer($user);
 
     /* Text Story, useful in Blogs, Ponders, Status */
     $text = hsprintf(
@@ -119,10 +119,10 @@ final class PHUIFeedStoryExample extends PhabricatorUIExample {
     $story5 = id(new PHUIFeedStoryView())
       ->setTitle($text)
       ->setImage(celerity_get_resource_uri('/rsrc/image/people/lincoln.png'))
-      ->setImageHref('http://en.wikipedia.org/wiki/Abraham_Lincoln')
+      ->setImageHref('https://en.wikipedia.org/wiki/Abraham_Lincoln')
       ->setEpoch(strtotime('November 19, 1863'))
       ->setAppIcon('fa-rocket')
-      ->setUser($user)
+      ->setViewer($user)
       ->setPontification(
         'If we ever create a lightweight status app '.
         'this story would be how that would be displayed.');
@@ -134,10 +134,10 @@ final class PHUIFeedStoryExample extends PhabricatorUIExample {
     $story6 = id(new PHUIFeedStoryView())
       ->setTitle($text)
       ->setImage(celerity_get_resource_uri('/rsrc/image/people/harding.png'))
-      ->setImageHref('http://en.wikipedia.org/wiki/Warren_G._Harding')
+      ->setImageHref('https://en.wikipedia.org/wiki/Warren_G._Harding')
       ->setEpoch(1)
       ->setAppIcon('fa-wifi')
-      ->setUser($user);
+      ->setViewer($user);
 
 
     $head1 = id(new PHUIHeaderView())

@@ -8,7 +8,7 @@ final class HeraldTranscriptSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorHeraldApplication';
+    return PhabricatorHeraldApplication::class;
   }
 
   public function canUseInPanelContext() {
@@ -104,11 +104,16 @@ final class HeraldTranscriptSearchEngine
     return mpull($transcripts, 'getObjectPHID');
   }
 
+  /**
+   * @param array<HeraldTranscript> $transcripts
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $transcripts,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($transcripts, 'HeraldTranscript');
+    assert_instances_of($transcripts, HeraldTranscript::class);
 
     $viewer = $this->requireViewer();
 

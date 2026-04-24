@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhluxVariable>
+ */
 final class PhluxVariableQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -89,7 +92,7 @@ final class PhluxVariableQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorPhluxApplication';
+    return PhabricatorPhluxApplication::class;
   }
 
 }

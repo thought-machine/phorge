@@ -85,8 +85,11 @@ final class DifferentialChangeset
     return $this->getAddLines() + $this->getDelLines();
   }
 
+  /**
+   * @param array<DifferentialHunk> $hunks
+   */
   public function attachHunks(array $hunks) {
-    assert_instances_of($hunks, 'DifferentialHunk');
+    assert_instances_of($hunks, DifferentialHunk::class);
     $this->hunks = $hunks;
     return $this;
   }
@@ -213,7 +216,7 @@ final class DifferentialChangeset
    * Test if this changeset and some other changeset put the affected file in
    * the same state.
    *
-   * @param DifferentialChangeset Changeset to compare against.
+   * @param DifferentialChangeset $other Changeset to compare against.
    * @return bool True if the two changesets have the same effect.
    */
   public function hasSameEffectAs(DifferentialChangeset $other) {
@@ -290,8 +293,8 @@ final class DifferentialChangeset
   }
 
   public function getAbsoluteRepositoryPath(
-    PhabricatorRepository $repository = null,
-    DifferentialDiff $diff = null) {
+    ?PhabricatorRepository $repository = null,
+    ?DifferentialDiff $diff = null) {
 
     $base = '/';
     if ($diff && $diff->getSourceControlPath()) {
@@ -550,7 +553,7 @@ final class DifferentialChangeset
   }
 
   public function newComparisonChangeset(
-    DifferentialChangeset $against = null) {
+    ?DifferentialChangeset $against = null) {
 
     $left = $this;
     $right = $against;
@@ -587,7 +590,7 @@ final class DifferentialChangeset
       $right_data);
 
     $comparison = id(new self())
-      ->makeEphemeral(true)
+      ->makeEphemeral()
       ->attachDiff($left->getDiff())
       ->setOldFile($left->getFilename())
       ->setFilename($file_name);

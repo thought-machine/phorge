@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorFile>
+ */
 final class PhabricatorFileQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -96,8 +99,9 @@ final class PhabricatorFileQuery
    * `PHID-FILE-aaaa` and all transformations of the file with PHID
    * `PHID-FILE-bbbb`.
    *
-   * @param list<dict>  List of transform specifications, described above.
-   * @return this
+   * @param array<int, array<string, mixed>> $specs List of transform
+   *                   specifications, described above.
+   * @return $this
    */
   public function withTransforms(array $specs) {
     foreach ($specs as $spec) {
@@ -540,7 +544,7 @@ final class PhabricatorFileQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorFilesApplication';
+    return PhabricatorFilesApplication::class;
   }
 
 }

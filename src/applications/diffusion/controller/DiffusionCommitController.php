@@ -624,6 +624,13 @@ final class DiffusionCommitController extends DiffusionController {
     $author_view = $commit->newCommitAuthorView($viewer);
     if ($author_view) {
       $author_date = $data->getAuthorEpoch();
+
+      // Add support to Subversion commits that only have one date,
+      // since in SVN you cannot prepare local commits to push them later.
+      if ($author_date === null) {
+        $author_date = $commit->getEpoch();
+      }
+
       $author_date = phabricator_datetime($author_date, $viewer);
 
       $provenance_list->addItem(
@@ -891,10 +898,16 @@ final class DiffusionCommitController extends DiffusionController {
     return $file->getRedirectResponse();
   }
 
+  /**
+   * @param PhabricatorRepositoryCommit $commit
+   * @param array<PhabricatorRepositoryAuditRequest> $audit_requests
+   */
   private function renderAuditStatusView(
     PhabricatorRepositoryCommit $commit,
     array $audit_requests) {
-    assert_instances_of($audit_requests, 'PhabricatorRepositoryAuditRequest');
+    assert_instances_of(
+      $audit_requests,
+      PhabricatorRepositoryAuditRequest::class);
     $viewer = $this->getViewer();
 
     $view = new PHUIStatusListView();
@@ -967,7 +980,7 @@ final class DiffusionCommitController extends DiffusionController {
       ->setDiffusionRequest($drequest);
 
     $have_owners = PhabricatorApplication::isClassInstalledForViewer(
-      'PhabricatorOwnersApplication',
+      PhabricatorOwnersApplication::class,
       $viewer);
 
     if (!$changesets) {

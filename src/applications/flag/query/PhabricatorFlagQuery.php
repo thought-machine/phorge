@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorFlag>
+ */
 final class PhabricatorFlagQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -123,7 +126,6 @@ final class PhabricatorFlagQuery
       default:
         throw new Exception(
           pht('Unknown groupBy parameter: %s', $this->groupBy));
-        break;
     }
 
     return $flags;
@@ -173,7 +175,7 @@ final class PhabricatorFlagQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorFlagsApplication';
+    return PhabricatorFlagsApplication::class;
   }
 
 }

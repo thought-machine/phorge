@@ -34,7 +34,7 @@ final class PhabricatorApplicationEditHTTPParameterHelpView
     $object = $this->getObject();
     $fields = $this->getFields();
 
-    $uri = 'https://your.install.com/application/edit/';
+    $uri = 'https://phorge.example.com/application/edit/';
 
     // Remove fields which do not expose an HTTP parameter type.
     $types = array();
@@ -67,16 +67,16 @@ browser's address bar. It will usually look something like this:
 %s
 ```
 
-However, `your.install.com` will be the domain where your copy of this software
-is installed, and `application/` will be the URI for an application. Some
-applications have multiple forms for creating objects or URIs that look a little
-different than this example, so the URI may not look exactly like this.
+However, `phorge.example.com` will be the domain where your copy of this
+software is installed, and `application/` will be the URI for an application.
+Some applications have multiple forms for creating objects or URIs that look a
+little different than this example, so the URI may not look exactly like this.
 
 To prefill the form, add properly encoded HTTP parameters to the URI. You
 should end up with something like this:
 
 ```
-%s?title=Platyplus&body=Ornithopter
+%s?title=Platypus&body=Ornithopter
 ```
 
 If the form has `title` and `body` fields of the correct types, visiting this

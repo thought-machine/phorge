@@ -102,7 +102,7 @@ final class DivinerLiveSymbol extends DivinerDAO
     return $this->assertAttached($this->repository);
   }
 
-  public function attachRepository(PhabricatorRepository $repository = null) {
+  public function attachRepository(?PhabricatorRepository $repository = null) {
     $this->repository = $repository;
     return $this;
   }
@@ -111,7 +111,7 @@ final class DivinerLiveSymbol extends DivinerDAO
     return $this->assertAttached($this->atom);
   }
 
-  public function attachAtom(DivinerLiveAtom $atom = null) {
+  public function attachAtom(?DivinerLiveAtom $atom = null) {
     if ($atom === null) {
       $this->atom = null;
     } else {
@@ -194,7 +194,7 @@ final class DivinerLiveSymbol extends DivinerDAO
   }
 
   public function attachExtends(array $extends) {
-    assert_instances_of($extends, __CLASS__);
+    assert_instances_of($extends, self::class);
     $this->extends = $extends;
     return $this;
   }
@@ -204,7 +204,7 @@ final class DivinerLiveSymbol extends DivinerDAO
   }
 
   public function attachChildren(array $children) {
-    assert_instances_of($children, __CLASS__);
+    assert_instances_of($children, self::class);
     $this->children = $children;
     return $this;
   }
@@ -247,7 +247,7 @@ final class DivinerLiveSymbol extends DivinerDAO
 
   public function getMarkupText($field) {
     if (!$this->getAtom()) {
-      return;
+      return '';
     }
 
     return $this->getAtom()->getDocblockText();

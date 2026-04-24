@@ -33,6 +33,7 @@ final class PhabricatorObjectHandle
   private $commandLineObjectName;
   private $mailStampName;
   private $capabilities = array();
+  private $userIsEnrolledInMultiFactor = false;
 
   public function setIcon($icon) {
     $this->icon = $icon;
@@ -60,11 +61,7 @@ final class PhabricatorObjectHandle
   }
 
   public function setTagColor($color) {
-    static $colors;
-    if (!$colors) {
-      $colors = array_fuse(array_keys(PHUITagView::getShadeMap()));
-    }
-
+    $colors = PHUITagView::getShadeMapCached();
     if (isset($colors[$color])) {
       $this->tagColor = $color;
     }
@@ -168,6 +165,19 @@ final class PhabricatorObjectHandle
     if ($this->name === null) {
       if ($this->getPolicyFiltered()) {
         return pht('Restricted %s', $this->getTypeName());
+      } else if ($this->getPHID() && $this->getTypeName() ===
+          PhabricatorPHIDConstants::PHID_TYPE_UNKNOWN) {
+        // Values of custom Select field conditions in Herald rules do not have
+        // a PHID (and no PHID type) as they are arbitrary text when loadPage()
+        // in PhabricatorHandleQuery calls $type = phid_get_type($phid).
+        // Thus the code lower in this class cannot pull a name to render for
+        // these non-existing PHIDs either.
+        // In this case, render their PHID (the actual Select field key value).
+        // This is always more informative than 'Unknown Object (????)' though
+        // still imperfect as it displays the key instead of the user-friendly
+        // name value defined in maniphest.custom-field-definitions.
+        // https://we.phorge.it/T15860
+        return $this->getPHID();
       } else {
         return pht('Unknown Object (%s)', $this->getTypeName());
       }
@@ -270,13 +280,34 @@ final class PhabricatorObjectHandle
     return $this->getType();
   }
 
+  /**
+   * Set whether or not the user object has multi-factor auth enabled.
+   *
+   * @param bool $has_mfa True when the user represented by the handle has
+   *  multi-factor auth enabled. Defaults to false otherwise.
+   * @return $this
+   */
+  public function setUserIsEnrolledInMultiFactor(bool $has_mfa) {
+    $this->userIsEnrolledInMultiFactor = $has_mfa;
+    return $this;
+  }
+
+  /**
+   * Get whether or not the user object has multi-factor auth enabled.
+   *
+   * @return bool True when the user represented by the handle has
+   *  multi-factor auth enabled. Defaults to false.
+   */
+  public function getUserIsEnrolledInMultiFactor(): bool {
+    return $this->userIsEnrolledInMultiFactor;
+  }
 
   /**
    * Set whether or not the underlying object is complete. See
    * @{method:isComplete} for an explanation of what it means to be complete.
    *
-   * @param bool True if the handle represents a complete object.
-   * @return this
+   * @param bool $complete True if the handle represents a complete object.
+   * @return $this
    */
   public function setComplete($complete) {
     $this->complete = $complete;

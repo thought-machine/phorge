@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorUserLog>
+ */
 final class PhabricatorPeopleLogQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -129,7 +132,7 @@ final class PhabricatorPeopleLogQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorPeopleApplication';
+    return PhabricatorPeopleApplication::class;
   }
 
 }

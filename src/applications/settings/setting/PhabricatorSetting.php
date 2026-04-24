@@ -4,7 +4,7 @@ abstract class PhabricatorSetting extends Phobject {
 
   private $viewer = false;
 
-  public function setViewer(PhabricatorUser $viewer = null) {
+  public function setViewer(?PhabricatorUser $viewer = null) {
     $this->viewer = $viewer;
     return $this;
   }
@@ -50,7 +50,7 @@ abstract class PhabricatorSetting extends Phobject {
 
   public static function getAllSettings() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setUniqueMethod('getSettingKey')
       ->execute();
   }

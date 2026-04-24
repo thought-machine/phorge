@@ -8,7 +8,7 @@ final class PhabricatorOwnersPackageSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorOwnersApplication';
+    return PhabricatorOwnersApplication::class;
   }
 
   public function newQuery() {
@@ -121,11 +121,16 @@ final class PhabricatorOwnersPackageSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<PhabricatorOwnersPackage> $packages
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $packages,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($packages, 'PhabricatorOwnersPackage');
+    assert_instances_of($packages, PhabricatorOwnersPackage::class);
 
     $viewer = $this->requireViewer();
 

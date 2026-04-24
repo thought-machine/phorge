@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorRepositoryCommit>
+ */
 final class DiffusionCommitQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -123,8 +126,11 @@ final class DiffusionCommitQuery
     return $this;
   }
 
+  /**
+   * @param array<PhabricatorUser> $users
+   */
   public function needAuditAuthority(array $users) {
-    assert_instances_of($users, 'PhabricatorUser');
+    assert_instances_of($users, PhabricatorUser::class);
     $this->needAuditAuthority = $users;
     return $this;
   }
@@ -252,7 +258,7 @@ final class DiffusionCommitQuery
         $table->getTableName());
     }
 
-    if (!$subqueries) {
+    if (!$subqueries && $empty_exception) {
       throw $empty_exception;
     }
 
@@ -439,9 +445,9 @@ final class DiffusionCommitQuery
     }
 
     if ($this->needIdentities) {
-      $identity_phids = array_merge(
+      $identity_phids = array_unique(array_merge(
         mpull($commits, 'getAuthorIdentityPHID'),
-        mpull($commits, 'getCommitterIdentityPHID'));
+        mpull($commits, 'getCommitterIdentityPHID')));
 
       $data = id(new PhabricatorRepositoryIdentityQuery())
         ->withPHIDs($identity_phids)
@@ -551,7 +557,7 @@ final class DiffusionCommitQuery
     }
 
     if ($this->ancestorsOf !== null) {
-      if (count($this->repositoryIDs) !== 1) {
+      if ($this->repositoryIDs === null || count($this->repositoryIDs) !== 1) {
         throw new PhabricatorSearchConstraintException(
           pht(
             'To search for commits which are ancestors of particular refs, '.
@@ -776,7 +782,8 @@ final class DiffusionCommitQuery
               // See T3377.
               (int)$ref['identifier']);
           } else {
-            if (strlen($ref['identifier']) < $min_qualified) {
+            if (!phutil_nonempty_string($ref['identifier']) ||
+                strlen($ref['identifier']) < $min_qualified) {
               continue;
             }
 
@@ -931,7 +938,7 @@ final class DiffusionCommitQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDiffusionApplication';
+    return PhabricatorDiffusionApplication::class;
   }
 
   public function getOrderableColumns() {

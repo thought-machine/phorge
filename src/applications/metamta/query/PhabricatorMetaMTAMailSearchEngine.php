@@ -8,7 +8,7 @@ final class PhabricatorMetaMTAMailSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorMetaMTAApplication';
+    return PhabricatorMetaMTAApplication::class;
   }
 
   public function canUseInPanelContext() {
@@ -94,12 +94,17 @@ final class PhabricatorMetaMTAMailSearchEngine
     return array_mergev($phids);
   }
 
+  /**
+   * @param array<PhabricatorMetaMTAMail> $mails
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $mails,
     PhabricatorSavedQuery $query,
     array $handles) {
 
-    assert_instances_of($mails, 'PhabricatorMetaMTAMail');
+    assert_instances_of($mails, PhabricatorMetaMTAMail::class);
     $viewer = $this->requireViewer();
     $list = new PHUIObjectItemListView();
 

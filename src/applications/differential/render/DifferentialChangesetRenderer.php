@@ -105,7 +105,7 @@ abstract class DifferentialChangesetRenderer extends Phobject {
     return $this->depthOnlyLines;
   }
 
-  public function attachOldFile(PhabricatorFile $old = null) {
+  public function attachOldFile(?PhabricatorFile $old = null) {
     $this->oldFile = $old;
     return $this;
   }
@@ -121,7 +121,7 @@ abstract class DifferentialChangesetRenderer extends Phobject {
     return (bool)$this->oldFile;
   }
 
-  public function attachNewFile(PhabricatorFile $new = null) {
+  public function attachNewFile(?PhabricatorFile $new = null) {
     $this->newFile = $new;
     return $this;
   }
@@ -177,8 +177,11 @@ abstract class DifferentialChangesetRenderer extends Phobject {
     return $this->markupEngine;
   }
 
+  /**
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   public function setHandles(array $handles) {
-    assert_instances_of($handles, 'PhabricatorObjectHandle');
+    assert_instances_of($handles, PhabricatorObjectHandle::class);
     $this->handles = $handles;
     return $this;
   }
@@ -261,20 +264,27 @@ abstract class DifferentialChangesetRenderer extends Phobject {
     return $this->documentEngineBlocks;
   }
 
+  /**
+   * @param array<PhabricatorInlineComment> $new_comments
+   */
   public function setNewComments(array $new_comments) {
     foreach ($new_comments as $line_number => $comments) {
-      assert_instances_of($comments, 'PhabricatorInlineComment');
+      assert_instances_of($comments, PhabricatorInlineComment::class);
     }
     $this->newComments = $new_comments;
     return $this;
   }
+
   protected function getNewComments() {
     return $this->newComments;
   }
 
+  /**
+   * @param array<PhabricatorInlineComment> $old_comments
+   */
   public function setOldComments(array $old_comments) {
     foreach ($old_comments as $line_number => $comments) {
-      assert_instances_of($comments, 'PhabricatorInlineComment');
+      assert_instances_of($comments, PhabricatorInlineComment::class);
     }
     $this->oldComments = $old_comments;
     return $this;
@@ -442,8 +452,8 @@ abstract class DifferentialChangesetRenderer extends Phobject {
    *      when a file is not changed.
    *    - `"none"`: Don't show the link (e.g., text not available).
    *
-   * @param   string        Message explaining why the diff is hidden.
-   * @param   string|null   Force mode, see above.
+   * @param   string        $message Message explaining why the diff is hidden.
+   * @param   string|null   $force Force mode, see above.
    * @return  string        Shield markup.
    */
   abstract public function renderShield($message, $force = 'default');

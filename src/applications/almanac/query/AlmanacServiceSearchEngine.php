@@ -8,7 +8,7 @@ final class AlmanacServiceSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorAlmanacApplication';
+    return PhabricatorAlmanacApplication::class;
   }
 
   public function newQuery() {
@@ -86,11 +86,16 @@ final class AlmanacServiceSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<AlmanacService> $services
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $services,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($services, 'AlmanacService');
+    assert_instances_of($services, AlmanacService::class);
 
     $viewer = $this->requireViewer();
 
@@ -114,5 +119,33 @@ final class AlmanacServiceSearchEngine
     $result->setNoDataString(pht('No Almanac Services found.'));
 
     return $result;
+  }
+
+  protected function getNewUserBody() {
+    $see_devices = id(new PHUIButtonView())
+      ->setTag('a')
+      ->setText(pht('See Devices'))
+      ->setHref('/almanac/device/');
+
+    $create_button = id(new PHUIButtonView())
+      ->setTag('a')
+      ->setText(pht('Create a Service'))
+      ->setHref('/almanac/service/edit/')
+      ->setIcon('fa-plus')
+      ->setColor(PHUIButtonView::GREEN);
+
+
+    $app_name = pht('Services');
+    $view = id(new PHUIBigInfoView())
+      ->setIcon('fa-plug')
+      ->setTitle(pht('Welcome to %s', $app_name))
+      ->setDescription(
+        pht(
+          'Services describe pools of devices, and '.
+          'they are available to Drydock for CI/CD, and more.'))
+      ->addAction($see_devices)
+      ->addAction($create_button);
+
+      return $view;
   }
 }

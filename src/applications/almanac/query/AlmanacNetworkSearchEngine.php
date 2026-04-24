@@ -8,7 +8,7 @@ final class AlmanacNetworkSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorAlmanacApplication';
+    return PhabricatorAlmanacApplication::class;
   }
 
   public function newQuery() {
@@ -59,11 +59,16 @@ final class AlmanacNetworkSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<AlmanacNetwork> $networks
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $networks,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($networks, 'AlmanacNetwork');
+    assert_instances_of($networks, AlmanacNetwork::class);
 
     $viewer = $this->requireViewer();
 
@@ -86,5 +91,26 @@ final class AlmanacNetworkSearchEngine
     $result->setNoDataString(pht('No Almanac Networks found.'));
 
     return $result;
+  }
+
+  protected function getNewUserBody() {
+    $create_button = id(new PHUIButtonView())
+      ->setTag('a')
+      ->setText(pht('Create a Network'))
+      ->setHref('/almanac/network/edit/')
+      ->setIcon('fa-plus')
+      ->setColor(PHUIButtonView::GREEN);
+
+    $app_name = pht('Networks');
+    $view = id(new PHUIBigInfoView())
+      ->setIcon('fa-globe')
+      ->setTitle(pht('Welcome to %s', $app_name))
+      ->setDescription(
+        pht(
+          'Use Almanac networks to catalogue private and public '.
+          'computer networks.'))
+      ->addAction($create_button);
+
+      return $view;
   }
 }

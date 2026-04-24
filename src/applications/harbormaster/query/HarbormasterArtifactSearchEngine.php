@@ -8,7 +8,7 @@ final class HarbormasterArtifactSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorHarbormasterApplication';
+    return PhabricatorHarbormasterApplication::class;
   }
 
   public function newQuery() {
@@ -67,11 +67,16 @@ final class HarbormasterArtifactSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<HarbormasterBuildArtifact> $artifacts
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $artifacts,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($artifacts, 'HarbormasterBuildArtifact');
+    assert_instances_of($artifacts, HarbormasterBuildArtifact::class);
 
     $viewer = $this->requireViewer();
 

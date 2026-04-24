@@ -13,7 +13,7 @@ final class PhabricatorRepositoryCommitPHIDType extends PhabricatorPHIDType {
   }
 
   public function getPHIDTypeApplicationClass() {
-    return 'PhabricatorDiffusionApplication';
+    return PhabricatorDiffusionApplication::class;
   }
 
   protected function buildQueryForObjects(
@@ -96,6 +96,11 @@ final class PhabricatorRepositoryCommitPHIDType extends PhabricatorPHIDType {
       '[a-f0-9]{'.$min_unqualified.',40}';
   }
 
+  /**
+   * Check whether a named object is of this PHID type
+   * @param string $name Object name
+   * @return bool True if the named object is of this PHID type
+   */
   public function canLoadNamedObject($name) {
     $pattern = self::getCommitObjectNamePattern();
     return preg_match('(^'.$pattern.'$)', $name);

@@ -13,7 +13,7 @@ final class PonderQuestionPHIDType extends PhabricatorPHIDType {
   }
 
   public function getPHIDTypeApplicationClass() {
-    return 'PhabricatorPonderApplication';
+    return PhabricatorPonderApplication::class;
   }
 
   protected function buildQueryForObjects(
@@ -40,6 +40,11 @@ final class PonderQuestionPHIDType extends PhabricatorPHIDType {
     }
   }
 
+  /**
+   * Check whether a named object is of this PHID type
+   * @param string $name Object name
+   * @return bool True if the named object is of this PHID type
+   */
   public function canLoadNamedObject($name) {
     return preg_match('/^Q\d*[1-9]\d*$/i', $name);
   }

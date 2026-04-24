@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<LegalpadDocument>
+ */
 final class LegalpadDocumentQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -259,7 +262,7 @@ final class LegalpadDocumentQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorLegalpadApplication';
+    return PhabricatorLegalpadApplication::class;
   }
 
   protected function getPrimaryTableAlias() {

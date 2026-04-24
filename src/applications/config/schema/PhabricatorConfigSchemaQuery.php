@@ -230,7 +230,7 @@ final class PhabricatorConfigSchemaQuery extends Phobject {
     $info = $this->getAPI($ref)->getCharsetInfo();
 
     $specs = id(new PhutilClassMapQuery())
-      ->setAncestorClass('PhabricatorConfigSchemaSpec')
+      ->setAncestorClass(PhabricatorConfigSchemaSpec::class)
       ->execute();
 
     $server_schema = id(new PhabricatorConfigServerSchema())
@@ -349,8 +349,8 @@ final class PhabricatorConfigSchemaQuery extends Phobject {
   }
 
   private function compareSchemata(
-    PhabricatorConfigStorageSchema $expect = null,
-    PhabricatorConfigStorageSchema $actual = null) {
+    ?PhabricatorConfigStorageSchema $expect = null,
+    ?PhabricatorConfigStorageSchema $actual = null) {
 
     $expect_is_key = ($expect instanceof PhabricatorConfigKeySchema);
     $actual_is_key = ($actual instanceof PhabricatorConfigKeySchema);

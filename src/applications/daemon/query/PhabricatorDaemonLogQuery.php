@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorDaemonLog>
+ */
 final class PhabricatorDaemonLogQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -189,7 +192,7 @@ final class PhabricatorDaemonLogQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDaemonsApplication';
+    return PhabricatorDaemonsApplication::class;
   }
 
 }

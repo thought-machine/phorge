@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorCalendarEventInvitee>
+ */
 final class PhabricatorCalendarEventInviteeQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -93,7 +96,7 @@ final class PhabricatorCalendarEventInviteeQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorCalendarApplication';
+    return PhabricatorCalendarApplication::class;
   }
 
 }

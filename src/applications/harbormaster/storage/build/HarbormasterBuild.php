@@ -90,7 +90,7 @@ final class HarbormasterBuild extends HarbormasterDAO
   }
 
   public function attachBuildPlan(
-    HarbormasterBuildPlan $build_plan = null) {
+    ?HarbormasterBuildPlan $build_plan = null) {
     $this->buildPlan = $build_plan;
     return $this;
   }
@@ -160,7 +160,7 @@ final class HarbormasterBuild extends HarbormasterDAO
 
   public static function getAvailableBuildVariables() {
     $objects = id(new PhutilClassMapQuery())
-      ->setAncestorClass('HarbormasterBuildableInterface')
+      ->setAncestorClass(HarbormasterBuildableInterface::class)
       ->execute();
 
     $variables = array();
@@ -309,8 +309,11 @@ final class HarbormasterBuild extends HarbormasterDAO
     return array($pending_status, $apply_messages);
   }
 
+  /**
+   * @param array<HarbormasterBuildMessage> $messages
+   */
   public function attachUnprocessedMessages(array $messages) {
-    assert_instances_of($messages, 'HarbormasterBuildMessage');
+    assert_instances_of($messages, HarbormasterBuildMessage::class);
     $this->unprocessedMessages = $messages;
     return $this;
   }

@@ -6,6 +6,8 @@ abstract class NuanceItemType
   private $viewer;
   private $controller;
 
+  abstract protected function newWorkCommands(NuanceItem $item);
+
   public function setViewer(PhabricatorUser $viewer) {
     $this->viewer = $viewer;
     return $this;
@@ -77,7 +79,7 @@ abstract class NuanceItemType
 
   final public static function getAllItemTypes() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setUniqueMethod('getItemTypeConstant')
       ->execute();
   }

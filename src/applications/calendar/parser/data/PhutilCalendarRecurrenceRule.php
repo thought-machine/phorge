@@ -245,7 +245,7 @@ final class PhutilCalendarRecurrenceRule
         case 'INTERVAL':
         case 'WKST':
         case 'COUNT':
-        case 'UNTIL';
+        case 'UNTIL':
           break;
         default:
           $value = explode(',', $value);
@@ -575,7 +575,6 @@ final class PhutilCalendarRecurrenceRule
             pht(
               'RRULE specifies BYMONTHDAY with FREQ set to WEEKLY, which '.
               'violates RFC5545.'));
-          break;
         default:
           break;
       }

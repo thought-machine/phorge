@@ -222,7 +222,6 @@ final class PhamePost extends PhameDAO
         } else {
           return PhabricatorPolicies::POLICY_NOONE;
         }
-        break;
       case PhabricatorPolicyCapability::CAN_EDIT:
         if ($this->getBlog()) {
           return $this->getBlog()->getEditPolicy();
@@ -268,6 +267,7 @@ final class PhamePost extends PhameDAO
       case self::MARKUP_FIELD_BODY:
         return $this->getBody();
     }
+    return '';
   }
 
   public function didMarkupText(

@@ -7,7 +7,7 @@ final class DivinerAtomSearchEngine extends PhabricatorApplicationSearchEngine {
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorDivinerApplication';
+    return PhabricatorDivinerApplication::class;
   }
 
   public function canUseInPanelContext() {
@@ -123,12 +123,17 @@ final class DivinerAtomSearchEngine extends PhabricatorApplicationSearchEngine {
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<DivinerLiveSymbol> $symbols
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $symbols,
     PhabricatorSavedQuery $query,
     array $handles) {
 
-    assert_instances_of($symbols, 'DivinerLiveSymbol');
+    assert_instances_of($symbols, DivinerLiveSymbol::class);
 
     $viewer = $this->requireViewer();
 

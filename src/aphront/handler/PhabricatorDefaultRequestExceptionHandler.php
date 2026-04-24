@@ -42,7 +42,15 @@ final class PhabricatorDefaultRequestExceptionHandler
     }
 
     $class = get_class($throwable);
-    $message = $throwable->getMessage();
+
+    if (PhabricatorEnv::getEnvConfig('phabricator.developer-mode')) {
+      // Include last location in error message
+      $message = '"'.$throwable->getMessage().'" at '.
+        PhutilErrorHandler::adjustFilePath($throwable->getFile()).
+        ':'.$throwable->getLine();
+    } else {
+      $message = $throwable->getMessage();
+    }
 
     if ($throwable instanceof AphrontSchemaQueryException) {
       $message .= "\n\n".pht(
@@ -53,7 +61,7 @@ final class PhabricatorDefaultRequestExceptionHandler
 
     if (PhabricatorEnv::getEnvConfig('phabricator.developer-mode')) {
       $trace = id(new AphrontStackTraceView())
-        ->setUser($viewer)
+        ->setViewer($viewer)
         ->setTrace($throwable->getTrace());
     } else {
       $trace = null;
@@ -71,7 +79,7 @@ final class PhabricatorDefaultRequestExceptionHandler
     $dialog
       ->setTitle(pht('Unhandled Exception ("%s")', $class))
       ->setClass('aphront-exception-dialog')
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->appendChild($content);
 
     if ($request->isAjax()) {

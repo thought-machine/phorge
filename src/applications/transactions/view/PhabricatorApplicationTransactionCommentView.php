@@ -10,16 +10,16 @@ final class PhabricatorApplicationTransactionCommentView
   private $previewTimelineID;
   private $previewToggleID;
   private $formID;
-  private $statusID;
   private $commentID;
   private $draft;
   private $requestURI;
   private $showPreview = true;
-  private $objectPHID;
+  private $object;
   private $headerText;
   private $noPermission;
   private $fullWidth;
   private $infoView;
+  private $editEngine;
   private $editEngineLock;
   private $noBorder;
   private $requiresMFA;
@@ -30,13 +30,19 @@ final class PhabricatorApplicationTransactionCommentView
   private $commentActionGroups = array();
   private $transactionTimeline;
 
-  public function setObjectPHID($object_phid) {
-    $this->objectPHID = $object_phid;
+  /**
+   * Set object in which this comment textarea field is displayed
+   */
+  public function setObject($object) {
+    $this->object = $object;
     return $this;
   }
 
-  public function getObjectPHID() {
-    return $this->objectPHID;
+  /**
+   * Get object in which this comment textarea is displayed
+   */
+  public function getObject() {
+    return $this->object;
   }
 
   public function setShowPreview($show_preview) {
@@ -121,8 +127,13 @@ final class PhabricatorApplicationTransactionCommentView
     return $this->infoView;
   }
 
+  /**
+   * @param array<PhabricatorEditEngineCommentAction> $comment_actions
+   */
   public function setCommentActions(array $comment_actions) {
-    assert_instances_of($comment_actions, 'PhabricatorEditEngineCommentAction');
+    assert_instances_of(
+      $comment_actions,
+      PhabricatorEditEngineCommentAction::class);
     $this->commentActions = $comment_actions;
     return $this;
   }
@@ -131,8 +142,13 @@ final class PhabricatorApplicationTransactionCommentView
     return $this->commentActions;
   }
 
+  /**
+   * @param array<PhabricatorEditEngineCommentActionGroup> $groups
+   */
   public function setCommentActionGroups(array $groups) {
-    assert_instances_of($groups, 'PhabricatorEditEngineCommentActionGroup');
+    assert_instances_of(
+      $groups,
+      PhabricatorEditEngineCommentActionGroup::class);
     $this->commentActionGroups = $groups;
     return $this;
   }
@@ -148,6 +164,15 @@ final class PhabricatorApplicationTransactionCommentView
 
   public function getNoPermission() {
     return $this->noPermission;
+  }
+
+  public function setEditEngine(PhabricatorEditEngine $edit_engine) {
+    $this->editEngine = $edit_engine;
+    return $this;
+  }
+
+  public function getEditEngine() {
+    return $this->editEngine;
   }
 
   public function setEditEngineLock(PhabricatorEditEngineLock $lock) {
@@ -280,7 +305,7 @@ final class PhabricatorApplicationTransactionCommentView
       ->appendChild($anchor)
       ->appendChild(
         phutil_tag(
-          'h3',
+          'h2',
           array(
             'class' => 'aural-only',
           ),
@@ -295,13 +320,24 @@ final class PhabricatorApplicationTransactionCommentView
 
   private function renderCommentPanel() {
     $viewer = $this->getViewer();
+    $engine = $this->getEditEngine();
+    // In a few rare cases PhabricatorApplicationTransactionCommentView gets
+    // initiated in a View or Controller class. Don't crash in that case.
+    if ($engine) {
+      $placeholder_text = $engine
+        ->getCommentFieldPlaceholderText($this->getObject());
+    } else {
+      $placeholder_text = '';
+    }
 
     $remarkup_control = id(new PhabricatorRemarkupControl())
       ->setViewer($viewer)
       ->setID($this->getCommentID())
       ->addClass('phui-comment-fullwidth-control')
       ->addClass('phui-comment-textarea-control')
+      ->setSurroundingObject($this->getObject())
       ->setCanPin(true)
+      ->setPlaceholder($placeholder_text)
       ->setName('comment');
 
     $draft_comment = '';
@@ -331,7 +367,7 @@ final class PhabricatorApplicationTransactionCommentView
     }
     $remarkup_control->setRemarkupMetadata($draft_metadata);
 
-    if (!$this->getObjectPHID()) {
+    if (!$this->getObject()->getPHID()) {
       throw new PhutilInvalidStateException('setObjectPHID', 'render');
     }
 
@@ -339,13 +375,13 @@ final class PhabricatorApplicationTransactionCommentView
     $version_value = $this->getCurrentVersion();
 
     $form = id(new AphrontFormView())
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->addSigil('transaction-append')
       ->setWorkflow(true)
       ->setFullWidth($this->fullWidth)
       ->setMetadata(
         array(
-          'objectPHID' => $this->getObjectPHID(),
+          'objectPHID' => $this->getObject()->getPHID(),
         ))
       ->setAction($this->getAction())
       ->setID($this->getFormID())
@@ -426,6 +462,7 @@ final class PhabricatorApplicationTransactionCommentView
       $action_select = id(new AphrontFormSelectControl())
         ->addClass('phui-comment-fullwidth-control')
         ->addClass('phui-comment-action-control')
+        ->setAriaLabel(pht('Comment Action Options'))
         ->setID($action_id)
         ->setOptions($options);
 
@@ -542,13 +579,6 @@ final class PhabricatorApplicationTransactionCommentView
     return $this->formID;
   }
 
-  private function getStatusID() {
-    if (!$this->statusID) {
-      $this->statusID = celerity_generate_unique_node_id();
-    }
-    return $this->statusID;
-  }
-
   private function getCommentID() {
     if (!$this->commentID) {
       $this->commentID = celerity_generate_unique_node_id();
@@ -601,7 +631,7 @@ final class PhabricatorApplicationTransactionCommentView
   private function renderBadgeView() {
     $user = $this->getUser();
     $can_use_badges = PhabricatorApplication::isClassInstalledForViewer(
-      'PhabricatorBadgesApplication',
+      PhabricatorBadgesApplication::class,
       $user);
     if (!$can_use_badges) {
       return null;

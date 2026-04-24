@@ -145,15 +145,28 @@ final class PhabricatorFeedTransactionQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorFeedApplication';
+    return PhabricatorFeedApplication::class;
   }
 
   private function newTransactionQueries() {
     $viewer = $this->getViewer();
 
     $queries = id(new PhutilClassMapQuery())
-      ->setAncestorClass('PhabricatorApplicationTransactionQuery')
+      ->setAncestorClass(PhabricatorApplicationTransactionQuery::class)
       ->execute();
+
+    // Remove TransactionQuery classes of uninstalled apps. Increases query
+    // performance and decreases likeliness of a "Query Overheated" error if
+    // an app got uninstalled so data in it cannot be accessed anymore anyway.
+    // See https://secure.phabricator.com/T13133, https://we.phorge.it/T15642
+    foreach ($queries as $key => $query) {
+      $app = $query->getQueryApplicationClass();
+      if ($app !== null &&
+          PhabricatorApplication::isClassInstalledForViewerIfAny($app,
+            $viewer)) {
+        unset($queries[$key]);
+      }
+    }
 
     $type_map = array();
 

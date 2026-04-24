@@ -12,6 +12,9 @@
  * @task order Result Ordering
  * @task edgelogic Working with Edge Logic
  * @task spaces Working with Spaces
+ *
+ * @template R of PhabricatorPolicyInterface
+ * @extends PhabricatorPolicyAwareQuery<R>
  */
 abstract class PhabricatorCursorPagedPolicyAwareQuery
   extends PhabricatorPolicyAwareQuery {
@@ -433,12 +436,15 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    * this is the case, return the alias for the primary table the query
    * uses; generally the object table which has `id` and `phid` columns.
    *
-   * @return string Alias for the primary table.
+   * @return string|null Alias for the primary table, or null.
    */
   protected function getPrimaryTableAlias() {
     return null;
   }
 
+  /**
+   * @return R|null
+   */
   public function newResultObject() {
     return null;
   }
@@ -718,9 +724,9 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    *
    * This method will then return a composable clause for inclusion in WHERE.
    *
-   * @param AphrontDatabaseConnection Connection query will execute on.
-   * @param list<map> Column description dictionaries.
-   * @param map Additional construction options.
+   * @param AphrontDatabaseConnection $conn Connection query will execute on.
+   * @param list<map> $columns Column description dictionaries.
+   * @param map $options Additional construction options.
    * @return string Query clause.
    * @task paging
    */
@@ -735,6 +741,9 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
         array(
           'table' => 'optional string|null',
           'column' => 'string',
+          'customfield' => 'optional bool',
+          'customfield.index.key' => 'optional string',
+          'customfield.index.table' => 'optional string',
           'value' => 'wild',
           'type' => 'string',
           'reverse' => 'optional bool',
@@ -881,8 +890,8 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    * across individual orderable columns. This offers greater control but is
    * also more involved.
    *
-   * @param string Key of a builtin order supported by this query.
-   * @return this
+   * @param string $order Key of a builtin order supported by this query.
+   * @return $this
    * @task order
    */
   public function setOrder($order) {
@@ -914,8 +923,9 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    * This is a high-level method which works alongside @{method:setOrder}. For
    * lower-level control over order vectors, use @{method:setOrderVector}.
    *
-   * @param PhabricatorQueryOrderVector|list<string> List of order keys.
-   * @return this
+   * @param PhabricatorQueryOrderVector|list<string> $vector List of order
+   *   keys.
+   * @return $this
    * @task order
    */
   public function setGroupVector($vector) {
@@ -945,7 +955,11 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    *   - `vector` (`list<string>`): The actual order vector to use.
    *   - `name` (`string`): Human-readable order name.
    *
-   * @return map<string, wild> Map from builtin order keys to specification.
+   * @phpstan-type BuiltinOrder array{name: string, vector: string[],
+   *                                  aliases?: string[]}
+   * @return map<string,BuiltinOrder> Map from builtin order keys to
+   *                                    specification.
+   *
    * @task order
    */
   public function getBuiltinOrders() {
@@ -1038,8 +1052,9 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    * To set an order vector, specify a list of order keys as provided by
    * @{method:getOrderableColumns}.
    *
-   * @param PhabricatorQueryOrderVector|list<string> List of order keys.
-   * @return this
+   * @param PhabricatorQueryOrderVector|list<string> $vector List of order
+   *   keys.
+   * @return $this
    * @task order
    */
   public function setOrderVector($vector) {
@@ -1138,6 +1153,11 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
 
 
   /**
+   * @return array<string,array<string,string>> PhutilKeyValueCacheStack string
+   *   (e.g. 'id', 'rank', 'fulltext-created', 'fulltext-modified') and the
+   *   cache value as an array, for example '{"table":"user","column":"id",
+   *   "reverse":false,"type":"int","unique":true}' or '{"table":null,
+   *   "column":"_ft_rank","type":"int","requires-ferret":true,"having":true}'
    * @task order
    */
   public function getOrderableColumns() {
@@ -1239,6 +1259,7 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
   }
 
   /**
+   * @return PhabricatorQueryOrderVector
    * @task order
    */
   private function getQueryableOrderVector() {
@@ -1350,9 +1371,10 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    *   - Find users with shirt sizes "X" or "XL".
    *   - Find shoes with size "13".
    *
-   * @param PhabricatorCustomFieldIndexStorage Table where the index is stored.
-   * @param string|list<string> One or more values to filter by.
-   * @return this
+   * @param PhabricatorCustomFieldIndexStorage $index Table where the index is
+   *   stored.
+   * @param string|list<string> $value One or more values to filter by.
+   * @return $this
    * @task appsearch
    */
   public function withApplicationSearchContainsConstraint(
@@ -1400,10 +1422,11 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    * `5` will match fields with values `3`, `4`, or `5`. Providing `null` for
    * either end of the range will leave that end of the constraint open.
    *
-   * @param PhabricatorCustomFieldIndexStorage Table where the index is stored.
-   * @param int|null Minimum permissible value, inclusive.
-   * @param int|null Maximum permissible value, inclusive.
-   * @return this
+   * @param PhabricatorCustomFieldIndexStorage $index Table where the index is
+   *   stored.
+   * @param int|null $min Minimum permissible value, inclusive.
+   * @param int|null $max Maximum permissible value, inclusive.
+   * @return $this
    * @task appsearch
    */
   public function withApplicationSearchRangeConstraint(
@@ -1446,7 +1469,7 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    * See @{method:getPrimaryTableAlias} if the column needs to be qualified with
    * a table alias.
    *
-   * @param AphrontDatabaseConnection Connection executing queries.
+   * @param AphrontDatabaseConnection $conn Connection executing queries.
    * @return PhutilQueryString Column name.
    * @task appsearch
    */
@@ -1506,7 +1529,7 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
   /**
    * Construct a GROUP BY clause appropriate for ApplicationSearch constraints.
    *
-   * @param AphrontDatabaseConnection Connection executing the query.
+   * @param AphrontDatabaseConnection $conn Connection executing the query.
    * @return string Group clause.
    * @task appsearch
    */
@@ -1528,7 +1551,7 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    * Construct a JOIN clause appropriate for applying ApplicationSearch
    * constraints.
    *
-   * @param AphrontDatabaseConnection Connection executing the query.
+   * @param AphrontDatabaseConnection $conn Connection executing the query.
    * @return string Join clause.
    * @task appsearch
    */
@@ -1650,7 +1673,7 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    * Construct a WHERE clause appropriate for applying ApplicationSearch
    * constraints.
    *
-   * @param AphrontDatabaseConnection Connection executing the query.
+   * @param AphrontDatabaseConnection $conn Connection executing the query.
    * @return list<string> Where clause parts.
    * @task appsearch
    */
@@ -1747,7 +1770,7 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
 
     $map = array();
     foreach ($fields->getFields() as $field) {
-      $map['custom:'.$field->getFieldKey()] = $field->getValueForStorage();
+      $map[$field->getModernFieldKey()] = $field->getValueForStorage();
     }
 
     return $map;
@@ -1758,7 +1781,7 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    * @task customfield
    */
   protected function isCustomFieldOrderKey($key) {
-    $prefix = 'custom:';
+    $prefix = 'custom.';
     return !strncmp($key, $prefix, strlen($prefix));
   }
 
@@ -2580,10 +2603,10 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    * Convenience method for specifying edge logic constraints with a list of
    * PHIDs.
    *
-   * @param const Edge constant.
-   * @param const Constraint operator.
-   * @param list<phid> List of PHIDs.
-   * @return this
+   * @param int $edge_type Edge type constant (SomeClassEdgeType::EDGECONST).
+   * @param string $operator Constraint operator.
+   * @param list<string> $phids List of PHIDs.
+   * @return $this
    * @task edgelogic
    */
   public function withEdgeLogicPHIDs($edge_type, $operator, array $phids) {
@@ -2597,11 +2620,13 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
 
 
   /**
-   * @return this
+   * @param int $edge_type An edge type's EDGECONST constant
+   * @param array<PhabricatorQueryConstraint> $constraints
+   * @return $this
    * @task edgelogic
    */
   public function withEdgeLogicConstraints($edge_type, array $constraints) {
-    assert_instances_of($constraints, 'PhabricatorQueryConstraint');
+    assert_instances_of($constraints, PhabricatorQueryConstraint::class);
 
     $constraints = mgroup($constraints, 'getOperator');
     foreach ($constraints as $operator => $list) {
@@ -2994,7 +3019,7 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
   /**
    * Validate edge logic constraints for the query.
    *
-   * @return this
+   * @return $this
    * @task edgelogic
    */
   private function validateEdgeLogicConstraints() {
@@ -3088,7 +3113,7 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    * Queries are always constrained to include only results from spaces the
    * viewer has access to.
    *
-   * @param list<phid|null>
+   * @param list<string|null> $space_phids PHIDs of the spaces.
    * @task spaces
    */
   public function withSpacePHIDs(array $space_phids) {
@@ -3132,8 +3157,9 @@ abstract class PhabricatorCursorPagedPolicyAwareQuery
    * viewer has access to see with any explicit constraint on spaces added by
    * @{method:withSpacePHIDs}.
    *
-   * @param AphrontDatabaseConnection Database connection.
-   * @return string Part of a WHERE clause.
+   * @param AphrontDatabaseConnection $conn Database connection.
+   * @return string|null Part of a WHERE clause, or null when there is no
+   *   object or the object is not an instance of PhabricatorSpacesInterface.
    * @task spaces
    */
   private function buildSpacesWhereClause(AphrontDatabaseConnection $conn) {

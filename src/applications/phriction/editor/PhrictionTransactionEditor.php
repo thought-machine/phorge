@@ -90,7 +90,7 @@ final class PhrictionTransactionEditor
   }
 
   public function getEditorApplicationClass() {
-    return 'PhabricatorPhrictionApplication';
+    return PhabricatorPhrictionApplication::class;
   }
 
   public function getEditorObjectsDescription() {
@@ -106,6 +106,14 @@ final class PhrictionTransactionEditor
     $types[] = PhabricatorTransactions::TYPE_EDIT_POLICY;
 
     return $types;
+  }
+
+  public function getCreateObjectTitle($author, $object) {
+    return pht('%s created this document.', $author);
+  }
+
+  public function getCreateObjectTitleForFeed($author, $object) {
+    return pht('%s created %s.', $author, $object);
   }
 
   protected function expandTransactions(

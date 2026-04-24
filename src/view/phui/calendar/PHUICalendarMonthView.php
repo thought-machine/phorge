@@ -193,18 +193,6 @@ final class PHUICalendarMonthView extends AphrontView {
     return $box;
   }
 
-  private function getMaxDailyEventsForWeek($week_of_cell_lists) {
-    $max_count = 0;
-
-    foreach ($week_of_cell_lists as $cell_list) {
-      if ($cell_list['count'] > $max_count) {
-        $max_count = $cell_list['count'];
-      }
-    }
-
-    return $max_count;
-  }
-
   private function getEventListCell($event_list) {
     $list = $event_list['list'];
     $class = $event_list['class'];
@@ -423,23 +411,19 @@ final class PHUICalendarMonthView extends AphrontView {
 
       $button_bar = new PHUIButtonBarView();
 
-      $left_icon = id(new PHUIIconView())
-          ->setIcon('fa-chevron-left bluegrey');
       $left = id(new PHUIButtonView())
         ->setTag('a')
         ->setColor(PHUIButtonView::GREY)
         ->setHref($prev_uri)
         ->setTitle(pht('Previous Month'))
-        ->setIcon($left_icon);
+        ->setIcon('fa-chevron-left bluegrey');
 
-      $right_icon = id(new PHUIIconView())
-          ->setIcon('fa-chevron-right bluegrey');
       $right = id(new PHUIButtonView())
         ->setTag('a')
         ->setColor(PHUIButtonView::GREY)
         ->setHref($next_uri)
         ->setTitle(pht('Next Month'))
-        ->setIcon($right_icon);
+        ->setIcon('fa-chevron-right bluegrey');
 
       $button_bar->addButton($left);
       $button_bar->addButton($right);

@@ -67,7 +67,7 @@ final class DifferentialRevision extends DifferentialDAO
   public static function initializeNewRevision(PhabricatorUser $actor) {
     $app = id(new PhabricatorApplicationQuery())
       ->setViewer($actor)
-      ->withClasses(array('PhabricatorDifferentialApplication'))
+      ->withClasses(array(PhabricatorDifferentialApplication::class))
       ->executeOne();
 
     $view_policy = $app->getPolicy(
@@ -554,8 +554,11 @@ final class DifferentialRevision extends DifferentialDAO
     return $this->assertAttached($this->reviewerStatus);
   }
 
+  /**
+   * @param array<DifferentialReviewer> $reviewers
+   */
   public function attachReviewers(array $reviewers) {
-    assert_instances_of($reviewers, 'DifferentialReviewer');
+    assert_instances_of($reviewers, DifferentialReviewer::class);
     $reviewers = mpull($reviewers, null, 'getReviewerPHID');
     $this->reviewerStatus = $reviewers;
     return $this;
@@ -592,7 +595,7 @@ final class DifferentialRevision extends DifferentialDAO
     return $this->assertAttached($this->repository);
   }
 
-  public function attachRepository(PhabricatorRepository $repository = null) {
+  public function attachRepository(?PhabricatorRepository $repository = null) {
     $this->repository = $repository;
     return $this;
   }
@@ -668,7 +671,7 @@ final class DifferentialRevision extends DifferentialDAO
 
   public function attachFlag(
     PhabricatorUser $viewer,
-    PhabricatorFlag $flag = null) {
+    ?PhabricatorFlag $flag = null) {
     $this->flags[$viewer->getPHID()] = $flag;
     return $this;
   }

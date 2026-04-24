@@ -10,6 +10,11 @@ final class PhabricatorProjectReportsController
   public function handleRequest(AphrontRequest $request) {
     $viewer = $request->getViewer();
 
+    $class = PhabricatorFactApplication::class;
+    if (!PhabricatorApplication::isClassInstalledForViewer($class, $viewer)) {
+      return new Aphront404Response();
+    }
+
     $response = $this->loadProject();
     if ($response) {
       return $response;
@@ -17,11 +22,6 @@ final class PhabricatorProjectReportsController
 
     $project = $this->getProject();
     $id = $project->getID();
-
-    $can_edit = PhabricatorPolicyFilter::hasCapability(
-      $viewer,
-      $project,
-      PhabricatorPolicyCapability::CAN_EDIT);
 
     $nav = $this->newNavigation(
       $project,

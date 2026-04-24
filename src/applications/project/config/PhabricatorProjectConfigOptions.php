@@ -19,6 +19,10 @@ final class PhabricatorProjectConfigOptions
     return 'apps';
   }
 
+  public function getApplicationClassName() {
+    return PhabricatorProjectApplication::class;
+  }
+
   public function getOptions() {
     $default_icons = PhabricatorProjectIconSet::getDefaultConfiguration();
     $icons_type = 'project.icons';
@@ -105,6 +109,16 @@ EOTEXT
       ),
     );
 
+    $fields_description = $this->deformat(pht(<<<EOTEXT
+List of custom fields for project tags.
+
+For details on adding new fields, see [[ %s | %s ]] in the
+documentation.
+EOTEXT
+      ,
+      PhabricatorEnv::getDoclink('Configuring Custom Fields'),
+      pht('Configuring Custom Fields')));
+
     $subtype_description = $this->deformat(pht(<<<EOTEXT
 Allows you to define project subtypes. For a more detailed description of
 subtype configuration, see @{config:maniphest.subtypes}.
@@ -114,9 +128,7 @@ EOTEXT
     return array(
       $this->newOption('projects.custom-field-definitions', 'wild', array())
         ->setSummary(pht('Custom Projects fields.'))
-        ->setDescription(
-          pht(
-            'Array of custom fields for Projects.'))
+        ->setDescription($fields_description)
         ->addExample(
           '{"mycompany:motto": {"name": "Project Motto", '.
           '"type": "text"}}',

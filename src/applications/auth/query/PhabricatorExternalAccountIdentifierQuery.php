@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorExternalAccountIdentifier>
+ */
 final class PhabricatorExternalAccountIdentifierQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -84,7 +87,7 @@ final class PhabricatorExternalAccountIdentifierQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorPeopleApplication';
+    return PhabricatorPeopleApplication::class;
   }
 
 }

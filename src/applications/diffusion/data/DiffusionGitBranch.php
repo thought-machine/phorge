@@ -19,8 +19,9 @@ final class DiffusionGitBranch extends Phobject {
    *     'master' => '99a9c082f9a1b68c7264e26b9e552484a5ae5f25',
    *   );
    *
-   * @param string stdout of git branch command.
-   * @param string Filter branches to those on a specific remote.
+   * @param string $stdout stdout of git branch command.
+   * @param string $only_this_remote (optional) Filter branches to those on a
+   *   specific remote.
    * @return map Map of 'branch' or 'remote/branch' to hash at HEAD.
    */
   public static function parseRemoteBranchOutput(
@@ -79,7 +80,10 @@ final class DiffusionGitBranch extends Phobject {
   }
 
   /**
-   * As above, but with no `-r`. Used for bare repositories.
+   * Parse the output of 'git branch --verbose --no-abbrev' or similar into a
+   * map. As parseRemoteBranchOutput but no `-r`. Used for bare repositories.
+   *
+   * @return map Map of branch name (string or int) and its hash (string).
    */
   public static function parseLocalBranchOutput($stdout) {
     $map = array();
@@ -100,7 +104,9 @@ final class DiffusionGitBranch extends Phobject {
       if ($branch == '(no branch)') {
         continue;
       }
-
+      // Note: If the $branch name string is numeric containing only decimal
+      // ints and does not start with 0, PHP will cast it from string to int:
+      // https://www.php.net/manual/en/language.types.array.php#language.types.array.syntax
       $map[$branch] = $branch_head;
     }
 

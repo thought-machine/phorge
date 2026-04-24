@@ -20,6 +20,9 @@ final class PhabricatorProfileMenuEditEngine
     return $this;
   }
 
+  /**
+   * @return PhabricatorProfileMenuEngine
+   */
   public function getMenuEngine() {
     return $this->menuEngine;
   }
@@ -48,6 +51,9 @@ final class PhabricatorProfileMenuEditEngine
     return $this;
   }
 
+  /**
+   * @return PhabricatorProfileMenuItemConfiguration
+   */
   public function getNewMenuItemConfiguration() {
     return $this->newMenuItemConfiguration;
   }
@@ -74,7 +80,7 @@ final class PhabricatorProfileMenuEditEngine
   }
 
   public function getEngineApplicationClass() {
-    return 'PhabricatorSearchApplication';
+    return PhabricatorSearchApplication::class;
   }
 
   protected function newEditableObject() {

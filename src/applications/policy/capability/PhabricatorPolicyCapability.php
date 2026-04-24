@@ -36,8 +36,8 @@ abstract class PhabricatorPolicyCapability extends Phobject {
    *   - You do not have permission to edit this object.
    *   - You do not have permission to create new tasks.
    *
-   * @return string Human-readable name describing what failing a check for this
-   *   capability prevents the user from doing.
+   * @return string|null Human-readable name describing what failing a check
+   *   for this capability prevents the user from doing.
    */
   public function describeCapabilityRejection() {
     return null;
@@ -59,7 +59,7 @@ abstract class PhabricatorPolicyCapability extends Phobject {
 
   final public static function getCapabilityMap() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setUniqueMethod('getCapabilityKey')
       ->execute();
   }

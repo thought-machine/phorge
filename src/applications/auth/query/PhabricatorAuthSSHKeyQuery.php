@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorAuthSSHKey>
+ */
 final class PhabricatorAuthSSHKeyQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -32,8 +35,11 @@ final class PhabricatorAuthSSHKeyQuery
     return $this;
   }
 
+  /**
+   * @param array<PhabricatorAuthSSHPublicKey> $keys
+   */
   public function withKeys(array $keys) {
-    assert_instances_of($keys, 'PhabricatorAuthSSHPublicKey');
+    assert_instances_of($keys, PhabricatorAuthSSHPublicKey::class);
     $this->keys = $keys;
     return $this;
   }
@@ -128,7 +134,7 @@ final class PhabricatorAuthSSHKeyQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorAuthApplication';
+    return PhabricatorAuthApplication::class;
   }
 
 }

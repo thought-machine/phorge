@@ -14,7 +14,7 @@ final class PhabricatorPeopleUserEmailPHIDType
   }
 
   public function getPHIDTypeApplicationClass() {
-    return 'PhabricatorPeopleApplication';
+    return PhabricatorPeopleApplication::class;
   }
 
   protected function buildQueryForObjects(
@@ -34,8 +34,6 @@ final class PhabricatorPeopleUserEmailPHIDType
       $email = $objects[$phid];
       $handle->setName($email->getAddress());
     }
-
-    return null;
   }
 
 }

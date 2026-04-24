@@ -4,7 +4,7 @@ final class PhabricatorSpacesNamespaceSearchEngine
   extends PhabricatorApplicationSearchEngine {
 
   public function getApplicationClassName() {
-    return 'PhabricatorSpacesApplication';
+    return PhabricatorSpacesApplication::class;
   }
 
   public function getResultTypeDescription() {
@@ -64,16 +64,21 @@ final class PhabricatorSpacesNamespaceSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<PhabricatorSpacesNamespace> $spaces
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $spaces,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($spaces, 'PhabricatorSpacesNamespace');
+    assert_instances_of($spaces, PhabricatorSpacesNamespace::class);
 
     $viewer = $this->requireViewer();
 
     $list = new PHUIObjectItemListView();
-    $list->setUser($viewer);
+    $list->setViewer($viewer);
     foreach ($spaces as $space) {
       $item = id(new PHUIObjectItemView())
         ->setObjectName($space->getMonogram())

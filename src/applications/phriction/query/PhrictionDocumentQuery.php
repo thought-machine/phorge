@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhrictionDocument>
+ */
 final class PhrictionDocumentQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -392,7 +395,7 @@ final class PhrictionDocumentQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorPhrictionApplication';
+    return PhabricatorPhrictionApplication::class;
   }
 
 }

@@ -51,33 +51,7 @@ final class QueryFuture extends Future {
   }
 
   public function isReady() {
-    if ($this->result !== null || $this->exception) {
-      return true;
-    }
-
-    if (!$this->conn->supportsAsyncQueries()) {
-      if ($this->conn->supportsParallelQueries()) {
-        $queries = array();
-        $conns = array();
-        foreach (self::$futures as $id => $future) {
-          $queries[$id] = $future->query;
-          $conns[$id] = $future->conn;
-        }
-        $results = $this->conn->executeParallelQueries($queries, $conns);
-        $this->processResults($results);
-        return true;
-      }
-
-      $conns = array();
-      $conn_queries = array();
-      foreach (self::$futures as $id => $future) {
-        $hash = spl_object_hash($future->conn);
-        $conns[$hash] = $future->conn;
-        $conn_queries[$hash][$id] = $future->query;
-      }
-      foreach ($conn_queries as $hash => $queries) {
-        $this->processResults($conns[$hash]->executeRawQueries($queries));
-      }
+    if ($this->canResolve()) {
       return true;
     }
 
@@ -105,7 +79,7 @@ final class QueryFuture extends Future {
 
     $this->processResults($this->conn->resolveAsyncQueries($conns, $asyncs));
 
-    if ($this->result !== null || $this->exception) {
+    if ($this->canResolve()) {
       return true;
     }
     return false;

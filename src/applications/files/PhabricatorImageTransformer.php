@@ -20,8 +20,8 @@ final class PhabricatorImageTransformer extends Phobject {
    * Phabricator can not encode images in the given format (based on available
    * extensions), but can save images in another format.
    *
-   * @param   resource  GD image resource.
-   * @param   string?   Optionally, preferred mime type.
+   * @param   resource  $data GD image resource.
+   * @param   string    $preferred_mime (optional) Preferred mime type.
    * @return  string    Bytes of an image file.
    * @task save
    */
@@ -33,6 +33,9 @@ final class PhabricatorImageTransformer extends Phobject {
         break;
       case 'image/png':
         $preferred = self::saveImageDataAsPNG($data);
+        break;
+      case 'image/webp':
+        $preferred = self::saveImageDataAsWEBP($data);
         break;
     }
 
@@ -55,6 +58,11 @@ final class PhabricatorImageTransformer extends Phobject {
       return $data;
     }
 
+    $data = self::saveImageDataAsWEBP($data);
+    if ($data !== null) {
+      return $data;
+    }
+
     throw new Exception(pht('Failed to save image data into any format.'));
   }
 
@@ -62,7 +70,7 @@ final class PhabricatorImageTransformer extends Phobject {
   /**
    * Save an image in PNG format, returning the file data as a string.
    *
-   * @param resource      GD image resource.
+   * @param resource      $image GD image resource.
    * @return string|null  PNG file as a string, or null on failure.
    * @task save
    */
@@ -90,7 +98,7 @@ final class PhabricatorImageTransformer extends Phobject {
   /**
    * Save an image in GIF format, returning the file data as a string.
    *
-   * @param resource      GD image resource.
+   * @param resource      $image GD image resource.
    * @return string|null  GIF file as a string, or null on failure.
    * @task save
    */
@@ -114,7 +122,7 @@ final class PhabricatorImageTransformer extends Phobject {
   /**
    * Save an image in JPG format, returning the file data as a string.
    *
-   * @param resource      GD image resource.
+   * @param resource      $image GD image resource.
    * @return string|null  JPG file as a string, or null on failure.
    * @task save
    */
@@ -125,6 +133,29 @@ final class PhabricatorImageTransformer extends Phobject {
 
     ob_start();
     $result = imagejpeg($image);
+    $output = ob_get_clean();
+
+    if (!$result) {
+      return null;
+    }
+
+    return $output;
+  }
+
+  /**
+   * Save an image in WEBP format, returning the file data as a string.
+   *
+   * @param resource      $image GD image resource.
+   * @return string|null  WEBP file as a string, or null on failure.
+   * @task save
+   */
+  private static function saveImageDataAsWEBP($image) {
+    if (!function_exists('imagewebp')) {
+      return null;
+    }
+
+    ob_start();
+    $result = imagewebp($image);
     $output = ob_get_clean();
 
     if (!$result) {

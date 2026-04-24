@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorWorkerBulkJob>
+ */
 final class PhabricatorWorkerBulkJobQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -96,7 +99,7 @@ final class PhabricatorWorkerBulkJobQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDaemonsApplication';
+    return PhabricatorDaemonsApplication::class;
   }
 
 }

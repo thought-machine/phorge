@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorProjectColumnPosition>
+ */
 final class PhabricatorProjectColumnPositionQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -67,7 +70,7 @@ final class PhabricatorProjectColumnPositionQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorProjectApplication';
+    return PhabricatorProjectApplication::class;
   }
 
 }

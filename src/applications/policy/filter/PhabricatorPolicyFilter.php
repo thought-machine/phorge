@@ -52,11 +52,13 @@ final class PhabricatorPolicyFilter extends Phobject {
    * ...will throw a @{class:PhabricatorPolicyException} if the new policy would
    * remove the user's ability to edit the object.
    *
-   * @param PhabricatorUser   The viewer to perform a policy check for.
-   * @param PhabricatorPolicyInterface The object to perform a policy check on.
-   * @param string            Capability to test.
-   * @param string            Perform the test as though the object has this
-   *                          policy instead of the policy it actually has.
+   * @param PhabricatorUser   $viewer The viewer to perform a policy check for.
+   * @param PhabricatorPolicyInterface $object The object to perform a policy
+   *                          check on.
+   * @param string            $capability Capability to test.
+   * @param string            $forced_policy Perform the test as though the
+   *                          object has this policy instead of the policy it
+   *                          actually has.
    * @return void
    */
   public static function requireCapabilityWithForcedPolicy(
@@ -153,8 +155,11 @@ final class PhabricatorPolicyFilter extends Phobject {
     return $this;
   }
 
+  /**
+   * @param array<PhabricatorPolicyInterface> $objects
+   */
   public function apply(array $objects) {
-    assert_instances_of($objects, 'PhabricatorPolicyInterface');
+    assert_instances_of($objects, PhabricatorPolicyInterface::class);
 
     $viewer       = $this->viewer;
     $capabilities = $this->capabilities;
@@ -699,7 +704,7 @@ final class PhabricatorPolicyFilter extends Phobject {
     $text_details = array_filter(array_merge($head, $exceptions));
     $text_details = implode(' ', $text_details);
 
-    $html_details = array($head, $more, $exceptions);
+    $html_details = array($head, $more, phutil_implode_html(' ', $exceptions));
 
     $access_denied = $this->renderAccessDenied($object);
 

@@ -4,15 +4,15 @@ final class PhabricatorSearchDocumentTypeDatasource
   extends PhabricatorTypeaheadDatasource {
 
   public function getBrowseTitle() {
-    return pht('Browse Document Types');
+    return pht('Browse Item Types');
   }
 
   public function getPlaceholderText() {
-    return pht('Select a document type...');
+    return pht('Select an item type...');
   }
 
   public function getDatasourceApplicationClass() {
-    return 'PhabricatorSearchApplication';
+    return PhabricatorSearchApplication::class;
   }
 
   public function loadResults() {

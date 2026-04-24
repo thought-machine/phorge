@@ -100,7 +100,7 @@ EOREMARKUP
         ->setDescription(
           pht(
             "These alternative URIs will be able to access 'normal' pages ".
-            "on your this install. Other features such as OAuth ".
+            "on this install. Other features such as OAuth ".
             "won't work. The major use case for this is moving installs ".
             "across domains."))
         ->addExample(
@@ -200,7 +200,7 @@ EOREMARKUP
             '$PATH'))
         ->setDescription(
           pht(
-            "Thhi software sometimes executes other binaries on the ".
+            "This software sometimes executes other binaries on the ".
             "server. An example of this is the `%s` command, used to ".
             "syntax-highlight code written in languages other than PHP. By ".
             "default, it is assumed that these binaries are in the %s of the ".

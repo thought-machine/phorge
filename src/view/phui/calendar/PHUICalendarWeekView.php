@@ -37,6 +37,9 @@ final class PHUICalendarWeekView extends AphrontView {
     return $this->view;
   }
 
+  /**
+   * @return array<PHUICalendarWidgetView>
+   */
   public function render() {
     $this->events = msort($this->events, 'getEpochStart');
     $week_of_boxes = $this->getWeekOfBoxes();
@@ -68,12 +71,15 @@ final class PHUICalendarWeekView extends AphrontView {
     return $filled_boxes;
   }
 
+  /**
+   * @return PHUICalendarWidgetView
+   */
   private function renderSidebarBox($events, $title) {
     $widget = id(new PHUICalendarWidgetView())
       ->addClass('calendar-day-view-sidebar');
 
     $list = id(new PHUICalendarListView())
-      ->setUser($this->getViewer())
+      ->setViewer($this->getViewer())
       ->setView($this->getView());
 
     if (count($events) == 0) {

@@ -28,24 +28,39 @@ abstract class PhabricatorProfileMenuEngine extends Phobject {
     return $this->viewer;
   }
 
+  /**
+   * @param object $profile_object A PhabricatorApplication subclass
+   */
   public function setProfileObject($profile_object) {
     $this->profileObject = $profile_object;
     return $this;
   }
 
+  /**
+   * @return object A PhabricatorApplication subclass
+   */
   public function getProfileObject() {
     return $this->profileObject;
   }
 
+  /**
+   * @param $custom_phid A User PHID
+   */
   public function setCustomPHID($custom_phid) {
     $this->customPHID = $custom_phid;
     return $this;
   }
 
+  /**
+   * @return string|null A User PHID, or null
+   */
   public function getCustomPHID() {
     return $this->customPHID;
   }
 
+  /**
+   * @return string|null A User PHID, or null
+   */
   private function getEditModeCustomPHID() {
     $mode = $this->getEditMode();
 
@@ -54,6 +69,7 @@ abstract class PhabricatorProfileMenuEngine extends Phobject {
         $custom_phid = $this->getCustomPHID();
         break;
       case self::MODE_GLOBAL:
+      default:
         $custom_phid = null;
         break;
     }
@@ -87,6 +103,9 @@ abstract class PhabricatorProfileMenuEngine extends Phobject {
   abstract public function getItemURI($path);
   abstract protected function isMenuEngineConfigurable();
 
+  /**
+   * @return array of PhabricatorProfileMenuItemConfiguration objects
+   */
   abstract protected function getBuiltinProfileItems($object);
 
   protected function getBuiltinCustomProfileItems(
@@ -388,6 +407,7 @@ abstract class PhabricatorProfileMenuEngine extends Phobject {
 
   private function loadBuiltinProfileItems($mode) {
     $object = $this->getProfileObject();
+    $builtins = array();
 
     switch ($mode) {
       case self::MODE_GLOBAL:
@@ -399,7 +419,6 @@ abstract class PhabricatorProfileMenuEngine extends Phobject {
           $this->getCustomPHID());
         break;
       case self::MODE_COMBINED:
-        $builtins = array();
         $builtins[] = $this->getBuiltinCustomProfileItems(
           $object,
           $this->getCustomPHID());
@@ -463,15 +482,6 @@ abstract class PhabricatorProfileMenuEngine extends Phobject {
     }
 
     return $map;
-  }
-
-  private function validateNavigationMenuItem($item) {
-    if (!($item instanceof PHUIListItemView)) {
-      throw new Exception(
-        pht(
-          'Expected buildNavigationMenuItems() to return a list of '.
-          'PHUIListItemView objects, but got a surprise.'));
-    }
   }
 
   public function getConfigureURI() {

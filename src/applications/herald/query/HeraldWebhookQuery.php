@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<HeraldWebhook>
+ */
 final class HeraldWebhookQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -54,7 +57,7 @@ final class HeraldWebhookQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorHeraldApplication';
+    return PhabricatorHeraldApplication::class;
   }
 
 }

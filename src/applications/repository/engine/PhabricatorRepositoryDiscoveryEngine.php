@@ -83,7 +83,7 @@ final class PhabricatorRepositoryDiscoveryEngine
     if ($this->isInitialImport($refs)) {
       $this->log(
         pht(
-          'Discovered more than %s commit(s) in an empty repository, '.
+          'Discovered more than %s commits in an empty repository, '.
           'marking repository as importing.',
           new PhutilNumber(PhabricatorRepository::IMPORT_THRESHOLD)));
 
@@ -538,7 +538,7 @@ final class PhabricatorRepositoryDiscoveryEngine
    *
    * @task internal
    *
-   * @param   list<DiffusionRepositoryRef> List of refs.
+   * @param   list<DiffusionRepositoryRef> $refs List of refs.
    * @return  list<DiffusionRepositoryRef> Sorted list of refs.
    */
   private function sortRefs(array $refs) {

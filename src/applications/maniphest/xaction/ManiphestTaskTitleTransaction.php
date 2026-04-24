@@ -5,6 +5,10 @@ final class ManiphestTaskTitleTransaction
 
   const TRANSACTIONTYPE = 'title';
 
+  // Arbitrary title length limit to reduce abuse as the database scheme
+  // defines "longtext" instead of "varchar(255)" for maniphest_task.title
+  private $maximumTaskTitleLength = 255;
+
   public function generateOldValue($object) {
     return $object->getTitle();
   }
@@ -71,10 +75,19 @@ final class ManiphestTaskTitleTransaction
     // problems.
 
     foreach ($xactions as $xaction) {
-      $new = $xaction->getNewValue();
-      if (!strlen($new)) {
+      $new_value = $xaction->getNewValue();
+      $new_value = trim($new_value); // Strip surrounding whitespace
+      $xaction->setNewValue($new_value);
+      if (!strlen($new_value)) {
         $errors[] = $this->newInvalidError(
           pht('Tasks must have a title.'),
+          $xaction);
+        continue;
+      }
+      if (mb_strlen($new_value) > $this->maximumTaskTitleLength) {
+        $errors[] = $this->newInvalidError(
+          pht('Task title cannot exceed %d characters.',
+            $this->maximumTaskTitleLength),
           $xaction);
         continue;
       }

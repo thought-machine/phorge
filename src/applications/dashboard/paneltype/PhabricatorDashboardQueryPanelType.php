@@ -77,6 +77,12 @@ final class PhabricatorDashboardQueryPanelType
     }
 
     if (!$saved) {
+      if (!$viewer->isLoggedIn()) {
+      // If user is not logged in, authored/assigned/etc queries are empty.
+        return id(new PHUIObjectItemListView())
+          ->setUser($viewer)
+          ->setNoDataString(pht('You must log in to access this panel.'));
+      }
       throw new Exception(
         pht(
           'Query "%s" is unknown to application search engine "%s"!',
@@ -173,13 +179,10 @@ final class PhabricatorDashboardQueryPanelType
     $key = $panel->getProperty('key');
     $href = $search_engine->getQueryResultsPageURI($key);
 
-    $icon = id(new PHUIIconView())
-      ->setIcon('fa-search');
-
     $button = id(new PHUIButtonView())
       ->setTag('a')
       ->setText(pht('View All'))
-      ->setIcon($icon)
+      ->setIcon('fa-search')
       ->setHref($href)
       ->setColor(PHUIButtonView::GREY);
 
@@ -209,6 +212,9 @@ final class PhabricatorDashboardQueryPanelType
     return $engine;
   }
 
+  /**
+   * @return array<PhabricatorActionView>
+   */
   public function newHeaderEditActions(
     PhabricatorDashboardPanel $panel,
     PhabricatorUser $viewer,

@@ -104,8 +104,12 @@ final class PhabricatorStorageManagementAPI extends Phobject {
     return $this->getRef()->getDisplayName();
   }
 
+  /**
+   * @param array<PhabricatorStoragePatch> $patches
+   * @param bool $only_living
+   */
   public function getDatabaseList(array $patches, $only_living = false) {
-    assert_instances_of($patches, 'PhabricatorStoragePatch');
+    assert_instances_of($patches, PhabricatorStoragePatch::class);
 
     $list = array();
 
@@ -147,7 +151,7 @@ final class PhabricatorStorageManagementAPI extends Phobject {
         self::TABLE_STATUS);
       return ipull($applied, 'patch');
     } catch (AphrontAccessDeniedQueryException $ex) {
-      throw new PhutilProxyException(
+      throw new Exception(
         pht(
           'Failed while trying to read schema status: the database "%s" '.
           'exists, but the current user ("%s") does not have permission to '.
@@ -155,6 +159,7 @@ final class PhabricatorStorageManagementAPI extends Phobject {
           'different user.',
           $this->getDatabaseName('meta_data'),
           $this->getUser()),
+        0,
         $ex);
     } catch (AphrontQueryException $ex) {
       return null;
@@ -193,8 +198,11 @@ final class PhabricatorStorageManagementAPI extends Phobject {
       implode(', ', $cols));
   }
 
+  /**
+   * @param array<PhabricatorStoragePatch> $patches
+   */
   public function getLegacyPatches(array $patches) {
-    assert_instances_of($patches, 'PhabricatorStoragePatch');
+    assert_instances_of($patches, PhabricatorStoragePatch::class);
 
     try {
       $row = queryfx_one(
@@ -284,7 +292,7 @@ final class PhabricatorStorageManagementAPI extends Phobject {
         // avoiding it since we're executing raw text files full of SQL.
         queryfx($conn, '%Z', $query);
       } catch (AphrontAccessDeniedQueryException $ex) {
-        throw new PhutilProxyException(
+        throw new Exception(
           pht(
             'Unable to access a required database or table. This almost '.
             'always means that the user you are connecting with ("%s") does '.
@@ -292,6 +300,7 @@ final class PhabricatorStorageManagementAPI extends Phobject {
             'use `bin/storage databases` to get a list of all databases '.
             'permission is required on.',
             $this->getUser()),
+          0,
           $ex);
       }
     }

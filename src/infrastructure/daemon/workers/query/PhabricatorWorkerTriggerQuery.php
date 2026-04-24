@@ -59,8 +59,8 @@ final class PhabricatorWorkerTriggerQuery
    * triggers which have been scheduled to execute. You should not use this
    * ordering when querying for specific triggers, e.g. by ID or PHID.
    *
-   * @param const Result order.
-   * @return this
+   * @param string $order Result order constant.
+   * @return $this
    */
   public function setOrder($order) {
     $this->order = $order;
@@ -74,7 +74,6 @@ final class PhabricatorWorkerTriggerQuery
     // (Before T13266, we raised an exception here, but since "nextPage()" is
     // now called even if we don't page we can't do that anymore. Just do
     // nothing instead.)
-    return null;
   }
 
   protected function loadPage() {
@@ -110,7 +109,7 @@ final class PhabricatorWorkerTriggerQuery
 
       foreach ($triggers as $key => $trigger) {
         $clock_class = $trigger->getClockClass();
-        if (!is_subclass_of($clock_class, 'PhabricatorTriggerClock')) {
+        if (!is_subclass_of($clock_class, PhabricatorTriggerClock::class)) {
           unset($triggers[$key]);
           continue;
         }
@@ -129,7 +128,7 @@ final class PhabricatorWorkerTriggerQuery
 
       foreach ($triggers as $key => $trigger) {
         $action_class = $trigger->getActionClass();
-        if (!is_subclass_of($action_class, 'PhabricatorTriggerAction')) {
+        if (!is_subclass_of($action_class, PhabricatorTriggerAction::class)) {
           unset($triggers[$key]);
           continue;
         }

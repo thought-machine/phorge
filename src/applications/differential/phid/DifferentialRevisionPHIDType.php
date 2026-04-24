@@ -13,7 +13,7 @@ final class DifferentialRevisionPHIDType extends PhabricatorPHIDType {
   }
 
   public function getPHIDTypeApplicationClass() {
-    return 'PhabricatorDifferentialApplication';
+    return PhabricatorDifferentialApplication::class;
   }
 
   protected function buildQueryForObjects(
@@ -47,6 +47,11 @@ final class DifferentialRevisionPHIDType extends PhabricatorPHIDType {
     }
   }
 
+  /**
+   * Check whether a named object is of this PHID type
+   * @param string $name Object name
+   * @return bool True if the named object is of this PHID type
+   */
   public function canLoadNamedObject($name) {
     return preg_match('/^D[1-9]\d*$/i', $name);
   }

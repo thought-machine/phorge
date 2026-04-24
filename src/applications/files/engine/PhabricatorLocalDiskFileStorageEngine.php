@@ -47,7 +47,7 @@ final class PhabricatorLocalDiskFileStorageEngine
     // have one directory with a zillion files in it, since this is generally
     // bad news.
     do {
-      $name = md5(mt_rand());
+      $name = md5((string)mt_rand());
       $name = preg_replace('/^(..)(..)(.*)$/', '\\1/\\2/\\3', $name);
       if (!Filesystem::pathExists($root.'/'.$name)) {
         break;
@@ -116,7 +116,7 @@ final class PhabricatorLocalDiskFileStorageEngine
   /**
    * Convert a handle into an absolute local disk path.
    *
-   * @param string File data handle.
+   * @param string $handle File data handle.
    * @return string Absolute path to the corresponding file.
    * @task internal
    */

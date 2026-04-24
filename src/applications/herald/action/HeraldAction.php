@@ -20,11 +20,18 @@ abstract class HeraldAction extends Phobject {
   const DO_STANDARD_WRONG_RULE_TYPE = 'do.standard.wrong-rule-type';
   const DO_STANDARD_FORBIDDEN = 'do.standard.forbidden';
 
+  /**
+   * @return string Text of option in first dropdown of a Herald Action
+   */
   abstract public function getHeraldActionName();
   abstract public function supportsObject($object);
   abstract public function supportsRuleType($rule_type);
   abstract public function applyEffect($object, HeraldEffect $effect);
 
+  /**
+   * @return string|PhutilSafeHTML Description of the action performed by a
+   *   Herald rule, shown under 'Take these actions...' on a Herald rule page
+   */
   abstract public function renderActionDescription($value);
 
   public function getRequiredAdapterStates() {
@@ -122,6 +129,9 @@ abstract class HeraldAction extends Phobject {
     return $this;
   }
 
+  /*
+   * @return HeraldAdapter HeraldAdapter class of the action
+   **/
   final public function getAdapter() {
     return $this->adapter;
   }
@@ -141,7 +151,7 @@ abstract class HeraldAction extends Phobject {
 
   final public static function getAllActions() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setUniqueMethod('getActionConstant')
       ->execute();
   }
@@ -298,10 +308,9 @@ abstract class HeraldAction extends Phobject {
         $no_permission[] = $phid;
         unset($targets[$phid]);
       }
-    }
-
-    if ($no_permission) {
-      $this->logEffect(self::DO_STANDARD_PERMISSION, $no_permission);
+      if ($no_permission) {
+        $this->logEffect(self::DO_STANDARD_PERMISSION, $no_permission);
+      }
     }
 
     return $targets;

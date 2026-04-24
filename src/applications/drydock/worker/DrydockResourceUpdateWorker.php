@@ -38,7 +38,7 @@ final class DrydockResourceUpdateWorker extends DrydockWorker {
   /**
    * Update a resource, handling exceptions thrown during the update.
    *
-   * @param DrydockReosource Resource to update.
+   * @param DrydockResource $resource Resource to update.
    * @return void
    * @task update
    */
@@ -58,7 +58,7 @@ final class DrydockResourceUpdateWorker extends DrydockWorker {
   /**
    * Update a resource.
    *
-   * @param DrydockResource Resource to update.
+   * @param DrydockResource $resource Resource to update.
    * @return void
    * @task update
    */
@@ -71,14 +71,13 @@ final class DrydockResourceUpdateWorker extends DrydockWorker {
         $this->activateResource($resource);
         break;
       case DrydockResourceStatus::STATUS_ACTIVE:
+      case DrydockResourceStatus::STATUS_DESTROYED:
         // Nothing to do.
         break;
       case DrydockResourceStatus::STATUS_RELEASED:
       case DrydockResourceStatus::STATUS_BROKEN:
         $this->destroyResource($resource);
         break;
-      case DrydockResourceStatus::STATUS_DESTROYED:
-        // Nothing to do.
         break;
     }
 
@@ -89,8 +88,8 @@ final class DrydockResourceUpdateWorker extends DrydockWorker {
   /**
    * Convert a temporary exception into a yield.
    *
-   * @param DrydockResource Resource to yield.
-   * @param Exception Temporary exception worker encountered.
+   * @param DrydockResource $resource Resource to yield.
+   * @param Exception $ex Temporary exception worker encountered.
    * @task update
    */
   private function yieldResource(DrydockResource $resource, Exception $ex) {
@@ -266,10 +265,11 @@ final class DrydockResourceUpdateWorker extends DrydockWorker {
       case DrydockResourceStatus::STATUS_DESTROYED:
         // If the resource was already broken, just throw a normal exception.
         // This will retry the task eventually.
-        throw new PhutilProxyException(
+        throw new Exception(
           pht(
             'Unexpected failure while destroying resource ("%s").',
             $resource->getPHID()),
+          0,
           $ex);
     }
 

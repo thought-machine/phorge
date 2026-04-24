@@ -12,8 +12,8 @@ class ConduitException extends Exception {
    * will be used instead. This is useful to provide specific information about
    * an exception (e.g., which values were wrong in an invalid request).
    *
-   * @param string Detailed error description.
-   * @return this
+   * @param string $error_description Detailed error description.
+   * @return $this
    */
   final public function setErrorDescription($error_description) {
     $this->errorDescription = $error_description;

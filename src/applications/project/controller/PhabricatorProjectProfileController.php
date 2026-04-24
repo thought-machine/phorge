@@ -27,7 +27,7 @@ final class PhabricatorProjectProfileController
 
     $header = id(new PHUIHeaderView())
       ->setHeader(array($project->getDisplayName(), $tag))
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->setPolicyObject($project)
       ->setProfileHeader(true);
 
@@ -61,14 +61,14 @@ final class PhabricatorProjectProfileController
     $subproject_list = $this->buildSubprojectList($project);
 
     $member_list = id(new PhabricatorProjectMemberListView())
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->setProject($project)
       ->setLimit(10)
       ->setBackground(PHUIObjectBoxView::BLUE_PROPERTY)
       ->setUserPHIDs($project->getMemberPHIDs());
 
     $watcher_list = id(new PhabricatorProjectWatcherListView())
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->setProject($project)
       ->setLimit(10)
       ->setBackground(PHUIObjectBoxView::BLUE_PROPERTY)
@@ -104,9 +104,7 @@ final class PhabricatorProjectProfileController
 
     $view_all = id(new PHUIButtonView())
       ->setTag('a')
-      ->setIcon(
-        id(new PHUIIconView())
-          ->setIcon('fa-list-ul'))
+      ->setIcon('fa-list-ul')
       ->setText(pht('View All'))
       ->setHref('/feed/?projectPHIDs='.$project->getPHID());
 
@@ -160,7 +158,7 @@ final class PhabricatorProjectProfileController
     $viewer = $request->getUser();
 
     $view = id(new PHUIPropertyListView())
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->setObject($project);
 
     $field_list = PhabricatorCustomField::getObjectFields(
@@ -184,8 +182,11 @@ final class PhabricatorProjectProfileController
     return $view;
   }
 
+  /**
+   * @param array<PhabricatorFeedStory> $stories
+   */
   private function renderStories(array $stories) {
-    assert_instances_of($stories, 'PhabricatorFeedStory');
+    assert_instances_of($stories, PhabricatorFeedStory::class);
 
     $builder = new PhabricatorFeedBuilder($stories);
     $builder->setUser($this->getRequest()->getUser());
@@ -225,9 +226,6 @@ final class PhabricatorProjectProfileController
       $watch_disabled = false;
     }
 
-    $watch_icon = id(new PHUIIconView())
-      ->setIcon($watch_icon);
-
     return id(new PHUIButtonView())
       ->setTag('a')
       ->setWorkflow(true)
@@ -261,15 +259,13 @@ final class PhabricatorProjectProfileController
     }
 
     $milestone_list = id(new PhabricatorProjectListView())
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->setProjects($milestones)
       ->renderList();
 
     $view_all = id(new PHUIButtonView())
       ->setTag('a')
-      ->setIcon(
-        id(new PHUIIconView())
-          ->setIcon('fa-list-ul'))
+      ->setIcon('fa-list-ul')
       ->setText(pht('View All'))
       ->setHref("/project/subprojects/{$id}/");
 
@@ -315,9 +311,7 @@ final class PhabricatorProjectProfileController
 
     $view_all = id(new PHUIButtonView())
       ->setTag('a')
-      ->setIcon(
-        id(new PHUIIconView())
-          ->setIcon('fa-list-ul'))
+      ->setIcon('fa-list-ul')
       ->setText(pht('View All'))
       ->setHref("/project/subprojects/{$id}/");
 

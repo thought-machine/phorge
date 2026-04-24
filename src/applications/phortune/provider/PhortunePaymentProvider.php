@@ -96,7 +96,7 @@ abstract class PhortunePaymentProvider extends Phobject {
     array $issues);
 
   protected function renderConfigurationSecret($value) {
-    if (strlen($value)) {
+    if (phutil_nonempty_string($value)) {
       return str_repeat('*', strlen($value));
     }
     return '';
@@ -270,7 +270,8 @@ abstract class PhortunePaymentProvider extends Phobject {
     $local = false) {
 
     $id = $this->getProviderConfig()->getID();
-    $app = PhabricatorApplication::getByClass('PhabricatorPhortuneApplication');
+    $app = PhabricatorApplication::getByClass(
+      PhabricatorPhortuneApplication::class);
     $path = $app->getBaseURI().'provider/'.$id.'/'.$action.'/';
 
     $uri = new PhutilURI($path, $params);

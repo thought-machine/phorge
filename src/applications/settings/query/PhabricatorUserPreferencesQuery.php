@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorUserPreferences>
+ */
 final class PhabricatorUserPreferencesQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -31,8 +34,11 @@ final class PhabricatorUserPreferencesQuery
     return $this;
   }
 
+  /**
+   * @param array<PhabricatorUser> $users
+   */
   public function withUsers(array $users) {
-    assert_instances_of($users, 'PhabricatorUser');
+    assert_instances_of($users, PhabricatorUser::class);
     $this->users = mpull($users, null, 'getPHID');
     $this->withUserPHIDs(array_keys($this->users));
     return $this;
@@ -49,7 +55,8 @@ final class PhabricatorUserPreferencesQuery
    * If no settings exist for a user, a new empty settings object with
    * appropriate defaults is returned.
    *
-   * @param bool True to generate synthetic preferences for missing users.
+   * @param bool $synthetic True to generate synthetic preferences for missing
+   *   users.
    */
   public function needSyntheticPreferences($synthetic) {
     $this->synthetic = $synthetic;
@@ -190,7 +197,7 @@ final class PhabricatorUserPreferencesQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorSettingsApplication';
+    return PhabricatorSettingsApplication::class;
   }
 
 }

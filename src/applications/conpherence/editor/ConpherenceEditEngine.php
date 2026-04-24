@@ -10,7 +10,7 @@ final class ConpherenceEditEngine
   }
 
   public function getEngineApplicationClass() {
-    return 'PhabricatorConpherenceApplication';
+    return PhabricatorConpherenceApplication::class;
   }
 
   public function getSummaryHeader() {
@@ -59,6 +59,11 @@ final class ConpherenceEditEngine
 
   protected function getObjectViewURI($object) {
     return $object->getURI();
+  }
+
+  protected function getCreateNewObjectPolicy() {
+    return $this->getApplication()->getPolicy(
+      ConpherenceCreateRoomCapability::CAPABILITY);
   }
 
   public function isEngineConfigurable() {

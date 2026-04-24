@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorMetaMTAApplicationEmail>
+ */
 final class PhabricatorMetaMTAApplicationEmailQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -105,7 +108,7 @@ final class PhabricatorMetaMTAApplicationEmailQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorMetaMTAApplication';
+    return PhabricatorMetaMTAApplication::class;
   }
 
 }

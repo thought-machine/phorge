@@ -14,8 +14,11 @@ final class AphrontFormPolicyControl extends AphrontFormControl {
     return $this;
   }
 
+  /**
+   * @param array<PhabricatorPolicy> $policies
+   */
   public function setPolicies(array $policies) {
-    assert_instances_of($policies, 'PhabricatorPolicy');
+    assert_instances_of($policies, PhabricatorPolicy::class);
     $this->policies = $policies;
     return $this;
   }
@@ -244,7 +247,11 @@ final class AphrontFormPolicyControl extends AphrontFormControl {
       $this->setValue($policy);
     }
 
-    $control_id = celerity_generate_unique_node_id();
+    if ($this->getID()) {
+      $control_id = $this->getID();
+    } else {
+      $control_id = celerity_generate_unique_node_id();
+    }
     $input_id = celerity_generate_unique_node_id();
 
     $caret = phutil_tag(

@@ -32,7 +32,7 @@ abstract class PhutilDaemonOverseerModule extends Phobject {
 
   public static function getAllModules() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->execute();
   }
 
@@ -47,8 +47,8 @@ abstract class PhutilDaemonOverseerModule extends Phobject {
    *     return;
    *   }
    *
-   * @param string Throttle key.
-   * @param float Duration in seconds.
+   * @param string $name Throttle key.
+   * @param float $duration Duration in seconds.
    * @return bool True to throttle the check.
    */
   protected function shouldThrottle($name, $duration) {

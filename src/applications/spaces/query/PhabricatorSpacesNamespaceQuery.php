@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorSpacesNamespace>
+ */
 final class PhabricatorSpacesNamespaceQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -33,7 +36,7 @@ final class PhabricatorSpacesNamespaceQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorSpacesApplication';
+    return PhabricatorSpacesApplication::class;
   }
 
   public function newResultObject() {
@@ -212,8 +215,8 @@ final class PhabricatorSpacesNamespaceQuery
    * This is intended to simplify performing a bunch of redundant checks; you
    * can intentionally pass any value in (including `null`).
    *
-   * @param wild
-   * @return phid|null
+   * @param object $object
+   * @return string|null Space PHID of the object, or null.
    */
   public static function getObjectSpacePHID($object) {
     if (!$object) {

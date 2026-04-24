@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends AlmanacQuery<AlmanacNamespace>
+ */
 final class AlmanacNamespaceQuery
   extends AlmanacQuery {
 
@@ -92,7 +95,7 @@ final class AlmanacNamespaceQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorAlmanacApplication';
+    return PhabricatorAlmanacApplication::class;
   }
 
 }

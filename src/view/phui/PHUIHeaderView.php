@@ -24,6 +24,7 @@ final class PHUIHeaderView extends AphrontTagView {
   private $href;
   private $actionList;
   private $actionListID;
+  private $collapsible;
 
   public function setHeader($header) {
     $this->header = $header;
@@ -87,6 +88,18 @@ final class PHUIHeaderView extends AphrontTagView {
 
   public function setActionListID($action_list_id) {
     $this->actionListID = $action_list_id;
+    return $this;
+  }
+
+  /**
+   * Render PHUIHeaderView as a <summary> instead of a <div> HTML tag.
+   * To be used for collapse/expand in combination with PHUIBoxView.
+   *
+   * @param bool $collapsible True to wrap in <summary> instead of <div> HTML
+   *   tag.
+   */
+  public function setCollapsible($collapsible) {
+    $this->collapsible = $collapsible;
     return $this;
   }
 
@@ -156,6 +169,9 @@ final class PHUIHeaderView extends AphrontTagView {
   }
 
   protected function getTagName() {
+    if ($this->collapsible) {
+      return 'summary';
+    }
     return 'div';
   }
 
@@ -254,7 +270,7 @@ final class PHUIHeaderView extends AphrontTagView {
     $space_header = null;
     if ($viewer) {
       $space_header = id(new PHUISpacesNamespaceContextView())
-        ->setUser($viewer)
+        ->setViewer($viewer)
         ->setObject($this->policyObject);
     }
 
@@ -287,15 +303,13 @@ final class PHUIHeaderView extends AphrontTagView {
 
     if ($this->actionItems) {
       $action_list = array();
-      if ($this->actionItems) {
-        foreach ($this->actionItems as $item) {
-          $action_list[] = phutil_tag(
-            'li',
-            array(
-              'class' => 'phui-header-action-item',
-            ),
-            $item);
-        }
+      foreach ($this->actionItems as $item) {
+        $action_list[] = phutil_tag(
+          'li',
+          array(
+            'class' => 'phui-header-action-item',
+          ),
+          $item);
       }
       $right[] = phutil_tag(
         'ul',
@@ -360,7 +374,6 @@ final class PHUIHeaderView extends AphrontTagView {
           break;
           default:
             throw new Exception(pht('Incorrect Property Passed'));
-          break;
         }
       }
 

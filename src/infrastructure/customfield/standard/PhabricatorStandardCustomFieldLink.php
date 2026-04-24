@@ -18,10 +18,10 @@ final class PhabricatorStandardCustomFieldLink
     return $indexes;
   }
 
-  public function renderPropertyViewValue(array $handles) {
+  protected function renderValue() {
     $value = $this->getFieldValue();
 
-    if (!strlen($value)) {
+    if (!phutil_nonempty_string($value)) {
       return null;
     }
 

@@ -63,8 +63,8 @@ final class AphrontFormDateControlValue extends Phobject {
     $value = new AphrontFormDateControlValue();
     $value->viewer = $request->getViewer();
 
-    $date = $request->getStr($key.'_d');
-    $time = $request->getStr($key.'_t');
+    $date = $request->getStr($key.'_d', '');
+    $time = $request->getStr($key.'_t', '');
 
     // If we have the individual parts, we read them preferentially. If we do
     // not, try to read the key as a raw value. This makes it so that HTTP
@@ -207,10 +207,14 @@ final class AphrontFormDateControlValue extends Phobject {
       $datetime->format($this->getDateFormat()),
       $datetime->format($this->getTimeFormat()),
     );
-
-    return array($date, $time);
   }
 
+  /**
+   * Create a DateTime object including timezone
+   * @param string $date Date, like "2024-08-20" or "2024-07-1" or such
+   * @param string|null $time Time, like "12:00 AM" or such
+   * @return DateTime|null
+   */
   private function newDateTime($date, $time) {
     $date = $this->getStandardDateFormat($date);
     $time = $this->getStandardTimeFormat($time);
@@ -282,10 +286,16 @@ final class AphrontFormDateControlValue extends Phobject {
     }
   }
 
+  /**
+   * @return DateTime|null
+   */
   public function getDateTime() {
     return $this->newDateTime($this->valueDate, $this->valueTime);
   }
 
+  /**
+   * @return DateTimeZone
+   */
   private function getTimezone() {
     if ($this->zone) {
       return $this->zone;
@@ -297,6 +307,10 @@ final class AphrontFormDateControlValue extends Phobject {
   }
 
   private function getStandardDateFormat($date) {
+    // no value entered into the field at all
+    if (!$date) {
+      return null;
+    }
     $colloquial = array(
       'newyear' => 'January 1',
       'valentine' => 'February 14',

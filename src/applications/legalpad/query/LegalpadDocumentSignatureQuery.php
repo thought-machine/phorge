@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<LegalpadDocumentSignature>
+ */
 final class LegalpadDocumentSignatureQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -151,7 +154,7 @@ final class LegalpadDocumentSignatureQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorLegalpadApplication';
+    return PhabricatorLegalpadApplication::class;
   }
 
 }

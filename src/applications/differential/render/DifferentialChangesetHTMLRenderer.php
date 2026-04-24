@@ -491,10 +491,11 @@ abstract class DifferentialChangesetHTMLRenderer
   /**
    * Build links which users can click to show more context in a changeset.
    *
-   * @param int Beginning of the line range to build links for.
-   * @param int Length of the line range to build links for.
-   * @param int Total number of lines in the changeset.
-   * @return markup Rendered links.
+   * @param int $top Beginning of the line range to build links for.
+   * @param int $len Length of the line range to build links for.
+   * @param int $changeset_length Total number of lines in the changeset.
+   * @param bool $is_blocks (optional)
+   * @return string Rendered links.
    */
   protected function renderShowContextLinks(
     $top,
@@ -580,10 +581,10 @@ abstract class DifferentialChangesetHTMLRenderer
    *
    * See @{method:renderShowContextLinks}.
    *
-   * @param bool Does this link show all context when clicked?
-   * @param string Range specification for lines to show.
-   * @param string Text of the link.
-   * @return markup Rendered link.
+   * @param bool $is_all Does this link show all context when clicked?
+   * @param string $range Range specification for lines to show.
+   * @param string $text Text of the link.
+   * @return string Rendered link.
    */
   private function renderShowContextLink($is_all, $range, $text) {
     $reference = $this->getRenderingReference();
@@ -605,7 +606,7 @@ abstract class DifferentialChangesetHTMLRenderer
   /**
    * Build the prefixes for line IDs used to track inline comments.
    *
-   * @return pair<wild, wild> Left and right prefixes.
+   * @return array{string|null,string|null} Left and right prefixes.
    */
   protected function getLineIDPrefixes() {
     // These look like "C123NL45", which means the line is line 45 on the

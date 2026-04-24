@@ -4,6 +4,8 @@
  * @task config   Query Configuration
  * @task exec     Query Execution
  * @task internal Internals
+ *
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<DifferentialRevision>
  */
 final class DifferentialRevisionQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
@@ -45,8 +47,8 @@ final class DifferentialRevisionQuery
   /**
    * Find revisions affecting one or more items in a list of paths.
    *
-   * @param list<string> List of file paths.
-   * @return this
+   * @param list<string> $paths List of file paths.
+   * @return $this
    * @task config
    */
   public function withPaths(array $paths) {
@@ -59,8 +61,8 @@ final class DifferentialRevisionQuery
    * this function will clear anything set by previous calls to
    * @{method:withAuthors}.
    *
-   * @param array List of PHIDs of authors
-   * @return this
+   * @param array $author_phids List of PHIDs of authors
+   * @return $this
    * @task config
    */
   public function withAuthors(array $author_phids) {
@@ -72,8 +74,8 @@ final class DifferentialRevisionQuery
    * Filter results to revisions which CC one of the listed people. Calling this
    * function will clear anything set by previous calls to @{method:withCCs}.
    *
-   * @param array List of PHIDs of subscribers.
-   * @return this
+   * @param array $cc_phids List of PHIDs of subscribers.
+   * @return $this
    * @task config
    */
   public function withCCs(array $cc_phids) {
@@ -86,8 +88,8 @@ final class DifferentialRevisionQuery
    * reviewers. Calling this function will clear anything set by previous calls
    * to @{method:withReviewers}.
    *
-   * @param array List of PHIDs of reviewers
-   * @return this
+   * @param array $reviewer_phids List of PHIDs of reviewers
+   * @return $this
    * @task config
    */
   public function withReviewers(array $reviewer_phids) {
@@ -124,10 +126,10 @@ final class DifferentialRevisionQuery
    * Calling this function will clear anything set by previous calls to
    * @{method:withCommitHashes}.
    *
-   * @param array List of pairs <Class
+   * @param array $commit_hashes List of pairs <Class
    *              ArcanistDifferentialRevisionHash::HASH_$type constant,
    *              hash>
-   * @return this
+   * @return $this
    * @task config
    */
   public function withCommitHashes(array $commit_hashes) {
@@ -149,8 +151,8 @@ final class DifferentialRevisionQuery
   /**
    * Filter results to revisions on given branches.
    *
-   * @param  list List of branch names.
-   * @return this
+   * @param list $branches List of branch names.
+   * @return $this
    * @task config
    */
   public function withBranches(array $branches) {
@@ -162,8 +164,8 @@ final class DifferentialRevisionQuery
   /**
    * Filter results to only return revisions whose ids are in the given set.
    *
-   * @param array List of revision ids
-   * @return this
+   * @param array $ids List of revision ids
+   * @return $this
    * @task config
    */
   public function withIDs(array $ids) {
@@ -175,8 +177,8 @@ final class DifferentialRevisionQuery
   /**
    * Filter results to only return revisions whose PHIDs are in the given set.
    *
-   * @param array List of revision PHIDs
-   * @return this
+   * @param array $phids List of revision PHIDs
+   * @return $this
    * @task config
    */
   public function withPHIDs(array $phids) {
@@ -189,8 +191,8 @@ final class DifferentialRevisionQuery
    * Given a set of users, filter results to return only revisions they are
    * responsible for (i.e., they are either authors or reviewers).
    *
-   * @param array List of user PHIDs.
-   * @return this
+   * @param array $responsible_phids List of user PHIDs.
+   * @return $this
    * @task config
    */
   public function withResponsibleUsers(array $responsible_phids) {
@@ -221,8 +223,8 @@ final class DifferentialRevisionQuery
    * Set whether or not the query should load the active diff for each
    * revision.
    *
-   * @param bool True to load and attach diffs.
-   * @return this
+   * @param bool $need_active_diffs True to load and attach diffs.
+   * @return $this
    * @task config
    */
   public function needActiveDiffs($need_active_diffs) {
@@ -235,8 +237,8 @@ final class DifferentialRevisionQuery
    * Set whether or not the query should load the associated commit PHIDs for
    * each revision.
    *
-   * @param bool True to load and attach diffs.
-   * @return this
+   * @param bool $need_commit_phids True to load and attach diffs.
+   * @return $this
    * @task config
    */
   public function needCommitPHIDs($need_commit_phids) {
@@ -249,8 +251,8 @@ final class DifferentialRevisionQuery
    * Set whether or not the query should load associated diff IDs for each
    * revision.
    *
-   * @param bool True to load and attach diff IDs.
-   * @return this
+   * @param bool $need_diff_ids True to load and attach diff IDs.
+   * @return $this
    * @task config
    */
   public function needDiffIDs($need_diff_ids) {
@@ -263,8 +265,8 @@ final class DifferentialRevisionQuery
    * Set whether or not the query should load associated commit hashes for each
    * revision.
    *
-   * @param bool True to load and attach commit hashes.
-   * @return this
+   * @param bool $need_hashes True to load and attach commit hashes.
+   * @return $this
    * @task config
    */
   public function needHashes($need_hashes) {
@@ -276,8 +278,8 @@ final class DifferentialRevisionQuery
   /**
    * Set whether or not the query should load associated reviewers.
    *
-   * @param bool True to load and attach reviewers.
-   * @return this
+   * @param bool $need_reviewers True to load and attach reviewers.
+   * @return $this
    * @task config
    */
   public function needReviewers($need_reviewers) {
@@ -291,8 +293,8 @@ final class DifferentialRevisionQuery
    * reviewer. In particular, they have authority to act on behalf of projects
    * they are a member of.
    *
-   * @param bool True to load and attach authority.
-   * @return this
+   * @param bool $need_reviewer_authority True to load and attach authority.
+   * @return $this
    * @task config
    */
   public function needReviewerAuthority($need_reviewer_authority) {
@@ -862,8 +864,11 @@ final class DifferentialRevisionQuery
     );
   }
 
+  /**
+   * @param array<DifferentialRevision> $revisions
+   */
   private function loadCommitPHIDs(array $revisions) {
-    assert_instances_of($revisions, 'DifferentialRevision');
+    assert_instances_of($revisions, DifferentialRevision::class);
 
     if (!$revisions) {
       return;
@@ -885,8 +890,12 @@ final class DifferentialRevisionQuery
     }
   }
 
+  /**
+   * @param AphrontDatabaseConnection $conn_r
+   * @param array<DifferentialRevision> $revisions
+   */
   private function loadDiffIDs($conn_r, array $revisions) {
-    assert_instances_of($revisions, 'DifferentialRevision');
+    assert_instances_of($revisions, DifferentialRevision::class);
 
     $diff_table = new DifferentialDiff();
 
@@ -905,8 +914,12 @@ final class DifferentialRevisionQuery
     }
   }
 
+  /**
+   * @param AphrontDatabaseConnection $conn_r
+   * @param array<DifferentialRevision> $revisions
+   */
   private function loadActiveDiffs($conn_r, array $revisions) {
-    assert_instances_of($revisions, 'DifferentialRevision');
+    assert_instances_of($revisions, DifferentialRevision::class);
 
     $diff_table = new DifferentialDiff();
 
@@ -931,10 +944,14 @@ final class DifferentialRevisionQuery
     }
   }
 
+  /**
+   * @param AphrontDatabaseConnection $conn_r
+   * @param array<DifferentialRevision> $revisions
+   */
   private function loadHashes(
     AphrontDatabaseConnection $conn_r,
     array $revisions) {
-    assert_instances_of($revisions, 'DifferentialRevision');
+    assert_instances_of($revisions, DifferentialRevision::class);
 
     $data = queryfx_all(
       $conn_r,
@@ -953,11 +970,15 @@ final class DifferentialRevisionQuery
     }
   }
 
+  /**
+   * @param AphrontDatabaseConnection $conn
+   * @param array<DifferentialRevision> $revisions
+   */
   private function loadReviewers(
     AphrontDatabaseConnection $conn,
     array $revisions) {
 
-    assert_instances_of($revisions, 'DifferentialRevision');
+    assert_instances_of($revisions, DifferentialRevision::class);
 
     $reviewer_table = new DifferentialReviewer();
     $reviewer_rows = queryfx_all(
@@ -1081,7 +1102,7 @@ final class DifferentialRevisionQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDifferentialApplication';
+    return PhabricatorDifferentialApplication::class;
   }
 
   protected function getPrimaryTableAlias() {

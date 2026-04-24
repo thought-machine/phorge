@@ -60,7 +60,7 @@ final class PhabricatorCalendarEvent extends PhabricatorCalendarDAO
   public static function initializeNewCalendarEvent(PhabricatorUser $actor) {
     $app = id(new PhabricatorApplicationQuery())
       ->setViewer($actor)
-      ->withClasses(array('PhabricatorCalendarApplication'))
+      ->withClasses(array(PhabricatorCalendarApplication::class))
       ->executeOne();
 
     $view_default = PhabricatorCalendarEventDefaultViewCapability::CAPABILITY;
@@ -130,7 +130,7 @@ final class PhabricatorCalendarEvent extends PhabricatorCalendarDAO
   private function newChild(
     PhabricatorUser $actor,
     $sequence,
-    PhutilCalendarDateTime $start = null) {
+    ?PhutilCalendarDateTime $start = null) {
     if (!$this->isParentEvent()) {
       throw new Exception(
         pht(
@@ -188,7 +188,7 @@ final class PhabricatorCalendarEvent extends PhabricatorCalendarDAO
 
   public function copyFromParent(
     PhabricatorUser $actor,
-    PhutilCalendarDateTime $start = null) {
+    ?PhutilCalendarDateTime $start = null) {
 
     if (!$this->isChildEvent()) {
       throw new Exception(
@@ -287,7 +287,7 @@ final class PhabricatorCalendarEvent extends PhabricatorCalendarDAO
   public function newGhost(
     PhabricatorUser $actor,
     $sequence,
-    PhutilCalendarDateTime $start = null) {
+    ?PhutilCalendarDateTime $start = null) {
 
     $ghost = $this->newChild($actor, $sequence, $start);
 
@@ -559,7 +559,7 @@ final class PhabricatorCalendarEvent extends PhabricatorCalendarDAO
     return $this->assertAttached($this->parentEvent);
   }
 
-  public function attachParentEvent(PhabricatorCalendarEvent $event = null) {
+  public function attachParentEvent(?PhabricatorCalendarEvent $event = null) {
     $this->parentEvent = $event;
     return $this;
   }
@@ -675,7 +675,6 @@ final class PhabricatorCalendarEvent extends PhabricatorCalendarDAO
       $status = $this->getUserInviteStatus($viewer_phid);
       switch ($status) {
         case PhabricatorCalendarEventInvitee::STATUS_ATTENDING:
-          return 'green';
         case PhabricatorCalendarEventInvitee::STATUS_INVITED:
           return 'green';
         case PhabricatorCalendarEventInvitee::STATUS_DECLINED:
@@ -912,16 +911,6 @@ final class PhabricatorCalendarEvent extends PhabricatorCalendarDAO
     return $this->newSequenceIndexDateTime($index);
   }
 
-  private function newDateTimeFromEpoch($epoch) {
-    $datetime = PhutilCalendarAbsoluteDateTime::newFromEpoch($epoch);
-
-    if ($this->getIsAllDay()) {
-      $datetime->setIsAllDay(true);
-    }
-
-    return $this->newDateTimeFromDateTime($datetime);
-  }
-
   private function newDateTimeFromDictionary(array $dict) {
     $datetime = PhutilCalendarAbsoluteDateTime::newFromDictionary($dict);
     return $this->newDateTimeFromDateTime($datetime);
@@ -957,7 +946,7 @@ final class PhabricatorCalendarEvent extends PhabricatorCalendarDAO
       $datetime->newAbsoluteDateTime()->toDictionary());
   }
 
-  public function setUntilDateTime(PhutilCalendarDateTime $datetime = null) {
+  public function setUntilDateTime(?PhutilCalendarDateTime $datetime = null) {
     if ($datetime) {
       $value = $datetime->newAbsoluteDateTime()->toDictionary();
     } else {
@@ -1045,7 +1034,7 @@ final class PhabricatorCalendarEvent extends PhabricatorCalendarDAO
   }
 
   public function attachImportSource(
-    PhabricatorCalendarImport $import = null) {
+    ?PhabricatorCalendarImport $import = null) {
     $this->importSource = $import;
     return $this;
   }

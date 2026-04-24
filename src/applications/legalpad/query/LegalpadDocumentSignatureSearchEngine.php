@@ -37,10 +37,14 @@ final class LegalpadDocumentSignatureSearchEngine
               'given string.')),
       id(new PhabricatorSearchDateField())
         ->setLabel(pht('Created After'))
-        ->setKey('createdStart'),
+        ->setKey('createdStart')
+        ->setDescription(
+          pht('Search for signatures created after a certain date.')),
       id(new PhabricatorSearchDateField())
         ->setLabel(pht('Created Before'))
-        ->setKey('createdEnd'),
+        ->setKey('createdEnd')
+        ->setDescription(
+          pht('Search for signatures created before a certain date.')),
     );
   }
 
@@ -79,7 +83,7 @@ final class LegalpadDocumentSignatureSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorLegalpadApplication';
+    return PhabricatorLegalpadApplication::class;
   }
 
   public function setDocument(LegalpadDocument $document) {
@@ -216,11 +220,16 @@ final class LegalpadDocumentSignatureSearchEngine
       mpull($signatures, 'getDocumentPHID'));
   }
 
+  /**
+   * @param array<LegalpadDocumentSignature> $signatures
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $signatures,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($signatures, 'LegalpadDocumentSignature');
+    assert_instances_of($signatures, LegalpadDocumentSignature::class);
 
     $viewer = $this->requireViewer();
 

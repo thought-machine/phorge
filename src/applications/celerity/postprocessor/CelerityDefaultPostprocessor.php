@@ -20,17 +20,16 @@ final class CelerityDefaultPostprocessor
   public function buildVariables() {
     return array(
       // Fonts
-      'basefont' => "13px -apple-system, system-ui, BlinkMacSystemFont, ".
-        "'Segoe UI', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Lato', ".
-        "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      'basefont' => "13px 'Segoe UI', 'Segoe UI Emoji', ".
+        "'Segoe UI Symbol', 'Lato', 'Helvetica Neue', ".
+        "Helvetica, Arial, sans-serif",
 
-      'fontfamily' => "-apple-system, system-ui, BlinkMacSystemFont, ".
-        "'Segoe UI', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Lato', ".
-        "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      'fontfamily' => "'Segoe UI', 'Segoe UI Emoji', ".
+        "'Segoe UI Symbol', 'Lato', 'Helvetica Neue', ".
+        "Helvetica, Arial, sans-serif",
 
       // Drop Shadow
       'dropshadow' => '0 2px 12px rgba(0, 0, 0, .20)',
-      'whitetextshadow' => '0 1px 0 rgba(255, 255, 255, 1)',
 
       // Anchors
       'anchor' => '#136CB2',
@@ -117,6 +116,12 @@ final class CelerityDefaultPostprocessor
       'redtext'               => '#802b2b',
       'lightredbackground'    => '#f5e1e1',
 
+      // Base Yellow
+      'lightyellowborder'     => '#dbdbbd',
+      'yellowborder'          => '#b9b988',
+      'yellowtext'            => '#72723c',
+      'lightyellowbackground' => '#ededde',
+
       // Base Violet
       'lightvioletborder'     => '#cfbddb',
       'violetborder'          => '#b589ba',
@@ -161,6 +166,9 @@ final class CelerityDefaultPostprocessor
       'sh-bluetext'           => '#464c5c',
       'sh-bluebackground'     => '#dee7f8',
 
+      // Shade Sky (mostly re-uses Blue colors above)
+      'sh-skybackground'      => '#e0f0fa',
+
       // Shade Indigo
       'sh-lightindigoborder'  => '#d1c9ee',
       'sh-indigoborder'       => '#bcb4da',
@@ -196,6 +204,10 @@ final class CelerityDefaultPostprocessor
       'sh-disabledtext'         => '#a6a6a6',
       'sh-disabledbackground'   => '#f3f3f3',
 
+      // Shade Checkered
+      'sh-checkeredtext' => '#555555',
+      'sh-checkeredicon' => '#757575',
+
       // Diffs
       'diff.background' => '#fff',
       'new-background' => 'rgba(151, 234, 151, .3)',
@@ -204,6 +216,16 @@ final class CelerityDefaultPostprocessor
       'old-bright' => 'rgba(251, 175, 175, .7)',
       'move-background' => '#fdf5d4',
       'copy-background' => '#f1c40f',
+
+      'diffsize.small.background' => '#f2f7ff',
+      'diffsize.large.background' => '#fbede1',
+      'diffsize.small.icon' => '#6699ba',
+      'diffsize.large.icon' => '#e5ae7e',
+
+      'diff.update-history-new' => '#d0ffd0',
+      'diff.update-history-new-now' => '#aaffaa',
+      'diff.update-history-old' => '#f9d0d0',
+      'diff.update-history-old-now' => '#ffaaaa',
 
       // Usually light yellow
       'gentle.highlight' => '#fdf3da',
@@ -228,6 +250,11 @@ final class CelerityDefaultPostprocessor
       'menu.main.height' => '44px',
       'menu.profile.width' => '240px',
 
+      'navigation-menu-selection-background' => 'rgba(0, 0, 0,.05)',
+      'navigation-menu-hover-background' => 'rgba(0, 0, 0,.07)',
+      'workboard-column-background' => 'rgba(234, 230, 247, 0.85)',
+      'form-inset-background' => '#f7f9fd',
+
       // Buttons
       'blue.button.color' => '#2980b9',
       'blue.button.gradient' => 'linear-gradient(to bottom, #3498db, #2980b9)',
@@ -247,6 +274,75 @@ final class CelerityDefaultPostprocessor
       'delete-color' => '#c0392b',
       'create-color' => '#139543',
 
+      // Checkerboard patterns
+      'checker.light-one' => '#cccccc',
+      'checker.light-two' => '#f3f3f3',
+      'checker.lighter-one' => '#ebebeb',
+      'checker.lighter-two' => '#fafafa',
+      'checker.dark-one' => '#343434',
+      'checker.dark-two' => '#0d0d0d',
+
+      // Codeblock syntax highlighting
+      'syntax.highlighted-line' => '#ffffcc',
+      'syntax.comment' => '#74777d',
+      'syntax.comment-multiline' => '#74777d',
+      'syntax.comment-single' => '#74777d',
+      'syntax.comment-special' => '#74777d',
+      'syntax.string-doc' => '#000000',
+      'syntax.string-heredoc' => '#000000',
+      'syntax.string' => '#766510',
+      'syntax.string-backtick' => '#766510',
+      'syntax.literal-string-char' => '#766510',
+      'syntax.string-double' => '#766510',
+      'syntax.string-single' => '#766510',
+      'syntax.string-other' => '#766510',
+      'syntax.string-regex' => '#bb6688',
+      'syntax.name-variable' => '#001294',
+      'syntax.variable-instance' => '#001294',
+      'syntax.variable-global' => '#001294',
+      'syntax.name-attribute' => '#354bb3',
+      'syntax.keyword-constant' => '#000a65',
+      'syntax.name-operator' => '#000a65',
+      'syntax.keyword' => '#aa4000',
+      'syntax.keyword-declaration' => '#aa4000',
+      'syntax.keyword-namespace' => '#aa4000',
+      'syntax.keyword-type' => '#aa4000',
+      'syntax.comment-preproc' => '#304a96',
+      'syntax.keyword-preproc' => '#304a96',
+      'syntax.keyword-reserved' => '#304a96',
+      'syntax.name-builtin' => '#304a96',
+      'syntax.builtin-pseudo' => '#304a96',
+      'syntax.name-class' => '#00702a',
+      'syntax.name-tag' => '#00702a',
+      'syntax.name-variable-class' => '#00702a',
+      'syntax.name-function' => '#004012',
+      'syntax.name-exception' => '#004012',
+      'syntax.operator' => '#aa2211',
+      'syntax.punctuation' => '#000000',
+      'syntax.literal-string-symbol' => '#aa2211',
+      'syntax.literal-number' => '#601200',
+      'syntax.literal-number-float' => '#601200',
+      'syntax.literal-number-hex' => '#601200',
+      'syntax.literal-number-integer' => '#601200',
+      'syntax.literal-number-octal' => '#601200',
+      'syntax.literal-number-integer-long' => '#601200',
+      'syntax.generic-deleted' => '#a00000',
+      'syntax.generic-red' => '#ff0000',
+      'syntax.generic-heading' => '#000080',
+      'syntax.generic-inserted' => '#00a000',
+      'syntax.generic-output' => '#808080',
+      'syntax.generic-prompt' => '#000080',
+      'syntax.generic-underline' => '#800080',
+      'syntax.generic-traceback' => '#0040d0',
+      'syntax.name-decorator' => '#aa22ff',
+      'syntax.name-identifier' => '#92969d',
+      'syntax.name-entity' => '#d2413a',
+      'syntax.name-label' => '#a0a000',
+      'syntax.name-namespace' => '#0000ff',
+      'syntax.operator-word' => '#aa22ff',
+      'syntax.text-whitespace' => '#bbbbbb',
+      'syntax.literal-string-escape' => '#bb6622',
+      'syntax.literal-string-interpol' => '#bb66bb',
     );
   }
 

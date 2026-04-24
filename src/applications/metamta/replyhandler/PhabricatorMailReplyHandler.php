@@ -199,8 +199,8 @@ abstract class PhabricatorMailReplyHandler extends Phobject {
    * Each target should be sent a separate email, and contains the information
    * required to generate it with appropriate permissions and configuration.
    *
-   * @param list<phid> List of "To" PHIDs.
-   * @param list<phid> List of "CC" PHIDs.
+   * @param list<string> $raw_to List of "To" PHIDs.
+   * @param list<string> $raw_cc List of "CC" PHIDs.
    * @return list<PhabricatorMailTarget> List of targets.
    */
   final public function getMailTargets(array $raw_to, array $raw_cc) {
@@ -274,9 +274,9 @@ abstract class PhabricatorMailReplyHandler extends Phobject {
    * This takes any compound recipients (like projects) and looks up all their
    * members.
    *
-   * @param list<phid> List of To PHIDs.
-   * @param list<phid> List of CC PHIDs.
-   * @return pair<list<phid>, list<phid>> Expanded PHID lists.
+   * @param list<string> $to List of To PHIDs.
+   * @param list<string> $cc List of CC PHIDs.
+   * @return array<list<string>, list<string>> Expanded PHID lists.
    */
   private function expandRecipientPHIDs(array $to, array $cc) {
     $to_result = array();
@@ -332,9 +332,10 @@ abstract class PhabricatorMailReplyHandler extends Phobject {
    *
    * Invalid recipients are dropped from the results.
    *
-   * @param list<phid> List of To PHIDs.
-   * @param list<phid> List of CC PHIDs.
-   * @return pair<wild, wild> Maps from PHIDs to users.
+   * @param list<string> $to List of To PHIDs.
+   * @param list<string> $cc List of CC PHIDs.
+   * @return array{array<string, PhabricatorUser>,
+   *         array<string, PhabricatorUser>} Maps from PHIDs to users.
    */
   private function loadRecipientUsers(array $to, array $cc) {
     $to_result = array();
@@ -370,9 +371,10 @@ abstract class PhabricatorMailReplyHandler extends Phobject {
   /**
    * Remove recipients who do not have permission to view the mail receiver.
    *
-   * @param map<string, PhabricatorUser> Map of "To" users.
-   * @param map<string, PhabricatorUser> Map of "CC" users.
-   * @return pair<wild, wild> Filtered user maps.
+   * @param map<string, PhabricatorUser> $to Map of "To" users.
+   * @param map<string, PhabricatorUser> $cc Map of "CC" users.
+   * @return array{array<string, PhabricatorUser>,
+   *         array<string, PhabricatorUser>} Filtered user maps.
    */
   private function filterRecipientUsers(array $to, array $cc) {
     $to_result = array();

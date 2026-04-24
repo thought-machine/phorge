@@ -27,8 +27,23 @@ final class PhabricatorPeopleProfilePictureController
     $done_uri = '/p/'.$name.'/';
 
     $supported_formats = PhabricatorFile::getTransformableImageFormats();
+    if ($supported_formats) {
+      $supported_formats_message = pht('Supported image formats: %s.',
+              implode(', ', $supported_formats));
+    } else {
+      $supported_formats_message = pht('Server supports no image formats.');
+    }
     $e_file = true;
     $errors = array();
+
+    // Get the image file transform.
+    $xform = PhabricatorFileTransform::getTransformByKey(
+      PhabricatorFileThumbnailTransform::TRANSFORM_PROFILE);
+
+    // Have an hard-limit to save our resources.
+    $max_image_dimensions = $xform->getMaxTransformDimensions();
+    $max_image_dimensions_message = pht('Maximum image dimensions: %s pixels.',
+      implode(mb_chr(215), $max_image_dimensions));
 
     if ($request->isFormPost()) {
       $phid = $request->getStr('phid');
@@ -59,13 +74,9 @@ final class PhabricatorPeopleProfilePictureController
       if (!$errors && !$is_default) {
         if (!$file->isTransformableImage()) {
           $e_file = pht('Not Supported');
-          $errors[] = pht(
-            'This server only supports these image formats: %s.',
-            implode(', ', $supported_formats));
+          $errors[] = $supported_formats_message;
         } else {
-          $xform = PhabricatorFileTransform::getTransformByKey(
-            PhabricatorFileThumbnailTransform::TRANSFORM_PROFILE);
-          $xformed = $xform->executeTransform($file);
+          $xformed = $xform->executeTransformExplicit($file);
         }
       }
 
@@ -180,10 +191,6 @@ final class PhabricatorPeopleProfilePictureController
 
     $buttons = array();
     foreach ($images as $phid => $spec) {
-      $style = null;
-      if (isset($spec['style'])) {
-        $style = $spec['style'];
-      }
       $button = javelin_tag(
         'button',
         array(
@@ -250,8 +257,8 @@ final class PhabricatorPeopleProfilePictureController
           ->setName('picture')
           ->setLabel(pht('Upload Picture'))
           ->setError($e_file)
-          ->setCaption(
-            pht('Supported formats: %s', implode(', ', $supported_formats))))
+          ->setCaption($supported_formats_message.' '.
+            $max_image_dimensions_message))
       ->appendChild(
         id(new AphrontFormSubmitControl())
           ->addCancelButton($done_uri)

@@ -19,7 +19,7 @@ final class DrydockLeaseSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorDrydockApplication';
+    return PhabricatorDrydockApplication::class;
   }
 
   public function newQuery() {
@@ -56,6 +56,7 @@ final class DrydockLeaseSearchEngine
       id(new PhabricatorSearchCheckboxesField())
         ->setLabel(pht('Statuses'))
         ->setKey('statuses')
+        ->setDescription(pht('Search for objects with given statuses.'))
         ->setOptions(DrydockLeaseStatus::getStatusMap()),
       id(new PhabricatorPHIDsSearchField())
         ->setLabel(pht('Owners'))

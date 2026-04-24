@@ -3,6 +3,7 @@
 abstract class AphrontFormControl extends AphrontView {
 
   private $label;
+  private $ariaLabel;
   private $caption;
   private $error;
   private $name;
@@ -52,6 +53,20 @@ abstract class AphrontFormControl extends AphrontView {
     return $this;
   }
 
+  /**
+   * Explicitly set an aria-label attribute for accessibility. Only to be used
+   * when no visible label is already set via setLabel().
+   * @param string $aria_label aria-label text to add to the form control
+   */
+  public function setAriaLabel($aria_label) {
+    $this->ariaLabel = $aria_label;
+    return $this;
+  }
+
+  public function getAriaLabel() {
+    return $this->ariaLabel;
+  }
+
   public function getLabel() {
     return $this->label;
   }
@@ -59,7 +74,7 @@ abstract class AphrontFormControl extends AphrontView {
   /**
    * Set the Caption
    * The Caption shows a tip usually nearby the related input field.
-   * @param string|PhutilSafeHTML|null
+   * @param string|PhutilSafeHTML|null $caption
    * @return self
    */
   public function setCaption($caption) {
