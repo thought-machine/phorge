@@ -1,7 +1,7 @@
 <?php
 
 use Prometheus\CollectorRegistry;
-use Prometheus\Storage\Redis as RedisStorage;
+use Prometheus\Storage\Predis as RedisStorage;
 
 final class PhabricatorPrometheusApplication extends PhabricatorApplication {
 
