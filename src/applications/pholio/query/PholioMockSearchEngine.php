@@ -7,7 +7,7 @@ final class PholioMockSearchEngine extends PhabricatorApplicationSearchEngine {
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorPholioApplication';
+    return PhabricatorPholioApplication::class;
   }
 
   public function newQuery() {
@@ -83,11 +83,16 @@ final class PholioMockSearchEngine extends PhabricatorApplicationSearchEngine {
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<PholioMock> $mocks
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $mocks,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($mocks, 'PholioMock');
+    assert_instances_of($mocks, PholioMock::class);
 
     $viewer = $this->requireViewer();
     $handles = $viewer->loadHandles(mpull($mocks, 'getAuthorPHID'));
@@ -104,7 +109,7 @@ final class PholioMockSearchEngine extends PhabricatorApplicationSearchEngine {
 
       $header = 'M'.$mock->getID().' '.$mock->getName();
       $item = id(new PHUIPinboardItemView())
-        ->setUser($viewer)
+        ->setViewer($viewer)
         ->setHeader($header)
         ->setObject($mock)
         ->setURI('/M'.$mock->getID())

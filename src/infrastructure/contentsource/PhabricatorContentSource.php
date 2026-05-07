@@ -14,7 +14,7 @@ abstract class PhabricatorContentSource extends Phobject {
 
   final public static function getAllContentSources() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setUniqueMethod('getSourceTypeConstant')
       ->execute();
   }
@@ -22,10 +22,10 @@ abstract class PhabricatorContentSource extends Phobject {
   /**
    * Construct a new content source object.
    *
-   * @param const The source type constant to build a source for.
-   * @param array Source parameters.
-   * @param bool True to suppress errors and force construction of a source
-   *   even if the source type is not valid.
+   * @param string $source The source type constant to build a source for.
+   * @param array  $params (optional) Source parameters.
+   * @param bool   $force (optional) True to suppress errors and force
+   *   construction of a source even if the source type is not valid.
    * @return PhabricatorContentSource New source object.
    */
   final public static function newForSource(

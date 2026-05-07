@@ -26,8 +26,23 @@ final class PhabricatorProjectEditPictureController
     $manage_uri = $this->getApplicationURI('manage/'.$project->getID().'/');
 
     $supported_formats = PhabricatorFile::getTransformableImageFormats();
+    if ($supported_formats) {
+      $supported_formats_message = pht('Supported image formats: %s.',
+              implode(', ', $supported_formats));
+    } else {
+      $supported_formats_message = pht('Server supports no image formats.');
+    }
     $e_file = true;
     $errors = array();
+
+    // Get the image file transform.
+    $xform = PhabricatorFileTransform::getTransformByKey(
+      PhabricatorFileThumbnailTransform::TRANSFORM_PROFILE);
+
+    // Have an hard-limit to save our resources.
+    $max_image_dimensions = $xform->getMaxTransformDimensions();
+    $max_image_dimensions_message = pht('Maximum image dimensions: %s pixels.',
+      implode(mb_chr(215), $max_image_dimensions));
 
     if ($request->isFormPost()) {
       $phid = $request->getStr('phid');
@@ -58,13 +73,9 @@ final class PhabricatorProjectEditPictureController
       if (!$errors && !$is_default) {
         if (!$file->isTransformableImage()) {
           $e_file = pht('Not Supported');
-          $errors[] = pht(
-            'This server only supports these image formats: %s.',
-            implode(', ', $supported_formats));
+          $errors[] = $supported_formats_message;
         } else {
-          $xform = PhabricatorFileTransform::getTransformByKey(
-            PhabricatorFileThumbnailTransform::TRANSFORM_PROFILE);
-          $xformed = $xform->executeTransform($file);
+          $xformed = $xform->executeTransformExplicit($file);
         }
       }
 
@@ -96,7 +107,7 @@ final class PhabricatorProjectEditPictureController
     $title = pht('Edit Project Picture');
 
     $form = id(new PHUIFormLayoutView())
-      ->setUser($viewer);
+      ->setViewer($viewer);
 
     $builtin = PhabricatorProjectIconSet::getIconImage(
       $project->getIcon());
@@ -250,15 +261,15 @@ final class PhabricatorProjectEditPictureController
         ->setValue($compose_form));
 
     $upload_form = id(new AphrontFormView())
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->setEncType('multipart/form-data')
       ->appendChild(
         id(new AphrontFormFileControl())
           ->setName('picture')
           ->setLabel(pht('Upload Picture'))
           ->setError($e_file)
-          ->setCaption(
-            pht('Supported formats: %s', implode(', ', $supported_formats))))
+          ->setCaption($supported_formats_message.' '.
+            $max_image_dimensions_message))
       ->appendChild(
         id(new AphrontFormSubmitControl())
           ->addCancelButton($manage_uri)

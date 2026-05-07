@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<DifferentialDiff>
+ */
 final class DifferentialDiffQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -185,7 +188,7 @@ final class DifferentialDiffQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDifferentialApplication';
+    return PhabricatorDifferentialApplication::class;
   }
 
 }

@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorRepositoryIdentity>
+ */
 final class PhabricatorRepositoryIdentityQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -150,7 +153,7 @@ final class PhabricatorRepositoryIdentityQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDiffusionApplication';
+    return PhabricatorDiffusionApplication::class;
   }
 
 }

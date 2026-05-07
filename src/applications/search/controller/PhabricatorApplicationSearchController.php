@@ -178,7 +178,7 @@ final class PhabricatorApplicationSearchController
       'query/advanced');
 
     $form = id(new AphrontFormView())
-      ->setUser($user)
+      ->setViewer($user)
       ->setAction($request->getPath());
 
     $engine->buildSearchForm($form, $saved_query);
@@ -211,7 +211,13 @@ final class PhabricatorApplicationSearchController
     if ($named_query) {
       $title = $named_query->getQueryName();
     } else {
-      $title = pht('Advanced Search');
+      $current_app = $this->getCurrentApplication()->getName();
+      $search_app = id(new PhabricatorSearchApplication())->getName();
+      if ($current_app === $search_app) {
+        $title = pht('Global Search');
+      } else {
+        $title = pht('Search');
+      }
     }
 
     $header = id(new PHUIHeaderView())
@@ -346,6 +352,15 @@ final class PhabricatorApplicationSearchController
             $body[] = $pager_box;
           }
         }
+      } catch (PhabricatorTypeaheadLoginRequiredException $ex) {
+
+        // A specific token requires login. Show login page.
+        $auth_class = PhabricatorAuthApplication::class;
+        $auth_application = PhabricatorApplication::getByClass($auth_class);
+        $login_controller = new PhabricatorAuthStartController();
+        $this->setCurrentApplication($auth_application);
+        return $this->delegateToController($login_controller);
+
       } catch (PhabricatorTypeaheadInvalidTokenException $ex) {
         $exec_errors[] = pht(
           'This query specifies an invalid parameter. Review the '.
@@ -568,8 +583,10 @@ final class PhabricatorApplicationSearchController
         'items' => array(),
         'edit' => true,
       ),
+      // The name 'global' is a remnant of the time this group was called
+      // Global Saved Queries. See T16168.
       'global' => array(
-        'name' => pht('Global Saved Queries'),
+        'name' => pht('System Saved Queries'),
         'items' => array(),
         'edit' => $can_global,
       ),
@@ -757,12 +774,15 @@ final class PhabricatorApplicationSearchController
     return $menu;
   }
 
+  /**
+   * @return AphrontSideNavFilterView
+   */
   private function buildNavigation() {
     $viewer = $this->getViewer();
     $engine = $this->getSearchEngine();
 
     $nav = id(new AphrontSideNavFilterView())
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->setBaseURI(new PhutilURI($this->getApplicationURI()));
 
     $engine->addNavigationItems($nav->getMenu());
@@ -770,6 +790,13 @@ final class PhabricatorApplicationSearchController
     return $nav;
   }
 
+  /**
+   * Render a content body (if available) to onboard new users. This may return
+   * what the corresponding PhabricatorApplicationSearchEngine returns, or null
+   * based on some additional checks performed in this function.
+   *
+   * @return mixed|PhutilSafeHTML|null
+   */
   private function renderNewUserView(
     PhabricatorApplicationSearchEngine $engine,
     $force_nux) {
@@ -813,6 +840,9 @@ final class PhabricatorApplicationSearchController
     return $nux_view;
   }
 
+  /**
+   * @return PHUIButtonView
+   */
   private function newUseResultsDropdown(
     PhabricatorSavedQuery $query,
     array $dropdown_items) {
@@ -854,7 +884,7 @@ final class PhabricatorApplicationSearchController
     $overheated_link = phutil_tag(
       'a',
       array(
-        'href' => 'https://phurl.io/u/overheated',
+        'href' => 'https://we.phorge.it/w/overheated_queries/',
         'target' => '_blank',
       ),
       pht('Learn More'));
@@ -872,6 +902,9 @@ final class PhabricatorApplicationSearchController
     return $message;
   }
 
+  /**
+   * @return PHUIInfoView
+   */
   private function newOverheatedView(array $results) {
     $message = self::newOverheatedError((bool)$results);
 
@@ -885,6 +918,9 @@ final class PhabricatorApplicationSearchController
         ));
   }
 
+  /**
+   * @return PhabricatorActionView
+   */
   private function newBuiltinUseActions() {
     $actions = array();
     $request = $this->getRequest();
@@ -899,12 +935,12 @@ final class PhabricatorApplicationSearchController
 
     $can_use = $engine->canUseInPanelContext();
     $is_installed = PhabricatorApplication::isClassInstalledForViewer(
-      'PhabricatorDashboardApplication',
+      PhabricatorDashboardApplication::class,
       $viewer);
 
     if ($can_use && $is_installed) {
       $actions[] = id(new PhabricatorActionView())
-        ->setIcon('fa-dashboard')
+        ->setIcon('fa-tachometer')
         ->setName(pht('Add to Dashboard'))
         ->setWorkflow(true)
         ->setHref("/dashboard/panel/install/{$engine_class}/{$query_key}/");

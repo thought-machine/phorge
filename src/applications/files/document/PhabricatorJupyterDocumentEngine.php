@@ -36,14 +36,14 @@ final class PhabricatorJupyterDocumentEngine
   }
 
   public function canDiffDocuments(
-    PhabricatorDocumentRef $uref = null,
-    PhabricatorDocumentRef $vref = null) {
+    ?PhabricatorDocumentRef $uref = null,
+    ?PhabricatorDocumentRef $vref = null) {
     return true;
   }
 
   public function newEngineBlocks(
-    PhabricatorDocumentRef $uref = null,
-    PhabricatorDocumentRef $vref = null) {
+    ?PhabricatorDocumentRef $uref = null,
+    ?PhabricatorDocumentRef $vref = null) {
 
     $blocks = new PhabricatorDocumentEngineBlocks();
 
@@ -201,13 +201,6 @@ final class PhabricatorJupyterDocumentEngine
 
       switch ($type) {
         case '-':
-          $result[] = phutil_tag(
-            'span',
-            array(
-              'class' => 'bright',
-            ),
-            $text);
-          break;
         case '+':
           $result[] = phutil_tag(
             'span',
@@ -323,11 +316,11 @@ final class PhabricatorJupyterDocumentEngine
     }
 
     $nbformat = idx($data, 'nbformat');
-    if (!strlen($nbformat)) {
+    if (!is_int($nbformat)) {
       throw new Exception(
         pht(
-          'This document is missing an "nbformat" field. Jupyter notebooks '.
-          'must have this field.'));
+          'This document lacks a valid "nbformat" field. Jupyter notebooks '.
+          'must have this field and it must have an integer value.'));
     }
 
     if ($nbformat !== 4) {
@@ -626,6 +619,7 @@ final class PhabricatorJupyterDocumentEngine
           'image/jpeg',
           'image/jpg',
           'image/gif',
+          'image/webp',
         );
 
         foreach ($image_formats as $image_format) {
@@ -734,11 +728,9 @@ final class PhabricatorJupyterDocumentEngine
   private function readStringList(array $src, $key) {
     $list = idx($src, $key);
 
-    if (is_array($list)) {
-      $list = $list;
-    } else if (is_string($list)) {
+    if (is_string($list)) {
       $list = array($list);
-    } else {
+    } else if (!is_array($list)) {
       $list = array();
     }
 

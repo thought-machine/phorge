@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorRepositoryPullEvent>
+ */
 final class PhabricatorRepositoryPullEventQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -125,7 +128,7 @@ final class PhabricatorRepositoryPullEventQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDiffusionApplication';
+    return PhabricatorDiffusionApplication::class;
   }
 
 }

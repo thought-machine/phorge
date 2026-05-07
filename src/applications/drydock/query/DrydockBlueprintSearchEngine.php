@@ -8,7 +8,7 @@ final class DrydockBlueprintSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorDrydockApplication';
+    return PhabricatorDrydockApplication::class;
   }
 
   public function newQuery() {
@@ -38,6 +38,7 @@ final class DrydockBlueprintSearchEngine
       id(new PhabricatorSearchThreeStateField())
         ->setLabel(pht('Disabled'))
         ->setKey('isDisabled')
+        ->setDescription(pht('Search for disabled or enabled blueprints.'))
         ->setOptions(
           pht('(Show All)'),
           pht('Show Only Disabled Blueprints'),
@@ -70,11 +71,16 @@ final class DrydockBlueprintSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<DrydockBlueprint> $blueprints
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $blueprints,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($blueprints, 'DrydockBlueprint');
+    assert_instances_of($blueprints, DrydockBlueprint::class);
 
     $viewer = $this->requireViewer();
 
@@ -136,6 +142,34 @@ final class DrydockBlueprintSearchEngine
     $result->setNoDataString(pht('No blueprints found.'));
 
     return $result;
+  }
+
+  protected function getNewUserBody() {
+    $see_almanac_button = id(new PHUIButtonView())
+      ->setTag('a')
+      ->setText(pht('See Almanac services'))
+      ->setHref('/almanac/service/');
+
+    $create_button = id(new PHUIButtonView())
+      ->setTag('a')
+      ->setText(pht('Create a Blueprint'))
+      ->setHref('/drydock/blueprint/edit/')
+      ->setIcon('fa-plus')
+      ->setColor(PHUIButtonView::GREEN);
+
+    $app_name = pht('Blueprints');
+    $view = id(new PHUIBigInfoView())
+      ->setIcon('fa-map-o')
+      ->setTitle(pht('Welcome to %s', $app_name))
+      ->setDescription(
+        pht(
+          'Blueprints allow to lease fresh working copies of repositories, '.
+          'on your Drydock devices, when needed by CI/CD workflows, and more. '.
+          'Blueprints lease services defined in your Almanac.'))
+      ->addAction($see_almanac_button)
+      ->addAction($create_button);
+
+      return $view;
   }
 
 }

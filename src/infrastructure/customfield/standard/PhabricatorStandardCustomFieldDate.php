@@ -46,13 +46,13 @@ final class PhabricatorStandardCustomFieldDate
 
   public function readValueFromRequest(AphrontRequest $request) {
     $control = $this->newDateControl();
-    $control->setUser($request->getUser());
+    $control->setViewer($request->getUser());
     $value = $control->readValueFromRequest($request);
 
     $this->setFieldValue($value);
   }
 
-  public function renderPropertyViewValue(array $handles) {
+  protected function renderValue() {
     $value = $this->getFieldValue();
     if (!$value) {
       return null;
@@ -65,7 +65,7 @@ final class PhabricatorStandardCustomFieldDate
     $control = id(new AphrontFormDateControl())
       ->setLabel($this->getFieldName())
       ->setName($this->getFieldKey())
-      ->setUser($this->getViewer())
+      ->setViewer($this->getViewer())
       ->setCaption($this->getCaption())
       ->setAllowNull(!$this->getRequired());
 
@@ -110,14 +110,14 @@ final class PhabricatorStandardCustomFieldDate
     }
 
     $min_str = idx($value, 'min', '');
-    if (strlen($min_str)) {
+    if (phutil_nonempty_string($min_str)) {
       $min = PhabricatorTime::parseLocalTime($min_str, $viewer);
     } else {
       $min = null;
     }
 
     $max_str = idx($value, 'max', '');
-    if (strlen($max_str)) {
+    if (phutil_nonempty_string($max_str)) {
       $max = PhabricatorTime::parseLocalTime($max_str, $viewer);
     } else {
       $max = null;
@@ -177,6 +177,12 @@ final class PhabricatorStandardCustomFieldDate
         $xaction->renderHandleLink($author_phid),
         $this->getFieldName(),
         $new_date);
+    } else if (!$new && $old) {
+      return pht(
+        '%s removed %s which was set to %s.',
+        $xaction->renderHandleLink($author_phid),
+        $this->getFieldName(),
+        $old_date);
     } else if (!$new) {
       return pht(
         '%s removed %s.',

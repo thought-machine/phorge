@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<HeraldTranscript>
+ */
 final class HeraldTranscriptQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -130,7 +133,7 @@ final class HeraldTranscriptQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorHeraldApplication';
+    return PhabricatorHeraldApplication::class;
   }
 
 }

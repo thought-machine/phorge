@@ -103,7 +103,8 @@ abstract class PhabricatorApplicationTransactionEditor
    *
    * Uninstalling the application will disable the editor.
    *
-   * @return string Editor's application class name.
+   * @return class-string<PhabricatorApplication> Editor's application
+   *   class name.
    */
   abstract public function getEditorApplicationClass();
 
@@ -140,8 +141,9 @@ abstract class PhabricatorApplicationTransactionEditor
    * nothing (e.g., empty comment with a status change that has already been
    * performed by another user).
    *
-   * @param bool  True to drop transactions without effect and continue.
-   * @return this
+   * @param bool $continue True to drop transactions without effect and
+  *     continue.
+   * @return $this
    */
   public function setContinueOnNoEffect($continue) {
     $this->continueOnNoEffect = $continue;
@@ -168,9 +170,9 @@ abstract class PhabricatorApplicationTransactionEditor
    * (like the priority, batch, and merge editors in Maniphest), these
    * operations can continue to function even if an object is outdated.
    *
-   * @param bool  True to continue when transactions don't completely satisfy
-   *              all required fields.
-   * @return this
+   * @param bool $continue_on_missing_fields True to continue when transactions
+   *              don't completely satisfy all required fields.
+   * @return $this
    */
   public function setContinueOnMissingFields($continue_on_missing_fields) {
     $this->continueOnMissingFields = $continue_on_missing_fields;
@@ -503,11 +505,12 @@ abstract class PhabricatorApplicationTransactionEditor
     switch ($type) {
       case PhabricatorTransactions::TYPE_CREATE:
       case PhabricatorTransactions::TYPE_HISTORY:
+      case PhabricatorTransactions::TYPE_MFA:
+      case PhabricatorTransactions::TYPE_COMMENT:
+      case PhabricatorTransactions::TYPE_FILE:
         return null;
       case PhabricatorTransactions::TYPE_SUBTYPE:
         return $object->getEditEngineSubtype();
-      case PhabricatorTransactions::TYPE_MFA:
-        return null;
       case PhabricatorTransactions::TYPE_SUBSCRIBERS:
         return array_values($this->subscribers);
       case PhabricatorTransactions::TYPE_VIEW_POLICY:
@@ -576,10 +579,6 @@ abstract class PhabricatorApplicationTransactionEditor
         // NOTE: Custom fields have their old value pre-populated when they are
         // built by PhabricatorCustomFieldList.
         return $xaction->getOldValue();
-      case PhabricatorTransactions::TYPE_COMMENT:
-        return null;
-      case PhabricatorTransactions::TYPE_FILE:
-        return null;
       default:
         return $this->getCustomTransactionOldValue($object, $xaction);
     }
@@ -600,6 +599,7 @@ abstract class PhabricatorApplicationTransactionEditor
 
     switch ($type) {
       case PhabricatorTransactions::TYPE_CREATE:
+      case PhabricatorTransactions::TYPE_COMMENT:
         return null;
       case PhabricatorTransactions::TYPE_SUBSCRIBERS:
         return $this->getPHIDTransactionNewValue($xaction);
@@ -647,8 +647,6 @@ abstract class PhabricatorApplicationTransactionEditor
       case PhabricatorTransactions::TYPE_CUSTOMFIELD:
         $field = $this->getCustomFieldForTransaction($object, $xaction);
         return $field->getNewValueFromApplicationTransactions($xaction);
-      case PhabricatorTransactions::TYPE_COMMENT:
-        return null;
       default:
         return $this->getCustomTransactionNewValue($object, $xaction);
     }
@@ -1307,6 +1305,7 @@ abstract class PhabricatorApplicationTransactionEditor
       foreach ($xactions as $xaction) {
         if ($xaction->getTransactionType() == $create_type) {
           $mark_as_create = true;
+          break;
         }
       }
 
@@ -1416,10 +1415,8 @@ abstract class PhabricatorApplicationTransactionEditor
         $read_locking = false;
       }
 
-      if ($transaction_open) {
-        $object->saveTransaction();
-        $transaction_open = false;
-      }
+      $object->saveTransaction();
+      $transaction_open = false;
 
       $this->didCommitTransactions($object, $xactions);
 
@@ -1753,6 +1750,10 @@ abstract class PhabricatorApplicationTransactionEditor
     }
   }
 
+  /**
+   * @param PhabricatorLiskDAO $object
+   * @param array<PhabricatorApplicationTransaction> $xactions
+   */
   private function validateEditParameters(
     PhabricatorLiskDAO $object,
     array $xactions) {
@@ -1767,7 +1768,7 @@ abstract class PhabricatorApplicationTransactionEditor
 
     $types = array_fill_keys($this->getTransactionTypes(), true);
 
-    assert_instances_of($xactions, 'PhabricatorApplicationTransaction');
+    assert_instances_of($xactions, PhabricatorApplicationTransaction::class);
     foreach ($xactions as $xaction) {
       if ($xaction->getPHID() || $xaction->getID()) {
         throw new PhabricatorApplicationTransactionStructureException(
@@ -1838,10 +1839,14 @@ abstract class PhabricatorApplicationTransactionEditor
     }
   }
 
+  /**
+   * @param PhabricatorLiskDAO $object
+   * @param array<PhabricatorApplicationTransaction> $xactions
+   */
   private function applyCapabilityChecks(
     PhabricatorLiskDAO $object,
     array $xactions) {
-    assert_instances_of($xactions, 'PhabricatorApplicationTransaction');
+    assert_instances_of($xactions, PhabricatorApplicationTransaction::class);
 
     $can_edit = PhabricatorPolicyCapability::CAN_EDIT;
 
@@ -2251,7 +2256,12 @@ abstract class PhabricatorApplicationTransactionEditor
     return $xactions;
   }
 
-
+  /**
+   * @param PhabricatorLiskDAO $object
+   * @param array<PhabricatorApplicationTransaction> $xactions
+   * @param array<PhabricatorTransactionRemarkupChange> $remarkup_changes
+   * @return PhabricatorApplicationTransaction
+   */
   private function newFileTransaction(
     PhabricatorLiskDAO $object,
     array $xactions,
@@ -2259,7 +2269,7 @@ abstract class PhabricatorApplicationTransactionEditor
 
     assert_instances_of(
       $remarkup_changes,
-      'PhabricatorTransactionRemarkupChange');
+      PhabricatorTransactionRemarkupChange::class);
 
     $new_map = array();
 
@@ -2320,6 +2330,7 @@ abstract class PhabricatorApplicationTransactionEditor
     }
 
     $xaction = $object->getApplicationTransactionTemplate()
+      ->setIgnoreOnNoEffect(true)
       ->setTransactionType(PhabricatorTransactions::TYPE_FILE)
       ->setMetadataValue('attach.implicit', true)
       ->setNewValue($new_map);
@@ -2851,11 +2862,11 @@ abstract class PhabricatorApplicationTransactionEditor
    * missing, by detecting that the object has no field value and there is no
    * transaction which sets one.
    *
-   * @param PhabricatorLiskDAO Object being edited.
-   * @param string Transaction type to validate.
-   * @param list<PhabricatorApplicationTransaction> Transactions of given type,
-   *   which may be empty if the edit does not apply any transactions of the
-   *   given type.
+   * @param PhabricatorLiskDAO $object Object being edited.
+   * @param string $type Transaction type to validate.
+   * @param list<PhabricatorApplicationTransaction> $xactions Transactions of
+   *   given type, which may be empty if the edit does not apply any
+   *   transactions of the given type.
    * @return list<PhabricatorApplicationTransactionValidationError> List of
    *   validation errors.
    */
@@ -3061,8 +3072,8 @@ abstract class PhabricatorApplicationTransactionEditor
           $transaction_type,
           pht('Invalid'),
           pht(
-            'You can not select this %s policy, because you would no longer '.
-            'be able to %s the object.',
+            'The %s policy of this object would no longer allow '.
+            'you to %s the object.',
             $capability,
             $capability),
           $xaction);
@@ -3205,13 +3216,20 @@ abstract class PhabricatorApplicationTransactionEditor
 
     foreach ($xactions as $xaction) {
       if (!$factors) {
+        $mfa_panel = id(new PhabricatorMultiFactorSettingsPanel())
+          ->setUser($this->getActor());
+        $mfa_uri = $mfa_panel->getPanelURI();
+        $mfa_panel_name = pht('Settings');
+        $mfa_link = new PhutilSafeHTML(
+          '<a href="'.$mfa_uri.'">'.$mfa_panel_name.'</a>');
         $errors[] = new PhabricatorApplicationTransactionValidationError(
           $transaction_type,
           pht('No MFA'),
           pht(
             'You do not have any MFA factors attached to your account, so '.
             'you can not sign this transaction group with MFA. Add MFA to '.
-            'your account in Settings.'),
+            'your account in %s.',
+            $mfa_link),
           $xaction);
       }
     }
@@ -3275,9 +3293,9 @@ abstract class PhabricatorApplicationTransactionEditor
    * This will return `true` if the net effect of the object and transactions
    * is an empty field.
    *
-   * @param wild Current field value.
-   * @param list<PhabricatorApplicationTransaction> Transactions editing the
-   *          field.
+   * @param mixed $field_value Current field value.
+   * @param list<PhabricatorApplicationTransaction> $xactions Transactions
+   *          editing the field.
    * @return bool True if the field will be an empty text field after edits.
    */
   protected function validateIsEmptyTextField($field_value, array $xactions) {
@@ -3297,7 +3315,10 @@ abstract class PhabricatorApplicationTransactionEditor
 
 
   /**
-   * When a user interacts with an object, we might want to add them to CC.
+   * Adds the actor as a subscriber to the object with which they interact
+   * @param PhabricatorLiskDAO $object on which the action is performed
+   * @param array $xactions Transactions to apply
+   * @return array Transactions to apply
    */
   final public function applyImplicitCC(
     PhabricatorLiskDAO $object,
@@ -3379,11 +3400,18 @@ abstract class PhabricatorApplicationTransactionEditor
     return $xactions;
   }
 
+  /**
+   * Whether the action implies the actor should be subscribed on the object
+   * @param PhabricatorLiskDAO $object on which the action is performed
+   * @param PhabricatorApplicationTransaction $xaction Transaction to apply
+   * @return bool True if the actor should be subscribed on the object
+   */
   protected function shouldImplyCC(
     PhabricatorLiskDAO $object,
     PhabricatorApplicationTransaction $xaction) {
 
-    return $xaction->isCommentTransaction();
+    return ($xaction->isCommentTransaction() &&
+      !($xaction->getComment()->getIsRemoved()));
   }
 
 
@@ -3948,18 +3976,9 @@ abstract class PhabricatorApplicationTransactionEditor
         $object_label);
     }
 
-    $xactions_style = array();
-
     $header_action = phutil_tag(
       'td',
       array(),
-      $header_button);
-
-    $header_action = phutil_tag(
-      'td',
-      array(
-        'style' => implode(' ', $xactions_style),
-      ),
       array(
         $headers_html,
         // Add an extra newline to prevent the "View Object" button from
@@ -4328,7 +4347,9 @@ abstract class PhabricatorApplicationTransactionEditor
     }
 
     $apply_xactions = $this->didApplyHeraldRules($object, $adapter, $xscript);
-    assert_instances_of($apply_xactions, 'PhabricatorApplicationTransaction');
+    assert_instances_of(
+      $apply_xactions,
+      PhabricatorApplicationTransaction::class);
 
     $queue_xactions = $adapter->getQueuedTransactions();
 
@@ -4535,7 +4556,7 @@ abstract class PhabricatorApplicationTransactionEditor
    *
    * This data will be loaded with @{method:loadWorkerState} in the worker.
    *
-   * @return dict<string, wild> Serializable editor state.
+   * @return array<string, mixed> Serializable editor state.
    * @task workers
    */
   private function getWorkerState() {
@@ -4560,7 +4581,7 @@ abstract class PhabricatorApplicationTransactionEditor
   /**
    * Hook; return custom properties which need to be passed to workers.
    *
-   * @return dict<string, wild> Custom properties.
+   * @return array<string, mixed> Custom properties.
    * @task workers
    */
   protected function getCustomWorkerState() {
@@ -4575,7 +4596,7 @@ abstract class PhabricatorApplicationTransactionEditor
    * This primarily allows binary data to be passed to workers and survive
    * JSON encoding.
    *
-   * @return dict<string, string> Property encodings.
+   * @return array<string, string> Property encodings.
    * @task workers
    */
   protected function getCustomWorkerStateEncoding() {
@@ -4588,8 +4609,9 @@ abstract class PhabricatorApplicationTransactionEditor
    *
    * This method is used to load state when running worker operations.
    *
-   * @param dict<string, wild> Editor state, from @{method:getWorkerState}.
-   * @return this
+   * @param array<string, mixed> $state Editor state, from
+        @{method:getWorkerState}.
+   * @return $this
    * @task workers
    */
   final public function loadWorkerState(array $state) {
@@ -4614,9 +4636,9 @@ abstract class PhabricatorApplicationTransactionEditor
    * Hook; set custom properties on the editor from data emitted by
    * @{method:getCustomWorkerState}.
    *
-   * @param dict<string, wild> Custom state,
+   * @param array<string, mixed> $state Custom state,
    *   from @{method:getCustomWorkerState}.
-   * @return this
+   * @return $this
    * @task workers
    */
   protected function loadCustomWorkerState(array $state) {
@@ -4662,9 +4684,10 @@ abstract class PhabricatorApplicationTransactionEditor
    *
    * See @{method:getCustomWorkerStateEncoding}.
    *
-   * @param map<string, wild> Map of values to encode.
-   * @param map<string, string> Map of encodings to apply.
-   * @return map<string, wild> Map of encoded values.
+   * @param map<string,mixed> $state Map of values to encode.
+   * @param map<string,string> $encodings Map of encodings to apply.
+   * @return map<string,mixed> Map of encoded values.
+   *
    * @task workers
    */
   private function encodeStateForStorage(
@@ -4708,9 +4731,10 @@ abstract class PhabricatorApplicationTransactionEditor
    *
    * See @{method:getCustomWorkerStateEncoding}.
    *
-   * @param map<string, wild> Map of encoded values.
-   * @param map<string, string> Map of encodings.
-   * @return map<string, wild> Map of decoded values.
+   * @param map<string, mixed> $state Map of encoded values.
+   * @param map<string, string> $encodings Map of encodings.
+   * @return map<string, mixed> Map of decoded values.
+   *
    * @task workers
    */
   private function decodeStateFromStorage(
@@ -4747,8 +4771,8 @@ abstract class PhabricatorApplicationTransactionEditor
    * If the list of PHIDs include mutually exclusive projects, remove the
    * conflicting projects.
    *
-   * @param list<phid> List of project PHIDs.
-   * @return list<phid> List with conflicts removed.
+   * @param list<string> $phids List of project PHIDs.
+   * @return list<string> List of project PHIDs with conflicts removed.
    */
   private function applyProjectConflictRules(array $phids) {
     if (!$phids) {
@@ -5012,7 +5036,7 @@ abstract class PhabricatorApplicationTransactionEditor
   }
 
   final protected function newSubEditor(
-    PhabricatorApplicationTransactionEditor $template = null) {
+    ?PhabricatorApplicationTransactionEditor $template = null) {
     $editor = $this->newEditorCopy($template);
 
     $editor->parentEditor = $this;
@@ -5022,7 +5046,7 @@ abstract class PhabricatorApplicationTransactionEditor
   }
 
   private function newEditorCopy(
-    PhabricatorApplicationTransactionEditor $template = null) {
+    ?PhabricatorApplicationTransactionEditor $template = null) {
     if ($template === null) {
       $template = newv(get_class($this), array());
     }
@@ -5333,6 +5357,9 @@ abstract class PhabricatorApplicationTransactionEditor
     return true;
   }
 
+  /**
+   * Get an entire object's history (via the "!history" email command)
+   */
   private function buildHistoryMail(PhabricatorLiskDAO $object) {
     $viewer = $this->requireActor();
     $recipient_phid = $this->getActingAsPHID();
@@ -5703,7 +5730,7 @@ abstract class PhabricatorApplicationTransactionEditor
 
       assert_instances_of(
         $extension_errors,
-        'PhabricatorApplicationTransactionValidationError');
+        PhabricatorApplicationTransactionValidationError::class);
 
       $errors[] = $extension_errors;
     }

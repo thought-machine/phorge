@@ -7,19 +7,8 @@ button,
 a.button,
 input[type="submit"] {
   font: {$basefont};
-  -webkit-font-smoothing: antialiased;
   -webkit-user-select: none;
   user-select: none;
-}
-
-button.phabricator-action-view-item {
-  -webkit-font-smoothing: auto;
-}
-
-button::-moz-focus-inner,
-input::-moz-focus-inner {
-  border: 0;
-  padding: 0;
 }
 
 button:focus,
@@ -100,9 +89,6 @@ input[type="submit"].button-grey {
 a.disabled,
 button.disabled,
 button[disabled] {
-  filter:alpha(opacity=50);
-  -moz-opacity: 0.5;
-  -khtml-opacity: 0.5;
   opacity: 0.5;
 }
 
@@ -183,8 +169,6 @@ button.link {
   border-bottom: none;
   text-decoration: none;
   color: #19558D;
-  -webkit-box-shadow: none;
-  -moz-box-shadow: none;
   box-shadow: none;
 }
 

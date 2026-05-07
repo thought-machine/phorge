@@ -32,18 +32,15 @@ body input.jx-tokenizer-input {
   outline: none;
   float: left;
   width: 100%;
-  border-shadow: none;
   box-shadow: none;
-  -webkit-box-shadow: none;
   font-size: {$normalfontsize};
-  color: #333;
+  color: {$greytext};
   height: 26px;
   background: transparent;
 }
 
 body input.jx-tokenizer-input:focus {
   box-shadow: none;
-  -webkit-box-shadow: none;
   border-color: transparent;
 }
 

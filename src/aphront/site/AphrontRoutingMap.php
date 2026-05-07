@@ -21,6 +21,9 @@ final class AphrontRoutingMap extends Phobject {
     return $this;
   }
 
+  /**
+   * @return AphrontSite
+   */
   public function getSite() {
     return $this->site;
   }
@@ -30,6 +33,9 @@ final class AphrontRoutingMap extends Phobject {
     return $this;
   }
 
+  /**
+   * @return PhabricatorApplication
+   */
   public function getApplication() {
     return $this->application;
   }
@@ -50,7 +56,7 @@ final class AphrontRoutingMap extends Phobject {
   /**
    * Find the route matching a path, if one exists.
    *
-   * @param string Path to route.
+   * @param string $path Path to route.
    * @return AphrontRoutingResult|null Routing result, if path matches map.
    * @task routing
    */
@@ -84,10 +90,11 @@ final class AphrontRoutingMap extends Phobject {
   /**
    * Test a sub-map to see if any routes match a path.
    *
-   * @param string Path to route.
-   * @param string Pattern from the map.
-   * @param string Value from the map.
-   * @return dict<string, wild>|null Match details, if path matches sub-map.
+   * @param string $route Pattern from the map.
+   * @param string $value Value from the map.
+   * @param string $path Path to route.
+   * @return array<string, array<string>|string>|null Match details, if path
+   *   matches sub-map.
    * @task routing
    */
   private function tryRoute($route, $value, $path) {

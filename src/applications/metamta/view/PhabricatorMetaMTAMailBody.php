@@ -40,8 +40,8 @@ final class PhabricatorMetaMTAMailBody extends Phobject {
   /**
    * Add a raw block of text to the email. This will be rendered as-is.
    *
-   * @param string Block of text.
-   * @return this
+   * @param string $text Block of text.
+   * @return $this
    * @task compose
    */
   public function addRawSection($text) {
@@ -100,9 +100,9 @@ final class PhabricatorMetaMTAMailBody extends Phobject {
    *    HEADER
    *      Text is indented.
    *
-   * @param string Header text.
-   * @param string Section text.
-   * @return this
+   * @param string $header Header text.
+   * @param string $section Section text.
+   * @return $this
    * @task compose
    */
   public function addTextSection($header, $section) {
@@ -155,8 +155,8 @@ final class PhabricatorMetaMTAMailBody extends Phobject {
   /**
    * Add an attachment.
    *
-   * @param PhabricatorMailAttachment Attachment.
-   * @return this
+   * @param PhabricatorMailAttachment $attachment Attachment.
+   * @return $this
    * @task compose
    */
   public function addAttachment(PhabricatorMailAttachment $attachment) {
@@ -198,7 +198,7 @@ final class PhabricatorMetaMTAMailBody extends Phobject {
   /**
    * Indent a block of text for rendering under a section heading.
    *
-   * @param string Text to indent.
+   * @param string $text Text to indent.
    * @return string Indented text.
    * @task render
    */

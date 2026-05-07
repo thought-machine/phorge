@@ -12,7 +12,7 @@ final class PhabricatorCalendarEventSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorCalendarApplication';
+    return PhabricatorCalendarApplication::class;
   }
 
   public function newQuery() {
@@ -32,10 +32,14 @@ final class PhabricatorCalendarEventSearchEngine
         ->setLabel(pht('Hosts'))
         ->setKey('hostPHIDs')
         ->setAliases(array('host', 'hostPHID', 'hosts'))
+        ->setDescription(
+          pht('Search for events created by specific hosts.'))
         ->setDatasource(new PhabricatorPeopleUserFunctionDatasource()),
       id(new PhabricatorSearchDatasourceField())
         ->setLabel(pht('Invited'))
         ->setKey('invitedPHIDs')
+        ->setDescription(
+          pht('Search for events with specific invited users.'))
         ->setDatasource(new PhabricatorCalendarInviteeDatasource()),
       id(new PhabricatorSearchDateControlField())
         ->setLabel(pht('Occurs After'))
@@ -52,15 +56,20 @@ final class PhabricatorCalendarEventSearchEngine
       id(new PhabricatorSearchSelectField())
         ->setLabel(pht('Cancelled Events'))
         ->setKey('isCancelled')
+        ->setDescription(pht('Search for active or cancelled events.'))
         ->setOptions($this->getCancelledOptions())
         ->setDefault('active'),
       id(new PhabricatorPHIDsSearchField())
         ->setLabel(pht('Import Sources'))
         ->setKey('importSourcePHIDs')
+        ->setDescription(
+          pht('Search for events with specific import sources.'))
         ->setAliases(array('importSourcePHID')),
       id(new PhabricatorSearchSelectField())
         ->setLabel(pht('Display Options'))
         ->setKey('display')
+        ->setDescription(
+          pht('Display events in a certain display format.'))
         ->setOptions($this->getViewOptions())
         ->setDefault('month'),
     );
@@ -137,7 +146,7 @@ final class PhabricatorCalendarEventSearchEngine
       $query->withImportSourcePHIDs($map['importSourcePHIDs']);
     }
 
-    if (!$map['ids'] && !$map['phids']) {
+    if (empty($map['ids']) && empty($map['phids'])) {
       $query
         ->withIsStub(false)
         ->setGenerateGhosts(true);
@@ -286,11 +295,15 @@ final class PhabricatorCalendarEventSearchEngine
     return $result;
   }
 
+  /**
+   * @param array<PhabricatorCalendarEvent> $events
+   * @param PhabricatorSavedQuery $query
+   */
   private function buildCalendarListView(
     array $events,
     PhabricatorSavedQuery $query) {
 
-    assert_instances_of($events, 'PhabricatorCalendarEvent');
+    assert_instances_of($events, PhabricatorCalendarEvent::class);
     $viewer = $this->requireViewer();
     $list = new PHUIObjectItemListView();
 
@@ -335,10 +348,14 @@ final class PhabricatorCalendarEventSearchEngine
       ->setNoDataString(pht('No events found.'));
   }
 
+  /**
+   * @param array<PhabricatorCalendarEvent> $events
+   * @param PhabricatorSavedQuery $query
+   */
   private function buildCalendarMonthView(
     array $events,
     PhabricatorSavedQuery $query) {
-    assert_instances_of($events, 'PhabricatorCalendarEvent');
+    assert_instances_of($events, PhabricatorCalendarEvent::class);
 
     $viewer = $this->requireViewer();
     $now = PhabricatorTime::getNow();
@@ -368,7 +385,7 @@ final class PhabricatorCalendarEventSearchEngine
         $start_year);
     }
 
-    $month_view->setUser($viewer);
+    $month_view->setViewer($viewer);
 
     $viewer_phid = $viewer->getPHID();
     foreach ($events as $event) {
@@ -485,6 +502,12 @@ final class PhabricatorCalendarEventSearchEngine
       ->setHeader($header);
   }
 
+  /**
+   * @param string|null $range_start Epoch
+   * @param string|null $range_end Epoch
+   * @param string $display View, such as "month" or "day"
+   * @return array<string|int, string|int, string|int> YYYY, M, D
+   */
   private function getDisplayYearAndMonthAndDay(
     $range_start,
     $range_end,
@@ -525,6 +548,10 @@ final class PhabricatorCalendarEventSearchEngine
     }
   }
 
+  /**
+   * @param PhabricatorSavedQuery $saved
+   * @return AphrontFormDateControlValue Query date range start
+   */
   private function getQueryDateFrom(PhabricatorSavedQuery $saved) {
     if ($this->calendarYear && $this->calendarMonth) {
       $viewer = $this->requireViewer();
@@ -540,11 +567,36 @@ final class PhabricatorCalendarEventSearchEngine
         ));
     }
 
-    return $this->getQueryDate($saved, 'rangeStart');
+    $date = $this->getQueryDate($saved, 'rangeStart');
+    $this->validateDate($date);
+
+    return $date;
   }
 
+  /**
+   * @param PhabricatorSavedQuery $saved
+   * @return AphrontFormDateControlValue Query date range end
+   */
   private function getQueryDateTo(PhabricatorSavedQuery $saved) {
-    return $this->getQueryDate($saved, 'rangeEnd');
+    $date = $this->getQueryDate($saved, 'rangeEnd');
+    $this->validateDate($date);
+    return $date;
+  }
+
+  /**
+   * Validate the user provided date and time value(s) by calling
+   * @{class:AphrontFormDateControlValue}::isValid().
+   * Throw an Exception if invalid.
+   *
+   * @param AphrontFormDateControlValue $date
+   * @return void
+   */
+  private function validateDate(AphrontFormDateControlValue $date) {
+    if (!$date->isValid()) {
+      // TODO: Use DateMalformedStringException once we require PHP 8.3.0
+      throw new Exception(
+        pht('Invalid date or time value set as query value.'));
+    }
   }
 
   private function getQueryDate(PhabricatorSavedQuery $saved, $key) {

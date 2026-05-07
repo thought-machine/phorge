@@ -8,7 +8,7 @@ final class DiffusionInternalCommitSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorDiffusionApplication';
+    return PhabricatorDiffusionApplication::class;
   }
 
   public function newQuery() {
@@ -36,7 +36,7 @@ final class DiffusionInternalCommitSearchEngine
   }
 
   protected function getURI($path) {
-    return null;
+    return '';
   }
 
   protected function renderResultList(

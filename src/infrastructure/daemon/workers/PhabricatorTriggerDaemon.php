@@ -78,12 +78,13 @@ final class PhabricatorTriggerDaemon
       try {
         $lock->lock(5);
       } catch (PhutilLockException $ex) {
-        throw new PhutilProxyException(
+        throw new Exception(
           pht(
             'Another process is holding the trigger lock. Usually, this '.
             'means another copy of the trigger daemon is running elsewhere. '.
             'Multiple processes are not permitted to update triggers '.
             'simultaneously.'),
+          0,
           $ex);
       }
 
@@ -122,7 +123,7 @@ final class PhabricatorTriggerDaemon
    * Process all of the triggers which have been updated since the last time
    * the daemon ran, scheduling them into the event table.
    *
-   * @param int Cursor for the next version update to process.
+   * @param int $cursor Cursor for the next version update to process.
    * @return void
    */
   private function scheduleTriggers($cursor) {
@@ -326,7 +327,7 @@ final class PhabricatorTriggerDaemon
   /**
    * Run the garbage collector for up to a specified number of seconds.
    *
-   * @param int Number of seconds the GC may run for.
+   * @param int $duration Number of seconds the GC may run for.
    * @return int Number of seconds remaining in the time budget.
    * @task garbage
    */
@@ -414,8 +415,8 @@ final class PhabricatorTriggerDaemon
 
 
   private function updateNuanceImportCursors() {
-    $nuance_app = 'PhabricatorNuanceApplication';
-    if (!PhabricatorApplication::isClassInstalled($nuance_app)) {
+    $nuance_class = PhabricatorNuanceApplication::class;
+    if (!PhabricatorApplication::isClassInstalled($nuance_class)) {
       return false;
     }
 

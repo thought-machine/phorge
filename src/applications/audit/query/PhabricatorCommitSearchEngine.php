@@ -8,7 +8,7 @@ final class PhabricatorCommitSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorDiffusionApplication';
+    return PhabricatorDiffusionApplication::class;
   }
 
   public function newQuery() {
@@ -70,6 +70,9 @@ final class PhabricatorCommitSearchEngine
   }
 
   protected function buildCustomSearchFields() {
+    $show_audit_fields = (id(new PhabricatorAuditApplication())->isInstalled());
+    $show_packages = PhabricatorApplication::isClassInstalled(
+      PhabricatorPackagesApplication::class);
     return array(
       id(new PhabricatorSearchDatasourceField())
         ->setLabel(pht('Responsible Users'))
@@ -93,6 +96,7 @@ final class PhabricatorCommitSearchEngine
         ->setConduitKey('auditors')
         ->setAliases(array('auditor', 'auditors', 'auditorPHID'))
         ->setDatasource(new DiffusionAuditorFunctionDatasource())
+        ->setIsHidden(!$show_audit_fields)
         ->setDescription(
           pht(
             'Find commits where given users, projects, or packages are '.
@@ -104,6 +108,7 @@ final class PhabricatorCommitSearchEngine
         ->setOptions(DiffusionCommitAuditStatus::newOptions())
         ->setDeprecatedOptions(
           DiffusionCommitAuditStatus::newDeprecatedOptions())
+        ->setIsHidden(!$show_audit_fields)
         ->setDescription(pht('Find commits with given audit statuses.')),
       id(new PhabricatorSearchDatasourceField())
         ->setLabel(pht('Repositories'))
@@ -118,6 +123,7 @@ final class PhabricatorCommitSearchEngine
         ->setConduitKey('packages')
         ->setAliases(array('package', 'packages', 'packagePHID'))
         ->setDatasource(new PhabricatorOwnersPackageDatasource())
+        ->setIsHidden(!$show_packages)
         ->setDescription(
           pht('Find commits which affect given packages.')),
       id(new PhabricatorSearchThreeStateField())
@@ -169,9 +175,13 @@ final class PhabricatorCommitSearchEngine
     $names = array();
 
     if ($this->requireViewer()->isLoggedIn()) {
-      $names['active'] = pht('Active Audits');
+      if (id(new PhabricatorAuditApplication())->isInstalled()) {
+        $names['active'] = pht('Active Audits');
+      }
       $names['authored'] = pht('Authored');
-      $names['audited'] = pht('Audited');
+      if (id(new PhabricatorAuditApplication())->isInstalled()) {
+        $names['audited'] = pht('Audited');
+      }
     }
 
     $names['all'] = pht('All Commits');
@@ -212,18 +222,25 @@ final class PhabricatorCommitSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<PhabricatorRepositoryCommit> $commits
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $commits,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($commits, 'PhabricatorRepositoryCommit');
+    assert_instances_of($commits, PhabricatorRepositoryCommit::class);
     $viewer = $this->requireViewer();
 
     $bucket = $this->getResultBucket($query);
 
+    // hide "Auditors" on /diffusion/commit/query/all/ if Audit not installed
+    $show_auditors = id(new PhabricatorAuditApplication())->isInstalled();
     $template = id(new DiffusionCommitGraphView())
       ->setViewer($viewer)
-      ->setShowAuditors(true);
+      ->setShowAuditors($show_auditors);
 
     $views = array();
     if ($bucket) {

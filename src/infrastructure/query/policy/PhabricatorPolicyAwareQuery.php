@@ -25,6 +25,8 @@
  * @task config     Query Configuration
  * @task exec       Executing Queries
  * @task policyimpl Policy Query Implementation
+ *
+ * @template R of PhabricatorPolicyInterface
  */
 abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
 
@@ -57,8 +59,8 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    * according to the viewer's capabilities. You must set a viewer to execute
    * a policy query.
    *
-   * @param PhabricatorUser The viewing user.
-   * @return this
+   * @param PhabricatorUser $viewer The viewing user.
+   * @return $this
    * @task config
    */
   final public function setViewer(PhabricatorUser $viewer) {
@@ -83,7 +85,7 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    * that configuration like whether or not to raise policy exceptions is
    * seamlessly passed along to child queries.
    *
-   * @return this
+   * @return $this
    * @task config
    */
   final public function setParentQuery(PhabricatorPolicyAwareQuery $query) {
@@ -106,7 +108,7 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
   /**
    * Hook to configure whether this query should raise policy exceptions.
    *
-   * @return this
+   * @return $this
    * @task config
    */
   final public function setRaisePolicyExceptions($bool) {
@@ -170,7 +172,7 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    * example, the user is trying to view or edit an object which exists but
    * which they do not have permission to see) a policy exception is thrown.
    *
-   * @return mixed Single result, or null.
+   * @return R|null Single result, or null.
    * @task exec
    */
   final public function executeOne() {
@@ -198,7 +200,7 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
   /**
    * Execute the query, loading all visible results.
    *
-   * @return list<PhabricatorPolicyInterface> Result objects.
+   * @return R[] Result objects.
    * @task exec
    */
   final public function execute() {
@@ -433,7 +435,7 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    * between objects which do not exist (or, at least, were filtered at the
    * content level) and objects which exist but aren't visible.
    *
-   * @return map<phid, phid> Map of object PHIDs which were filtered
+   * @return map<string, string> Map of object PHIDs which were filtered
    *   by policies.
    * @task exec
    */
@@ -473,9 +475,9 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    * automatically populated as a side effect of objects surviving policy
    * filtering.
    *
-   * @param map<phid, PhabricatorPolicyInterface> Objects to add to the query
-   *   workspace.
-   * @return this
+   * @param array<PhabricatorPolicyInterface> $objects Objects to add to
+   *   the query workspace.
+   * @return $this
    * @task workspace
    */
   public function putObjectsInWorkspace(array $objects) {
@@ -485,7 +487,7 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
       return $this;
     }
 
-    assert_instances_of($objects, 'PhabricatorPolicyInterface');
+    assert_instances_of($objects, PhabricatorPolicyInterface::class);
 
     $viewer_fragment = $this->getViewer()->getCacheFragment();
 
@@ -506,8 +508,8 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    * searches both the current query's workspace and the workspaces of parent
    * queries.
    *
-   * @param list<phid> List of PHIDs to retrieve.
-   * @return this
+   * @param list<string> $phids List of PHIDs to retrieve.
+   * @return $this
    * @task workspace
    */
   public function getObjectsFromWorkspace(array $phids) {
@@ -536,8 +538,8 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    * PHIDs which are "in flight" are actively being queried for. Using this
    * list can prevent infinite query loops by aborting queries which cycle.
    *
-   * @param list<phid> List of PHIDs which are now in flight.
-   * @return this
+   * @param list<string> $phids List of PHIDs which are now in flight.
+   * @return $this
    */
   public function putPHIDsInFlight(array $phids) {
     foreach ($phids as $phid) {
@@ -552,7 +554,7 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    *
    * PHIDs which are "in flight" are actively being queried for.
    *
-   * @return map<phid, phid> PHIDs currently in flight.
+   * @return array<string, string> PHIDs currently in flight.
    */
   public function getPHIDsInFlight() {
     $results = $this->inFlightPHIDs;
@@ -595,7 +597,7 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    * from the database. They should attempt to return the number of results
    * hinted by @{method:getRawResultLimit}.
    *
-   * @return list<PhabricatorPolicyInterface> List of filterable policy objects.
+   * @return R[] List of filterable policy objects.
    * @task policyimpl
    */
   abstract protected function loadPage();
@@ -606,7 +608,7 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    * return new results. Generally, you should adjust a cursor position based
    * on the provided result page.
    *
-   * @param list<PhabricatorPolicyInterface> The current page of results.
+   * @param R[] $page The current page of results.
    * @return void
    * @task policyimpl
    */
@@ -627,8 +629,8 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    * This method will only be called if data is available. Implementations
    * do not need to handle the case of no results specially.
    *
-   * @param   list<wild>  Results from `loadPage()`.
-   * @return  list<PhabricatorPolicyInterface> Objects for policy filtering.
+   * @param   R[]  $page Results from `loadPage()`.
+   * @return  R[] Objects for policy filtering.
    * @task policyimpl
    */
   protected function willFilterPage(array $page) {
@@ -650,8 +652,8 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    * This method will only be called if data is available. Implementations do
    * not need to handle the case of no results specially.
    *
-   * @param list<wild> Results from @{method:willFilterPage()}.
-   * @return list<PhabricatorPolicyInterface> Objects after additional
+   * @param R[] $page Results from @{method:willFilterPage()}.
+   * @return R[] Objects after additional
    *   non-policy processing.
    */
   protected function didFilterPage(array $page) {
@@ -665,8 +667,8 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    * filtered for policy reasons. The query should remove them from any cached
    * or partial result sets.
    *
-   * @param list<wild>  List of objects that should not be returned by alternate
-   *                    result mechanisms.
+   * @param R[]  $results List of objects that should not be returned by
+   *                    alternate result mechanisms.
    * @return void
    * @task policyimpl
    */
@@ -680,8 +682,8 @@ abstract class PhabricatorPolicyAwareQuery extends PhabricatorOffsetPagedQuery {
    * used by @{class:PhabricatorCursorPagedPolicyAwareQuery} to reverse results
    * that are queried during reverse paging.
    *
-   * @param   list<PhabricatorPolicyInterface> Query results.
-   * @return  list<PhabricatorPolicyInterface> Final results.
+   * @param   R[] $results Query results.
+   * @return  R[] Final results.
    * @task policyimpl
    */
   protected function didLoadResults(array $results) {

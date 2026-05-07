@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<HarbormasterBuildLog>
+ */
 final class HarbormasterBuildLogQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -80,7 +83,7 @@ final class HarbormasterBuildLogQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorHarbormasterApplication';
+    return PhabricatorHarbormasterApplication::class;
   }
 
 }

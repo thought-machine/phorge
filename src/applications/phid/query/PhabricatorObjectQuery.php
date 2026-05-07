@@ -38,7 +38,7 @@ final class PhabricatorObjectQuery
     $actually_phids = array();
     if ($names) {
       foreach ($names as $key => $name) {
-        if (!strncmp($name, 'PHID-', 5)) {
+        if (!phutil_nonempty_string($name) || !strncmp($name, 'PHID-', 5)) {
           $actually_phids[] = $name;
           $phids[] = $name;
           unset($names[$key]);
@@ -196,9 +196,9 @@ final class PhabricatorObjectQuery
    * viewer. This method is generally used to validate that PHIDs affected by
    * a transaction are valid.
    *
-   * @param PhabricatorUser Viewer.
-   * @param list<phid> List of ostensibly valid PHIDs.
-   * @return list<phid> List of invalid or restricted PHIDs.
+   * @param PhabricatorUser $viewer Viewer.
+   * @param list<string> $phids List of ostensibly valid PHIDs.
+   * @return list<string> List of invalid or restricted PHIDs.
    */
   public static function loadInvalidPHIDsForViewer(
     PhabricatorUser $viewer,

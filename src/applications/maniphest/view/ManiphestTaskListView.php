@@ -4,6 +4,7 @@ final class ManiphestTaskListView extends ManiphestView {
 
   private $tasks;
   private $handles;
+  private $customFieldLists = array();
   private $showBatchControls;
   private $noDataString;
 
@@ -16,6 +17,11 @@ final class ManiphestTaskListView extends ManiphestView {
   public function setHandles(array $handles) {
     assert_instances_of($handles, 'PhabricatorObjectHandle');
     $this->handles = $handles;
+    return $this;
+  }
+
+  public function setCustomFieldLists(array $lists) {
+    $this->customFieldLists = $lists;
     return $this;
   }
 
@@ -52,7 +58,7 @@ final class ManiphestTaskListView extends ManiphestView {
 
     foreach ($this->tasks as $task) {
       $item = id(new PHUIObjectItemView())
-        ->setUser($this->getUser())
+        ->setViewer($this->getUser())
         ->setObject($task)
         ->setObjectName('T'.$task->getID())
         ->setHeader($task->getTitle())
@@ -129,7 +135,15 @@ final class ManiphestTaskListView extends ManiphestView {
           id(new PHUIListItemView())
             ->setIcon('fa-pencil')
             ->addSigil('maniphest-edit-task')
+            ->setAriaLabel(pht('Edit Task'))
             ->setHref($href));
+      }
+
+
+      $field_list = idx($this->customFieldLists, $task->getPHID());
+      if ($field_list) {
+        $field_list
+          ->addFieldsToListViewItem($task, $this->getViewer(), $item);
       }
 
       $list->addItem($item);
@@ -138,10 +152,18 @@ final class ManiphestTaskListView extends ManiphestView {
     return $list;
   }
 
+  /**
+   * Deprecated.
+   * @param PhabricatorUser $viewer
+   * @param array<ManiphestTask> $tasks
+   * @deprecated
+   */
   public static function loadTaskHandles(
     PhabricatorUser $viewer,
     array $tasks) {
-    assert_instances_of($tasks, 'ManiphestTask');
+    // TODO: This method should be removed, and all call-sites switch
+    // to use ManiphestSearchEngine
+    assert_instances_of($tasks, ManiphestTask::class);
 
     $phids = array();
     foreach ($tasks as $task) {

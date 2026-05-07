@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorProjectTrigger>
+ */
 final class PhabricatorProjectTriggerQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -121,7 +124,7 @@ final class PhabricatorProjectTriggerQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorProjectApplication';
+    return PhabricatorProjectApplication::class;
   }
 
   protected function getPrimaryTableAlias() {

@@ -101,6 +101,11 @@ abstract class PhabricatorInlineComment
   abstract public function supportsHiding();
   abstract public function isHidden();
 
+  /**
+   * @return Phobject
+   */
+  abstract public function getTransactionCommentForSave();
+
   public function isDraft() {
     return !$this->getTransactionPHID();
   }
@@ -283,7 +288,7 @@ abstract class PhabricatorInlineComment
 
   public function attachVersionedDraftForViewer(
     PhabricatorUser $viewer,
-    PhabricatorVersionedDraft $draft = null) {
+    ?PhabricatorVersionedDraft $draft = null) {
 
     $key = $viewer->getCacheFragment();
     $this->versionedDrafts[$key] = $draft;
@@ -410,7 +415,7 @@ abstract class PhabricatorInlineComment
 
   private function getWireContentStateMap(
     $is_edit,
-    PhabricatorUser $viewer = null) {
+    ?PhabricatorUser $viewer = null) {
 
     $initial_state = $this->getInitialContentState();
     $committed_state = $this->getCommittedContentState();

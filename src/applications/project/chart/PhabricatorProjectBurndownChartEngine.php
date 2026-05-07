@@ -5,8 +5,11 @@ final class PhabricatorProjectBurndownChartEngine
 
   const CHARTENGINEKEY = 'project.burndown';
 
+  /**
+   * @param array<PhabricatorProject> $projects
+   */
   public function setProjects(array $projects) {
-    assert_instances_of($projects, 'PhabricatorProject');
+    assert_instances_of($projects, PhabricatorProject::class);
     $project_phids = mpull($projects, 'getPHID');
     return $this->setEngineParameter('projectPHIDs', $project_phids);
   }
@@ -70,8 +73,8 @@ final class PhabricatorProjectBurndownChartEngine
     $open_function->getFunctionLabel()
       ->setKey('open')
       ->setName(pht('Open Tasks'))
-      ->setColor('rgba(0, 0, 200, 1)')
-      ->setFillColor('rgba(0, 0, 200, 0.15)');
+      ->setColor('rgba(41, 128, 185, 1)')
+      ->setFillColor('rgba(41, 128, 185, 0.15)');
 
     $closed_function->getFunctionLabel()
       ->setKey('closed')
@@ -97,6 +100,12 @@ final class PhabricatorProjectBurndownChartEngine
     $chart->attachDatasets($datasets);
   }
 
+  /**
+   * @param string $fact_key The key of the new fact sum
+   *   (e.g. "tasks.open-count.assign.project")
+   * @param array<string> $phids Project PHIDs
+   * @return array
+   */
   private function newFactSum($fact_key, array $phids) {
     $result = array();
     $result[] = 'sum';

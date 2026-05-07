@@ -74,7 +74,7 @@ final class PhabricatorFile extends PhabricatorFileDAO
   public static function initializeNewFile() {
     $app = id(new PhabricatorApplicationQuery())
       ->setViewer(PhabricatorUser::getOmnipotentUser())
-      ->withClasses(array('PhabricatorFilesApplication'))
+      ->withClasses(array(PhabricatorFilesApplication::class))
       ->executeOne();
 
     $view_policy = $app->getPolicy(
@@ -176,6 +176,10 @@ final class PhabricatorFile extends PhabricatorFileDAO
     return true;
   }
 
+  /**
+   * Get file monogram in the format of "F123"
+   * @return string
+   */
   public function getMonogram() {
     return 'F'.$this->getID();
   }
@@ -336,11 +340,12 @@ final class PhabricatorFile extends PhabricatorFileDAO
           pht(
             'No configured storage engine can store this file. See '.
             '"Configuring File Storage" in the documentation for '.
-            'information on configuring storage engines.'));
+            'information on configuring storage engines. '.
+            'This is likely because the file is too large.'));
       }
     }
 
-    assert_instances_of($engines, 'PhabricatorFileStorageEngine');
+    assert_instances_of($engines, PhabricatorFileStorageEngine::class);
     if (!$engines) {
       throw new Exception(pht('No valid storage engines are available!'));
     }
@@ -679,7 +684,7 @@ final class PhabricatorFile extends PhabricatorFileDAO
         }
       } catch (Exception $ex) {
         if ($redirects) {
-          throw new PhutilProxyException(
+          throw new Exception(
             pht(
               'Failed to fetch remote URI "%s" after following %s redirect(s) '.
               '(%s): %s',
@@ -687,6 +692,7 @@ final class PhabricatorFile extends PhabricatorFileDAO
               phutil_count($redirects),
               implode(' > ', array_keys($redirects)),
               $ex->getMessage()),
+            0,
             $ex);
         } else {
           throw $ex;
@@ -803,8 +809,8 @@ final class PhabricatorFile extends PhabricatorFileDAO
   /**
    * Return an iterable which emits file content bytes.
    *
-   * @param int Offset for the start of data.
-   * @param int Offset for the end of data.
+   * @param int $begin (optional) Offset for the start of data.
+   * @param int $end (optional) Offset for the end of data.
    * @return Iterable Iterable object which emits requested data.
    */
   public function getFileDataIterator($begin = null, $end = null) {
@@ -821,10 +827,19 @@ final class PhabricatorFile extends PhabricatorFileDAO
     return $iterator;
   }
 
+  /**
+   * Get file URI in the format of "/F123"
+   * @return string
+   */
   public function getURI() {
     return $this->getInfoURI();
   }
 
+  /**
+   * Get file view URI in the format of
+   * https://phorge.example.com/file/data/foo/PHID-FILE-bar/filename
+   * @return string
+   */
   public function getViewURI() {
     if (!$this->getPHID()) {
       throw new Exception(
@@ -834,6 +849,12 @@ final class PhabricatorFile extends PhabricatorFileDAO
     return $this->getCDNURI('data');
   }
 
+  /**
+   * Get file view URI in the format of
+   * https://phorge.example.com/file/data/foo/PHID-FILE-bar/filename or
+   * https://phorge.example.com/file/download/foo/PHID-FILE-bar/filename
+   * @return string
+   */
   public function getCDNURI($request_kind) {
     if (($request_kind !== 'data') &&
         ($request_kind !== 'download')) {
@@ -876,7 +897,10 @@ final class PhabricatorFile extends PhabricatorFileDAO
     }
   }
 
-
+  /**
+   * Get file info URI in the format of "/F123"
+   * @return string
+   */
   public function getInfoURI() {
     return '/'.$this->getMonogram();
   }
@@ -889,6 +913,11 @@ final class PhabricatorFile extends PhabricatorFileDAO
     }
   }
 
+  /**
+   * Get file view URI in the format of
+   * https://phorge.example.com/file/download/foo/PHID-FILE-bar/filename
+   * @return string
+   */
   public function getDownloadURI() {
     return $this->getCDNURI('download');
   }
@@ -917,10 +946,20 @@ final class PhabricatorFile extends PhabricatorFileDAO
     return PhabricatorEnv::getCDNURI($path);
   }
 
+  /**
+   * Whether the file can be viewed in a browser
+   * @return bool True if MIME type of the file is listed in the
+   * files.viewable-mime-types setting
+   */
   public function isViewableInBrowser() {
     return ($this->getViewableMimeType() !== null);
   }
 
+  /**
+   * Whether the file is an image viewable in the browser
+   * @return bool True if MIME type of the file is listed in the
+   * files.image-mime-types setting and file is viewable in the browser
+   */
   public function isViewableImage() {
     if (!$this->isViewableInBrowser()) {
       return false;
@@ -931,6 +970,11 @@ final class PhabricatorFile extends PhabricatorFileDAO
     return idx($mime_map, $mime_type);
   }
 
+  /**
+   * Whether the file is an audio file
+   * @return bool True if MIME type of the file is listed in the
+   * files.audio-mime-types setting and file is viewable in the browser
+   */
   public function isAudio() {
     if (!$this->isViewableInBrowser()) {
       return false;
@@ -941,6 +985,11 @@ final class PhabricatorFile extends PhabricatorFileDAO
     return idx($mime_map, $mime_type);
   }
 
+  /**
+   * Whether the file is a video file
+   * @return bool True if MIME type of the file is listed in the
+   * files.video-mime-types setting and file is viewable in the browser
+   */
   public function isVideo() {
     if (!$this->isViewableInBrowser()) {
       return false;
@@ -951,6 +1000,11 @@ final class PhabricatorFile extends PhabricatorFileDAO
     return idx($mime_map, $mime_type);
   }
 
+  /**
+   * Whether the file is a PDF file
+   * @return bool True if MIME type of the file is application/pdf and file is
+   * viewable in the browser
+   */
   public function isPDF() {
     if (!$this->isViewableInBrowser()) {
       return false;
@@ -971,25 +1025,27 @@ final class PhabricatorFile extends PhabricatorFileDAO
     // warns you if you don't have complete support.
 
     $matches = null;
-    $ok = preg_match(
-      '@^image/(gif|png|jpe?g)@',
-      $this->getViewableMimeType(),
-      $matches);
+    $ok = false;
+    if ($this->getViewableMimeType() !== null) {
+      $ok = preg_match(
+        '@^image/(gif|png|jpe?g|webp)@',
+        $this->getViewableMimeType(),
+        $matches);
+    }
     if (!$ok) {
       return false;
     }
 
     switch ($matches[1]) {
-      case 'jpg';
+      case 'jpg':
       case 'jpeg':
         return function_exists('imagejpeg');
-        break;
       case 'png':
         return function_exists('imagepng');
-        break;
       case 'gif':
         return function_exists('imagegif');
-        break;
+      case 'webp':
+        return function_exists('imagewebp');
       default:
         throw new Exception(pht('Unknown type matched as image MIME type.'));
     }
@@ -1008,6 +1064,10 @@ final class PhabricatorFile extends PhabricatorFileDAO
 
     if (function_exists('imagegif')) {
       $supported[] = 'gif';
+    }
+
+    if (function_exists('imagewebp')) {
+      $supported[] = 'webp';
     }
 
     return $supported;
@@ -1041,10 +1101,15 @@ final class PhabricatorFile extends PhabricatorFileDAO
 
   public static function buildAllEngines() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass('PhabricatorFileStorageEngine')
+      ->setAncestorClass(PhabricatorFileStorageEngine::class)
       ->execute();
   }
 
+  /**
+   * Whether the file is listed as a viewable MIME type
+   * @return bool True if MIME type of the file is listed in the
+   * files.viewable-mime-types setting
+   */
   public function getViewableMimeType() {
     $mime_map = PhabricatorEnv::getEnvConfig('files.viewable-mime-types');
 
@@ -1146,7 +1211,7 @@ final class PhabricatorFile extends PhabricatorFileDAO
 
 
   /**
-   * Load (or build) the {@class:PhabricatorFile} objects for builtin file
+   * Load (or build) the @{class:PhabricatorFile} objects for builtin file
    * resources. The builtin mechanism allows files shipped with Phabricator
    * to be treated like normal files so that APIs do not need to special case
    * things like default images or deleted files.
@@ -1154,9 +1219,10 @@ final class PhabricatorFile extends PhabricatorFileDAO
    * Builtins are located in `resources/builtin/` and identified by their
    * name.
    *
-   * @param  PhabricatorUser Viewing user.
-   * @param  list<PhabricatorFilesBuiltinFile> List of builtin file specs.
-   * @return dict<string, PhabricatorFile> Dictionary of named builtins.
+   * @param  PhabricatorUser $user Viewing user.
+   * @param  list<PhabricatorFilesBuiltinFile> $builtins List of builtin file
+   *   specs.
+   * @return array<string, PhabricatorFile> Dictionary of named builtins.
    */
   public static function loadBuiltins(PhabricatorUser $user, array $builtins) {
     $builtins = mpull($builtins, null, 'getBuiltinFileKey');
@@ -1221,8 +1287,8 @@ final class PhabricatorFile extends PhabricatorFileDAO
   /**
    * Convenience wrapper for @{method:loadBuiltins}.
    *
-   * @param PhabricatorUser   Viewing user.
-   * @param string            Single builtin name to load.
+   * @param PhabricatorUser   $user Viewing user.
+   * @param string            $name Single builtin name to load.
    * @return PhabricatorFile  Corresponding builtin file.
    */
   public static function loadBuiltin(PhabricatorUser $user, $name) {
@@ -1256,7 +1322,7 @@ final class PhabricatorFile extends PhabricatorFileDAO
     return $this->assertAttached($this->originalFile);
   }
 
-  public function attachOriginalFile(PhabricatorFile $file = null) {
+  public function attachOriginalFile(?PhabricatorFile $file = null) {
     $this->originalFile = $file;
     return $this;
   }
@@ -1411,11 +1477,33 @@ final class PhabricatorFile extends PhabricatorFileDAO
 
   /**
    * Write the policy edge between this file and some object.
+   * This method is successful even if the file is already attached.
    *
-   * @param phid Object PHID to attach to.
-   * @return this
+   * @param string $phid Object PHID to attach to.
+   * @return $this
    */
   public function attachToObject($phid) {
+    self::attachFileToObject($this->getPHID(), $phid);
+    return $this;
+  }
+
+  /**
+   * Write the policy edge between a file and some object.
+   * This method is successful even if the file is already attached.
+   * NOTE: Please avoid to use this static method directly.
+   *       Instead, use PhabricatorFile#attachToObject(phid).
+   *
+   * @param string $file_phid File PHID to attach from.
+   * @param string $object_phid Object PHID to attach to.
+   * @return void
+   */
+  public static function attachFileToObject($file_phid, $object_phid) {
+
+    // It can be easy to confuse the two arguments. Be strict.
+    if (phid_get_type($file_phid) !== PhabricatorFileFilePHIDType::TYPECONST) {
+      throw new Exception(pht('The first argument must be a phid of a file.'));
+    }
+
     $attachment_table = new PhabricatorFileAttachment();
     $attachment_conn = $attachment_table->establishConnection('w');
 
@@ -1429,14 +1517,12 @@ final class PhabricatorFile extends PhabricatorFileDAO
           attacherPHID = VALUES(attacherPHID),
           dateModified = VALUES(dateModified)',
       $attachment_table,
-      $phid,
-      $this->getPHID(),
+      $object_phid,
+      $file_phid,
       PhabricatorFileAttachment::MODE_ATTACH,
       null,
       PhabricatorTime::getNow(),
       PhabricatorTime::getNow());
-
-    return $this;
   }
 
 
@@ -1446,9 +1532,9 @@ final class PhabricatorFile extends PhabricatorFileDAO
    * This method is called both when creating a file from fresh data, and
    * when creating a new file which reuses existing storage.
    *
-   * @param map<string, wild>   Bag of parameters, see @{class:PhabricatorFile}
-   *  for documentation.
-   * @return this
+   * @param map<string, mixed> $params Bag of parameters, see
+   *   @{class:PhabricatorFile} for documentation.
+   * @return $this
    */
   private function readPropertiesFromParameters(array $params) {
     PhutilTypeSpec::checkMap(
@@ -1705,6 +1791,14 @@ final class PhabricatorFile extends PhabricatorFileDAO
     PhabricatorDestructionEngine $engine) {
 
     $this->openTransaction();
+
+      $attachments = id(new PhabricatorFileAttachment())->loadAllWhere(
+        'filePHID = %s',
+        $this->getPHID());
+      foreach ($attachments as $attachment) {
+        $attachment->delete();
+      }
+
       $this->delete();
     $this->saveTransaction();
   }

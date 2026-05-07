@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorRepositoryGitLFSRef>
+ */
 final class PhabricatorRepositoryGitLFSRefQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -54,7 +57,7 @@ final class PhabricatorRepositoryGitLFSRefQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDiffusionApplication';
+    return PhabricatorDiffusionApplication::class;
   }
 
 }

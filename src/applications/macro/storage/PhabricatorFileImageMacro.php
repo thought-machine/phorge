@@ -32,7 +32,7 @@ final class PhabricatorFileImageMacro extends PhabricatorFileDAO
     return $this->assertAttached($this->file);
   }
 
-  public function attachAudio(PhabricatorFile $audio = null) {
+  public function attachAudio(?PhabricatorFile $audio = null) {
     $this->audio = $audio;
     return $this;
   }
@@ -137,7 +137,7 @@ final class PhabricatorFileImageMacro extends PhabricatorFileDAO
         return PhabricatorPolicies::getMostOpenPolicy();
       case PhabricatorPolicyCapability::CAN_EDIT:
         $app = PhabricatorApplication::getByClass(
-          'PhabricatorMacroApplication');
+          PhabricatorMacroApplication::class);
         return $app->getPolicy(PhabricatorMacroManageCapability::CAPABILITY);
     }
   }

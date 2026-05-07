@@ -8,6 +8,9 @@ abstract class DiffusionCommitActionTransaction
   }
 
   public function isActionAvailable($object, PhabricatorUser $viewer) {
+    if (!id(new PhabricatorAuditApplication())->isInstalled()) {
+      return false;
+    }
     try {
       $this->validateAction($object, $viewer);
       return true;
@@ -50,7 +53,7 @@ abstract class DiffusionCommitActionTransaction
 
   public static function loadAllActions() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setUniqueMethod('getCommitActionKey')
       ->execute();
   }

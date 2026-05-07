@@ -218,12 +218,13 @@ final class DiffusionRepositoryClusterEngine extends Phobject {
         ]
       );
       // TM CHANGES END
-      throw new PhutilProxyException(
+      throw new Exception(
         pht(
           'Failed to acquire read lock after waiting %s second(s). You '.
           'may be able to retry later. (%s)',
           new PhutilNumber($lock_wait),
           $ex->getHint()),
+        0,
         $ex);
     }
 
@@ -458,12 +459,13 @@ final class DiffusionRepositoryClusterEngine extends Phobject {
         ]
       );
       // TM CHANGES END
-      throw new PhutilProxyException(
+      throw new Exception(
         pht(
           'Failed to acquire write lock after waiting %s second(s). You '.
           'may be able to retry later. (%s)',
           new PhutilNumber($lock_wait),
           $ex->getHint()),
+        0,
         $ex);
     }
 
@@ -705,10 +707,10 @@ final class DiffusionRepositoryClusterEngine extends Phobject {
         pht(
           'Failed to reconnect to master database and release held write '.
           'lock ("%s") on device "%s" for repository "%s" after trying '.
-          'for %s seconds(s). This repository will be frozen.',
+          'for %s seconds. This repository will be frozen.',
           $this->clusterWriteOwner,
           $device->getName(),
-          $this->getDisplayName(),
+          $repository->getDisplayName(),
           new PhutilNumber($duration)));
     }
 

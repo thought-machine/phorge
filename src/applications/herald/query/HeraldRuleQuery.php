@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<HeraldRule>
+ */
 final class HeraldRuleQuery extends PhabricatorCursorPagedPolicyAwareQuery {
 
   private $ids;
@@ -327,7 +330,7 @@ final class HeraldRuleQuery extends PhabricatorCursorPagedPolicyAwareQuery {
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorHeraldApplication';
+    return PhabricatorHeraldApplication::class;
   }
 
   protected function getPrimaryTableAlias() {

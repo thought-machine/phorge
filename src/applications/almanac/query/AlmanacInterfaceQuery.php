@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends AlmanacQuery<AlmanacInterface>
+ */
 final class AlmanacInterfaceQuery
   extends AlmanacQuery {
 
@@ -169,7 +172,7 @@ final class AlmanacInterfaceQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorAlmanacApplication';
+    return PhabricatorAlmanacApplication::class;
   }
 
   public function getBuiltinOrders() {

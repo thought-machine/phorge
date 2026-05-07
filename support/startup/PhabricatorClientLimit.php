@@ -37,10 +37,10 @@ abstract class PhabricatorClientLimit {
     // NOTE: We can not use pht() here because this runs before libraries
     // load.
 
-    if (!function_exists('apc_fetch') && !function_exists('apcu_fetch')) {
+    if (!function_exists('apcu_fetch')) {
       throw new Exception(
-        'You can not configure connection rate limits unless APC/APCu are '.
-        'available. Rate limits rely on APC/APCu to track clients and '.
+        'You can not configure connection rate limits unless APCu is '.
+        'available. Rate limits rely on APCu to track clients and '.
         'connections.');
     }
 
@@ -170,7 +170,7 @@ abstract class PhabricatorClientLimit {
   /**
    * Get the APC key for a given bucket.
    *
-   * @param int Bucket to get the key for.
+   * @param int $bucket_id Bucket to get the key for.
    * @return string APC key for the bucket.
    */
   private function getBucketCacheKey($bucket_id) {
@@ -182,10 +182,9 @@ abstract class PhabricatorClientLimit {
   /**
    * Add points to the rate limit score for some client.
    *
-   * @param string  Some key which identifies the client making the request.
-   * @param float   The cost for this request; more points pushes them toward
-   *                the limit faster.
-   * @return this
+   * @param float   $score The cost for this request; more points pushes them
+   *                toward the limit faster.
+   * @return $this
    */
   private function addScore($score) {
     $is_apcu = (bool)function_exists('apcu_fetch');
@@ -200,11 +199,9 @@ abstract class PhabricatorClientLimit {
 
     if ($is_apcu) {
       $bucket = apcu_fetch($bucket_key);
-    } else {
-      $bucket = apc_fetch($bucket_key);
     }
 
-    if (!is_array($bucket)) {
+    if (!isset($bucket) || !is_array($bucket)) {
       $bucket = array();
     }
 
@@ -217,8 +214,6 @@ abstract class PhabricatorClientLimit {
 
     if ($is_apcu) {
       @apcu_store($bucket_key, $bucket);
-    } else {
-      @apc_store($bucket_key, $bucket);
     }
 
     return $this;
@@ -238,18 +233,14 @@ abstract class PhabricatorClientLimit {
     $min_key = $this->getMinimumBucketCacheKey();
     if ($is_apcu) {
       $min = apcu_fetch($min_key);
-    } else {
-      $min = apc_fetch($min_key);
     }
 
     // If we don't have any buckets stored yet, store the current bucket as
     // the oldest bucket.
     $cur = $this->getCurrentBucketID();
-    if (!$min) {
+    if (!isset($min) || !$min) {
       if ($is_apcu) {
         @apcu_store($min_key, $cur);
-      } else {
-        @apc_store($min_key, $cur);
       }
       $min = $cur;
     }
@@ -263,9 +254,6 @@ abstract class PhabricatorClientLimit {
       if ($is_apcu) {
         apcu_delete($bucket_key);
         @apcu_store($min_key, $cursor + 1);
-      } else {
-        apc_delete($bucket_key);
-        @apc_store($min_key, $cursor + 1);
       }
     }
 
@@ -277,8 +265,6 @@ abstract class PhabricatorClientLimit {
       $bucket_key = $this->getBucketCacheKey($cursor);
       if ($is_apcu) {
         $bucket = apcu_fetch($bucket_key);
-      } else {
-        $bucket = apc_fetch($bucket_key);
       }
       if (isset($bucket[$client_key])) {
         $score += $bucket[$client_key];

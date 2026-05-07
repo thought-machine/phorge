@@ -7,7 +7,7 @@ abstract class PhabricatorDaemonManagementWorkflow
 
   final protected function loadAvailableDaemonClasses() {
     return id(new PhutilSymbolLoader())
-      ->setAncestorClass('PhutilDaemon')
+      ->setAncestorClass(PhutilDaemon::class)
       ->setConcreteOnly(true)
       ->selectSymbolsWithoutLoading();
   }
@@ -152,7 +152,7 @@ abstract class PhabricatorDaemonManagementWorkflow
       // subprocess which will terminate normally.
       pcntl_signal(
         SIGINT,
-        array(__CLASS__, 'ignoreSignal'));
+        array(self::class, 'ignoreSignal'));
 
       echo "\n    scripts/daemon/ \$ {$command}\n\n";
 
@@ -560,35 +560,6 @@ abstract class PhabricatorDaemonManagementWorkflow
         'means that pools will not grow unless the machine has at least '.
         '25%%%% of its RAM free.'),
     );
-  }
-
-  private function selectDaemonPIDs(array $daemons, array $pids) {
-    $console = PhutilConsole::getConsole();
-
-    $running_pids = array_fuse(mpull($daemons, 'getPID'));
-    if (!$pids) {
-      $select_pids = $running_pids;
-    } else {
-      // We were given a PID or set of PIDs to kill.
-      $select_pids = array();
-      foreach ($pids as $key => $pid) {
-        if (!preg_match('/^\d+$/', $pid)) {
-          $console->writeErr(pht("PID '%s' is not a valid PID.", $pid)."\n");
-          continue;
-        } else if (empty($running_pids[$pid])) {
-          $console->writeErr(
-            "%s\n",
-            pht(
-              'PID "%d" is not a known daemon PID.',
-              $pid));
-          continue;
-        } else {
-          $select_pids[$pid] = $pid;
-        }
-      }
-    }
-
-    return $select_pids;
   }
 
   protected function getOverseerProcessRefs() {

@@ -4,7 +4,7 @@ final class NuanceQueueSearchEngine
   extends PhabricatorApplicationSearchEngine {
 
   public function getApplicationClassName() {
-    return 'PhabricatorNuanceApplication';
+    return PhabricatorNuanceApplication::class;
   }
 
   public function getResultTypeDescription() {
@@ -49,11 +49,16 @@ final class NuanceQueueSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<NuanceQueue> $queues
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $queues,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($queues, 'NuanceQueue');
+    assert_instances_of($queues, NuanceQueue::class);
 
     $viewer = $this->requireViewer();
 

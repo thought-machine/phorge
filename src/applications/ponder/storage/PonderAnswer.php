@@ -27,7 +27,7 @@ final class PonderAnswer extends PonderDAO
     PonderQuestion $question) {
     $app = id(new PhabricatorApplicationQuery())
       ->setViewer($actor)
-      ->withClasses(array('PhabricatorPonderApplication'))
+      ->withClasses(array(PhabricatorPonderApplication::class))
       ->executeOne();
 
     return id(new PonderAnswer())
@@ -40,7 +40,7 @@ final class PonderAnswer extends PonderDAO
 
   }
 
-  public function attachQuestion(PonderQuestion $question = null) {
+  public function attachQuestion(?PonderQuestion $question = null) {
     $this->question = $question;
     return $this;
   }
@@ -165,7 +165,7 @@ final class PonderAnswer extends PonderDAO
         return $this->getQuestion()->getPolicy($capability);
       case PhabricatorPolicyCapability::CAN_EDIT:
         $app = PhabricatorApplication::getByClass(
-          'PhabricatorPonderApplication');
+          PhabricatorPonderApplication::class);
         return $app->getPolicy(PonderModerateCapability::CAPABILITY);
     }
   }

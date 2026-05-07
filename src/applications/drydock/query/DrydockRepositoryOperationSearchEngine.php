@@ -8,7 +8,7 @@ final class DrydockRepositoryOperationSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorDrydockApplication';
+    return PhabricatorDrydockApplication::class;
   }
 
   public function newQuery() {
@@ -87,11 +87,16 @@ final class DrydockRepositoryOperationSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
+  /**
+   * @param array<DrydockRepositoryOperation> $operations
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $operations,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($operations, 'DrydockRepositoryOperation');
+    assert_instances_of($operations, DrydockRepositoryOperation::class);
 
     $viewer = $this->requireViewer();
 

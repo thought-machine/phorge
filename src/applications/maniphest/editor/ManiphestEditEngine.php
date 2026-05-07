@@ -18,7 +18,7 @@ final class ManiphestEditEngine
   }
 
   public function getEngineApplicationClass() {
-    return 'PhabricatorManiphestApplication';
+    return PhabricatorManiphestApplication::class;
   }
 
   public function isDefaultQuickCreateEngine() {
@@ -67,6 +67,14 @@ final class ManiphestEditEngine
 
   protected function getCommentViewButtonText($object) {
     return pht('Set Sail for Adventure');
+  }
+
+  public function getCommentFieldPlaceholderText($object) {
+    if ($object->getStatus() === ManiphestTaskStatus::STATUS_CLOSED_DUPLICATE) {
+      return pht('This task is closed as a duplicate. '.
+      'Only comment if you think that this task is not a duplicate.');
+    }
+    return '';
   }
 
   protected function getObjectViewURI($object) {
@@ -194,7 +202,7 @@ EODOCS
         ->setDescription(pht('User who is responsible for the task.'))
         ->setConduitDescription(pht('Reassign the task.'))
         ->setConduitTypeDescription(
-          pht('New task owner, or `null` to unassign.'))
+          pht('New task assignee, or `null` to unassign.'))
         ->setTransactionType(ManiphestTaskOwnerTransaction::TRANSACTIONTYPE)
         ->setIsCopyable(true)
         ->setIsNullable(true)

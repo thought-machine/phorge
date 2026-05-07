@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<AlmanacProperty>
+ */
 final class AlmanacPropertyQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -99,7 +102,7 @@ final class AlmanacPropertyQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorAlmanacApplication';
+    return PhabricatorAlmanacApplication::class;
   }
 
 }

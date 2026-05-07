@@ -12,7 +12,7 @@ final class PhabricatorProjectDatasource
   }
 
   public function getDatasourceApplicationClass() {
-    return 'PhabricatorProjectApplication';
+    return PhabricatorProjectApplication::class;
   }
 
   public function loadResults() {
@@ -51,7 +51,7 @@ final class PhabricatorProjectDatasource
     $projs = mpull($projs, null, 'getPHID');
 
     $must_have_cols = $this->getParameter('mustHaveColumns', false);
-    if ($must_have_cols) {
+    if ($must_have_cols && $projs) {
       $columns = id(new PhabricatorProjectColumnQuery())
         ->setViewer($viewer)
         ->withProjectPHIDs(array_keys($projs))
@@ -96,7 +96,7 @@ final class PhabricatorProjectDatasource
 
       // If we're building results for the autocompleter and this project
       // doesn't have any usable slugs, don't return it as a result.
-      if ($for_autocomplete && !strlen($slug)) {
+      if ($for_autocomplete && !phutil_nonempty_string($slug)) {
         continue;
       }
 

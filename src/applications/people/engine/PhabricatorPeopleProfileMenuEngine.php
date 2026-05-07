@@ -7,7 +7,8 @@ final class PhabricatorPeopleProfileMenuEngine
   const ITEM_MANAGE = 'people.manage';
   const ITEM_PICTURE = 'people.picture';
   const ITEM_BADGES = 'people.badges';
-  const ITEM_TASKS = 'people.tasks';
+  const ITEM_TASKS_ASSIGNED = 'people.tasks.assigned';
+  const ITEM_TASKS_AUTHORED = 'people.tasks.authored';
   const ITEM_COMMITS = 'people.commits';
   const ITEM_REVISIONS = 'people.revisions';
 
@@ -35,26 +36,22 @@ final class PhabricatorPeopleProfileMenuEngine
       ->setBuiltinKey(self::ITEM_PROFILE)
       ->setMenuItemKey(PhabricatorPeopleDetailsProfileMenuItem::MENUITEMKEY);
 
-    $have_badges = PhabricatorApplication::isClassInstalledForViewer(
-      'PhabricatorBadgesApplication',
-      $viewer);
-    if ($have_badges) {
-      $items[] = $this->newItem()
-        ->setBuiltinKey(self::ITEM_BADGES)
-        ->setMenuItemKey(PhabricatorPeopleBadgesProfileMenuItem::MENUITEMKEY);
-    }
-
     $have_maniphest = PhabricatorApplication::isClassInstalledForViewer(
-      'PhabricatorManiphestApplication',
+      PhabricatorManiphestApplication::class,
       $viewer);
     if ($have_maniphest) {
       $items[] = $this->newItem()
-        ->setBuiltinKey(self::ITEM_TASKS)
-        ->setMenuItemKey(PhabricatorPeopleTasksProfileMenuItem::MENUITEMKEY);
+        ->setBuiltinKey(self::ITEM_TASKS_ASSIGNED)
+        ->setMenuItemKey(
+          PhabricatorPeopleTasksAssignedProfileMenuItem::MENUITEMKEY);
+      $items[] = $this->newItem()
+        ->setBuiltinKey(self::ITEM_TASKS_AUTHORED)
+        ->setMenuItemKey(
+          PhabricatorPeopleTasksAuthoredProfileMenuItem::MENUITEMKEY);
     }
 
     $have_differential = PhabricatorApplication::isClassInstalledForViewer(
-      'PhabricatorDifferentialApplication',
+      PhabricatorDifferentialApplication::class,
       $viewer);
     if ($have_differential) {
       $items[] = $this->newItem()
@@ -64,12 +61,21 @@ final class PhabricatorPeopleProfileMenuEngine
     }
 
     $have_diffusion = PhabricatorApplication::isClassInstalledForViewer(
-      'PhabricatorDiffusionApplication',
+      PhabricatorDiffusionApplication::class,
       $viewer);
     if ($have_diffusion) {
       $items[] = $this->newItem()
         ->setBuiltinKey(self::ITEM_COMMITS)
         ->setMenuItemKey(PhabricatorPeopleCommitsProfileMenuItem::MENUITEMKEY);
+    }
+
+    $have_badges = PhabricatorApplication::isClassInstalledForViewer(
+      PhabricatorBadgesApplication::class,
+      $viewer);
+    if ($have_badges) {
+      $items[] = $this->newItem()
+        ->setBuiltinKey(self::ITEM_BADGES)
+        ->setMenuItemKey(PhabricatorPeopleBadgesProfileMenuItem::MENUITEMKEY);
     }
 
     $items[] = $this->newItem()

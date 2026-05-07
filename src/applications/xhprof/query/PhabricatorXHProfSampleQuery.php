@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorXHProfSample>
+ */
 final class PhabricatorXHProfSampleQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -41,7 +44,7 @@ final class PhabricatorXHProfSampleQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorXHProfApplication';
+    return PhabricatorXHProfApplication::class;
   }
 
 }

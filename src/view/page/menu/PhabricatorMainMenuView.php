@@ -88,7 +88,6 @@ final class PhabricatorMainMenuView extends AphrontView {
         'div',
         array(
           'class' => 'phabricator-main-menu-alerts',
-          'aural' => false,
         ),
         $alerts);
     }
@@ -293,35 +292,14 @@ final class PhabricatorMainMenuView extends AphrontView {
   }
 
   private function renderPhabricatorLogo() {
-    $custom_header = PhabricatorCustomLogoConfigType::getLogoImagePHID();
-
     $logo_style = array();
+    $custom_header = PhabricatorCustomLogoConfigType::getLogoImagePHID();
     if ($custom_header) {
-      $cache = PhabricatorCaches::getImmutableCache();
-      $cache_key_logo = 'ui.custom-header.logo-phid.v3.'.$custom_header;
-
-      $logo_uri = $cache->getKey($cache_key_logo);
-      if (!$logo_uri) {
-        // NOTE: If the file policy has been changed to be restrictive, we'll
-        // miss here and just show the default logo. The cache will fill later
-        // when someone who can see the file loads the page. This might be a
-        // little spooky, see T11982.
-        $files = id(new PhabricatorFileQuery())
-          ->setViewer($this->getViewer())
-          ->withPHIDs(array($custom_header))
-          ->execute();
-        $file = head($files);
-        if ($file) {
-          $logo_uri = $file->getViewURI();
-          $cache->setKey($cache_key_logo, $logo_uri);
-        }
-      }
-
-      if ($logo_uri) {
-        $logo_style[] = 'background-size: 40px 40px;';
-        $logo_style[] = 'background-position: 0 0;';
-        $logo_style[] = 'background-image: url('.$logo_uri.')';
-      }
+      $viewer = $this->getViewer();
+      $logo_uri = PhabricatorCustomLogoConfigType::getLogoURI($viewer);
+      $logo_style[] = 'background-size: 40px 40px;';
+      $logo_style[] = 'background-position: 0 0;';
+      $logo_style[] = 'background-image: url('.$logo_uri.')';
     }
 
     $logo_node = phutil_tag(
@@ -330,7 +308,6 @@ final class PhabricatorMainMenuView extends AphrontView {
         'class' => 'phabricator-main-menu-project-logo',
         'style' => implode(' ', $logo_style),
       ));
-
 
     $wordmark_text = PhabricatorCustomLogoConfigType::getLogoWordmark();
     if (!phutil_nonempty_string($wordmark_text)) {
@@ -377,7 +354,7 @@ final class PhabricatorMainMenuView extends AphrontView {
 
     $message_tag = '';
     $message_notification_dropdown = '';
-    $conpherence_app = 'PhabricatorConpherenceApplication';
+    $conpherence_app = PhabricatorConpherenceApplication::class;
     $conpherence_data = $dropdown_data[$conpherence_app];
     if ($conpherence_data['isInstalled']) {
       $message_id = celerity_generate_unique_node_id();
@@ -426,6 +403,7 @@ final class PhabricatorMainMenuView extends AphrontView {
           'href'  => '/conpherence/',
           'class' => implode(' ', $container_classes),
           'id'    => $message_id,
+          'aria-label' => pht('Chat Messages'),
         ),
         array(
           $message_icon_tag,
@@ -458,7 +436,7 @@ final class PhabricatorMainMenuView extends AphrontView {
 
     $bubble_tag = '';
     $notification_dropdown = '';
-    $notification_app = 'PhabricatorNotificationsApplication';
+    $notification_app = PhabricatorNotificationsApplication::class;
     $notification_data = $dropdown_data[$notification_app];
     if ($notification_data['isInstalled']) {
       $count_id = celerity_generate_unique_node_id();
@@ -507,6 +485,7 @@ final class PhabricatorMainMenuView extends AphrontView {
           'href'  => '/notification/',
           'class' => implode(' ', $container_classes),
           'id'    => $bubble_id,
+          'aria-label' => pht('Notifications'),
         ),
         array($icon_tag, $count_tag));
 
@@ -586,6 +565,7 @@ final class PhabricatorMainMenuView extends AphrontView {
             'href'  => '/config/issue/',
             'class' => implode(' ', $container_classes),
             'id'    => $setup_id,
+            'aria-label' => pht('Unresolved Setup Issues'),
           ),
           array(
             $setup_icon_tag,
@@ -652,6 +632,7 @@ final class PhabricatorMainMenuView extends AphrontView {
             'href' => $settings_uri,
             'class' => 'setup-unread',
             'id' => $bubble_id,
+            'aria-label' => pht('Account Setup Issues'),
           ),
           array(
             $user_icon,

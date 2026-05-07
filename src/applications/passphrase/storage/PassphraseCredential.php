@@ -32,7 +32,7 @@ final class PassphraseCredential extends PassphraseDAO
   public static function initializeNewCredential(PhabricatorUser $actor) {
     $app = id(new PhabricatorApplicationQuery())
       ->setViewer($actor)
-      ->withClasses(array('PhabricatorPassphraseApplication'))
+      ->withClasses(array(PhabricatorPassphraseApplication::class))
       ->executeOne();
 
     $view_policy = $app->getPolicy(PassphraseDefaultViewCapability::CAPABILITY);
@@ -91,7 +91,7 @@ final class PassphraseCredential extends PassphraseDAO
       PassphraseCredentialPHIDType::TYPECONST);
   }
 
-  public function attachSecret(PhutilOpaqueEnvelope $secret = null) {
+  public function attachSecret(?PhutilOpaqueEnvelope $secret = null) {
     $this->secret = $secret;
     return $this;
   }

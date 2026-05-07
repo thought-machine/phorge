@@ -28,7 +28,7 @@ abstract class PhabricatorStandardCustomField
     $builtin = false) {
 
     $types = id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setUniqueMethod('getFieldType')
       ->execute();
 
@@ -301,6 +301,10 @@ abstract class PhabricatorStandardCustomField
   }
 
   public function renderPropertyViewValue(array $handles) {
+    return $this->renderValue();
+  }
+
+  protected function renderValue() {
     // If your field needs to render anything more complicated then a string,
     // then you should override this method.
     $value_str = phutil_string_cast($this->getFieldValue());
@@ -309,6 +313,77 @@ abstract class PhabricatorStandardCustomField
       return $value_str;
     }
     return null;
+  }
+
+  public function shouldAppearInListView() {
+    return $this->getFieldConfigValue('list', false);
+  }
+
+  public function getStyleForListItemView() {
+    return $this->getFieldConfigValue('list');
+  }
+
+  public function renderListItemValue() {
+    return $this->renderValue();
+  }
+
+  private function isValue($something) {
+    if (is_object($something)) {
+      return true;
+    }
+    return phutil_nonempty_scalar($something);
+  }
+
+  public function getValueForListItem() {
+    $style = $this->getStyleForListItemView();
+    $value = $this->renderListItemValue();
+    if (!$this->isValue($value) || !$style) {
+      return null;
+    }
+    switch ($style) {
+      case 'icon':
+        // maybe expose 'list.icon.alt' for hover stuff?
+        // also icon's "label", and other features supported by
+        // PHUIObjectItemView::addIcon().
+        return 'fa-'.$this->getFieldConfigValue('list.icon');
+      case 'attribute':
+      case 'byline':
+        $label = $this->getFieldConfigValue(
+          'list.label',
+          $this->getFieldName());
+        if (phutil_nonempty_string($label)) {
+          return pht('%s: %s', $label, $value);
+        }
+        return $value;
+      default:
+        throw new Exception(
+          pht(
+            "Unknown field list-item view style '%s'; valid styles are ".
+            "'%s', '%s'and '%s'.",
+            $style,
+            'icon',
+            'attribute',
+            'byline'));
+    }
+  }
+
+  public function renderOnListItem(PHUIObjectItemView $view) {
+    $value = $this->getValueForListItem();
+    if (!$this->isValue($value)) {
+      return;
+    }
+
+    switch ($this->getStyleForListItemView()) {
+      case 'icon':
+        $view->addIcon($value);
+        break;
+      case 'attribute':
+        $view->addAttribute($value);
+        break;
+      case 'byline':
+        $view->addByline($value);
+        break;
+    }
   }
 
   public function shouldAppearInApplicationSearch() {
@@ -481,7 +556,7 @@ abstract class PhabricatorStandardCustomField
     }
 
     $field_value = $this->getFieldValue();
-    if (strlen($field_value)) {
+    if (($field_value !== null) && (strlen($field_value))) {
       $document->addField($field_key, $field_value);
     }
   }

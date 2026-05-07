@@ -81,7 +81,7 @@ final class ManiphestTaskDetailController extends ManiphestController {
     $graph_menu = null;
 
     $graph_limit = 200;
-    $overflow_message = null;
+    $graph_error_message = null;
     $task_graph = id(new ManiphestTaskGraph())
       ->setViewer($viewer)
       ->setSeedPHID($task->getPHID())
@@ -102,8 +102,9 @@ final class ManiphestTaskDetailController extends ManiphestController {
       // the search button to browse tasks with the search UI instead.
       $direct_count = count($parent_list) + count($subtask_list);
 
+      $graph_table = null;
       if ($direct_count > $graph_limit) {
-        $overflow_message = pht(
+        $graph_error_message = pht(
           'This task is directly connected to more than %s other tasks. '.
           'Use %s to browse parents or subtasks, or %s to show more of the '.
           'graph.',
@@ -111,14 +112,13 @@ final class ManiphestTaskDetailController extends ManiphestController {
           phutil_tag('strong', array(), pht('Search...')),
           phutil_tag('strong', array(), pht('View Standalone Graph')));
 
-        $graph_table = null;
       } else {
         // If there aren't too many direct tasks, but there are too many total
         // tasks, we'll only render directly connected tasks.
         if ($task_graph->isOverLimit()) {
           $task_graph->setRenderOnlyAdjacentNodes(true);
 
-          $overflow_message = pht(
+          $graph_error_message = pht(
             'This task is connected to more than %s other tasks. '.
             'Only direct parents and subtasks are shown here. Use '.
             '%s to show more of the graph.',
@@ -126,13 +126,22 @@ final class ManiphestTaskDetailController extends ManiphestController {
             phutil_tag('strong', array(), pht('View Standalone Graph')));
         }
 
-        $graph_table = $task_graph->newGraphTable();
+        try {
+          $graph_table = $task_graph->newGraphTable();
+        } catch (Throwable $ex) {
+          phlog($ex);
+          $graph_error_message = pht(
+            'There was an unexpected error displaying the task graph. '.
+            'Use %s to browse parents or subtasks, or %s to show the graph.',
+            phutil_tag('strong', array(), pht('Search...')),
+            phutil_tag('strong', array(), pht('View Standalone Graph')));
+        }
       }
 
-      if ($overflow_message) {
+      if ($graph_error_message) {
         $overflow_view = $this->newTaskGraphOverflowView(
           $task,
-          $overflow_message,
+          $graph_error_message,
           true);
 
         $graph_table = array(
@@ -154,7 +163,7 @@ final class ManiphestTaskDetailController extends ManiphestController {
     }
 
     $related_tabs[] = $this->newMocksTab($task, $query);
-    $related_tabs[] = $this->newMentionsTab($task, $query);
+    $related_tabs[] = $this->newMentionsTab($query);
     $related_tabs[] = $this->newDuplicatesTab($task, $query);
 
     $tab_view = null;
@@ -194,8 +203,7 @@ final class ManiphestTaskDetailController extends ManiphestController {
       ->addPropertySection(pht('Description'), $description)
       ->addPropertySection(pht('Details'), $details);
 
-
-    return $this->newPage()
+    $page = $this->newPage()
       ->setTitle($title)
       ->setCrumbs($crumbs)
       ->setPageObjectPHIDs(
@@ -204,12 +212,80 @@ final class ManiphestTaskDetailController extends ManiphestController {
         ))
       ->appendChild($view);
 
+    if ($this->getIncludeOpenGraphMetadata($viewer, $task)) {
+      $page = $this->addOpenGraphProtocolMetadataTags($page, $task);
+    }
+
+    return $page;
+  }
+
+  /**
+   * Whether the page should include Open Graph metadata tags
+   * @param PhabricatorUser $viewer Viewer of the object
+   * @param object $object
+   * @return bool True if the page should serve Open Graph metadata tags
+   */
+  private function getIncludeOpenGraphMetadata(PhabricatorUser $viewer,
+    $object) {
+    // Don't waste time adding OpenGraph metadata for logged-in users
+    if ($viewer->getIsStandardUser()) {
+      return false;
+    }
+    // Include OpenGraph tags only for public objects
+    return $object->getViewPolicy() === PhabricatorPolicies::POLICY_PUBLIC;
+  }
+
+  /**
+   * Get Open Graph Protocol metadata values
+   * @param ManiphestTask $task
+   * @return array Map of Open Graph property => value
+   */
+  private function getOpenGraphProtocolMetadataValues($task) {
+    $viewer = $this->getViewer();
+
+    $v = array();
+    $v['og:site_name'] = PlatformSymbols::getPlatformServerName();
+    $v['og:type'] = 'website';
+    $v['og:url'] = PhabricatorEnv::getProductionURI($task->getURI());
+    $v['og:title'] = $task->getMonogram().' '.$task->getTitle();
+
+    $desc = $task->getDescription();
+    if (phutil_nonempty_string($desc)) {
+      $v['og:description'] =
+        PhabricatorMarkupEngine::summarizeSentence($desc);
+    }
+
+    $v['og:image'] =
+      PhabricatorCustomLogoConfigType::getLogoURI($viewer);
+
+    $v['og:image:height'] = 64;
+    $v['og:image:width'] = 64;
+
+    return $v;
+  }
+
+  /**
+   * Add Open Graph Protocol metadata tags to Maniphest task page
+   * @param PhabricatorStandardPageView $page
+   * @param ManiphestTask $task
+   * @return PhabricatorStandardPageView with additional OGP <meta> tags
+   */
+  private function addOpenGraphProtocolMetadataTags($page, $task) {
+    foreach ($this->getOpenGraphProtocolMetadataValues($task) as $k => $v) {
+      $page->addHeadItem(phutil_tag(
+        'meta',
+        array(
+          'property' => $k,
+          'content' => $v,
+        )));
+    }
+    return $page;
   }
 
   private function buildHeaderView(ManiphestTask $task) {
     $view = id(new PHUIHeaderView())
       ->setHeader($task->getTitle())
-      ->setUser($this->getRequest()->getUser())
+      ->setViewer($this->getRequest()->getUser())
       ->setPolicyObject($task);
 
     $priority_name = ManiphestTaskPriority::getTaskPriorityName(
@@ -339,7 +415,11 @@ final class ManiphestTaskDetailController extends ManiphestController {
     $viewer_phid = $viewer->getPHID();
     $owner_phid = $task->getOwnerPHID();
     $author_phid = $task->getAuthorPHID();
-    $handles = $viewer->loadHandles(array($owner_phid, $author_phid));
+    if ($owner_phid) {
+      $handles = $viewer->loadHandles(array($owner_phid, $author_phid));
+    } else {
+      $handles = $viewer->loadHandles(array($author_phid));
+    }
 
     $assigned_refs = id(new PHUICurtainObjectRefListView())
       ->setViewer($viewer)
@@ -378,7 +458,7 @@ final class ManiphestTaskDetailController extends ManiphestController {
 
     $viewer = $this->getRequest()->getUser();
     $view = id(new PHUIPropertyListView())
-      ->setUser($viewer);
+      ->setViewer($viewer);
 
     $source = $task->getOriginalEmailSource();
     if ($source) {
@@ -452,49 +532,15 @@ final class ManiphestTaskDetailController extends ManiphestController {
   }
 
   private function newMentionsTab(
-    ManiphestTask $task,
     PhabricatorEdgeQuery $edge_query) {
 
-    $in_type = PhabricatorObjectMentionedByObjectEdgeType::EDGECONST;
-    $out_type = PhabricatorObjectMentionsObjectEdgeType::EDGECONST;
+    $view = (new PhorgeApplicationMentionsListView())
+      ->setEdgeQuery($edge_query)
+      ->setViewer($this->getViewer())
+      ->getMentionsView();
 
-    $in_phids = $edge_query->getDestinationPHIDs(array(), array($in_type));
-    $out_phids = $edge_query->getDestinationPHIDs(array(), array($out_type));
-
-    // Filter out any mentioned users from the list. These are not generally
-    // very interesting to show in a relationship summary since they usually
-    // end up as subscribers anyway.
-
-    $user_type = PhabricatorPeopleUserPHIDType::TYPECONST;
-    foreach ($out_phids as $key => $out_phid) {
-      if (phid_get_type($out_phid) == $user_type) {
-        unset($out_phids[$key]);
-      }
-    }
-
-    if (!$in_phids && !$out_phids) {
+    if (!$view ) {
       return null;
-    }
-
-    $viewer = $this->getViewer();
-    $in_handles = $viewer->loadHandles($in_phids);
-    $out_handles = $viewer->loadHandles($out_phids);
-
-    $in_handles = $this->getCompleteHandles($in_handles);
-    $out_handles = $this->getCompleteHandles($out_handles);
-
-    if (!count($in_handles) && !count($out_handles)) {
-      return null;
-    }
-
-    $view = new PHUIPropertyListView();
-
-    if (count($in_handles)) {
-      $view->addProperty(pht('Mentioned In'), $in_handles->renderList());
-    }
-
-    if (count($out_handles)) {
-      $view->addProperty(pht('Mentioned Here'), $out_handles->renderList());
     }
 
     return id(new PHUITabView())

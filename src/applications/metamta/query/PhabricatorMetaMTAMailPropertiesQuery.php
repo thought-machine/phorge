@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorMetaMTAMailProperties>
+ */
 final class PhabricatorMetaMTAMailPropertiesQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -41,7 +44,7 @@ final class PhabricatorMetaMTAMailPropertiesQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorMetaMTAApplication';
+    return PhabricatorMetaMTAApplication::class;
   }
 
 }

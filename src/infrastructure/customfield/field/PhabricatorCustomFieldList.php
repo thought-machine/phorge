@@ -12,8 +12,11 @@ final class PhabricatorCustomFieldList extends Phobject {
   private $fields;
   private $viewer;
 
+  /**
+   * @param array<PhabricatorCustomField> $fields
+   */
   public function __construct(array $fields) {
-    assert_instances_of($fields, 'PhabricatorCustomField');
+    assert_instances_of($fields, PhabricatorCustomField::class);
     $this->fields = $fields;
   }
 
@@ -46,8 +49,9 @@ final class PhabricatorCustomFieldList extends Phobject {
   /**
    * Read stored values for all fields which support storage.
    *
-   * @param PhabricatorCustomFieldInterface Object to read field values for.
-   * @return void
+   * @param PhabricatorCustomFieldInterface $object Object to read field values
+   *   for.
+   * @return $this
    */
   public function readFieldsFromStorage(
     PhabricatorCustomFieldInterface $object) {
@@ -196,6 +200,19 @@ final class PhabricatorCustomFieldList extends Phobject {
             $view->addTextContent($value);
             break;
         }
+      }
+    }
+  }
+
+  public function addFieldsToListViewItem(
+    PhabricatorCustomFieldInterface $object,
+    PhabricatorUser $viewer,
+    PHUIObjectItemView $view) {
+
+    foreach ($this->fields as $field) {
+      if ($field->shouldAppearInListView()) {
+        $field->setViewer($viewer);
+        $field->renderOnListItem($view);
       }
     }
   }

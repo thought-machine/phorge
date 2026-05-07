@@ -7,7 +7,7 @@ final class ManiphestTransactionEditor
   private $moreValidationErrors = array();
 
   public function getEditorApplicationClass() {
-    return 'PhabricatorManiphestApplication';
+    return PhabricatorManiphestApplication::class;
   }
 
   public function getEditorObjectsDescription() {
@@ -101,6 +101,7 @@ final class ManiphestTransactionEditor
     $unblock_xaction = null;
     foreach ($xactions as $xaction) {
       switch ($xaction->getTransactionType()) {
+        case ManiphestTaskParentTransaction::TRANSACTIONTYPE:
         case ManiphestTaskStatusTransaction::TRANSACTIONTYPE:
           $unblock_xaction = $xaction;
           break;
@@ -176,7 +177,7 @@ final class ManiphestTransactionEditor
       ManiphestTransaction::MAILTAG_STATUS =>
         pht("A task's status changes."),
       ManiphestTransaction::MAILTAG_OWNER =>
-        pht("A task's owner changes."),
+        pht("A task's assignee changes."),
       ManiphestTransaction::MAILTAG_PRIORITY =>
         pht("A task's priority changes."),
       ManiphestTransaction::MAILTAG_CC =>
@@ -327,11 +328,11 @@ final class ManiphestTransactionEditor
 
     $is_unassigned = ($object->getOwnerPHID() === null);
 
-    $any_assign = false;
+    $any_xassign = null;
     foreach ($xactions as $xaction) {
       if ($xaction->getTransactionType() ==
         ManiphestTaskOwnerTransaction::TRANSACTIONTYPE) {
-        $any_assign = true;
+        $any_xassign = $xaction;
         break;
       }
     }
@@ -355,15 +356,22 @@ final class ManiphestTransactionEditor
 
     // If the task is not assigned, not being assigned, currently open, and
     // being closed, try to assign the actor as the owner.
-    if ($is_unassigned && !$any_assign && $is_open && $is_closing) {
-      $is_claim = ManiphestTaskStatus::isClaimStatus($new_status);
-
-      // Don't assign the actor if they aren't a real user.
-      // Don't claim the task if the status is configured to not claim.
-      if ($actor_phid && $is_claim) {
-        $results[] = id(new ManiphestTransaction())
-          ->setTransactionType(ManiphestTaskOwnerTransaction::TRANSACTIONTYPE)
-          ->setNewValue($actor_phid);
+    // Don't assign the actor if they aren't a real user.
+    if ($is_unassigned && $is_open && $is_closing && $actor_phid) {
+      $is_autoclaim = ManiphestTaskStatus::isClaimStatus($new_status);
+      if ($is_autoclaim) {
+        if ($any_xassign === null) {
+          $results[] = id(new ManiphestTransaction())
+            ->setTransactionType(ManiphestTaskOwnerTransaction::TRANSACTIONTYPE)
+            ->setNewValue($actor_phid);
+        } else if ($any_xassign->getNewValue() === null) {
+          // We have an explicit "Assign / Claim" = nothing in the frontend.
+          // The user is trying to "undo" the above automatic auto-claim.
+          // When saving, this would cause the "no effect" warning.
+          // So we suppress that confusing warning.
+          // https://we.phorge.it/T15164
+          $any_xassign->setIgnoreOnNoEffect(true);
+        }
       }
     }
 
@@ -821,19 +829,19 @@ final class ManiphestTransactionEditor
         $message = pht(
           'You can not lock this task and unassign it at the same time '.
           'because no one will be able to edit it anymore. Lock the task '.
-          'or remove the owner, but not both.');
+          'or remove the assignee, but not both.');
         $problem_xaction = $status_xaction;
       } else if ($status_changed) {
         $message = pht(
-          'You can not lock this task because it does not have an owner. '.
+          'You can not lock this task because it does not have an assignee. '.
           'No one would be able to edit the task. Assign the task to an '.
-          'owner before locking it.');
+          'assignee before locking it.');
         $problem_xaction = $status_xaction;
       } else if ($owner_changed) {
         $message = pht(
-          'You can not remove the owner of this task because it is locked '.
+          'You can not remove the assignee of this task because it is locked '.
           'and no one would be able to edit the task. Reassign the task or '.
-          'unlock it before removing the owner.');
+          'unlock it before removing the assignee.');
         $problem_xaction = $owner_xaction;
       } else {
         // If the task was already broken, we don't have a transaction to

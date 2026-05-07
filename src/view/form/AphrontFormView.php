@@ -120,8 +120,8 @@ final class AphrontFormView extends AphrontView {
    * controls. It will propagate some information from the form to the
    * control to simplify rendering.
    *
-   * @param AphrontFormControl Control to append.
-   * @return this
+   * @param AphrontFormControl $control Control to append.
+   * @return $this
    */
   public function appendControl(AphrontFormControl $control) {
     $this->controls[] = $control;
@@ -138,7 +138,7 @@ final class AphrontFormView extends AphrontView {
       throw new Exception(
         pht(
           'You must pass the user to %s.',
-          __CLASS__));
+          self::class));
     }
 
     $sigils = $this->sigils;

@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends AlmanacQuery<AlmanacNetwork>
+ */
 final class AlmanacNetworkQuery
   extends AlmanacQuery {
 
@@ -64,7 +67,7 @@ final class AlmanacNetworkQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorAlmanacApplication';
+    return PhabricatorAlmanacApplication::class;
   }
 
 }

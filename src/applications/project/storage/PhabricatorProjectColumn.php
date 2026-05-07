@@ -186,11 +186,14 @@ final class PhabricatorProjectColumn
     return sprintf('%s%012d', $group, $sequence);
   }
 
-  public function attachTrigger(PhabricatorProjectTrigger $trigger = null) {
+  public function attachTrigger(?PhabricatorProjectTrigger $trigger = null) {
     $this->trigger = $trigger;
     return $this;
   }
 
+  /**
+   * @return PhabricatorProjectTrigger|null
+   */
   public function getTrigger() {
     return $this->assertAttached($this->trigger);
   }

@@ -12,7 +12,7 @@ final class PhabricatorTransactionsObjectTypeDatasource
   }
 
   public function getDatasourceApplicationClass() {
-    return 'PhabricatorTransactionsApplication';
+    return PhabricatorTransactionsApplication::class;
   }
 
   protected function renderSpecialTokens(array $values) {
@@ -26,7 +26,7 @@ final class PhabricatorTransactionsObjectTypeDatasource
 
   private function buildResults() {
     $queries = id(new PhutilClassMapQuery())
-      ->setAncestorClass('PhabricatorApplicationTransactionQuery')
+      ->setAncestorClass(PhabricatorApplicationTransactionQuery::class)
       ->execute();
 
     $phid_types = PhabricatorPHIDType::getAllTypes();

@@ -13,7 +13,7 @@ final class PhabricatorPastePastePHIDType extends PhabricatorPHIDType {
   }
 
   public function getPHIDTypeApplicationClass() {
-    return 'PhabricatorPasteApplication';
+    return PhabricatorPasteApplication::class;
   }
 
   protected function buildQueryForObjects(
@@ -41,6 +41,11 @@ final class PhabricatorPastePastePHIDType extends PhabricatorPHIDType {
     }
   }
 
+  /**
+   * Check whether a named object is of this PHID type
+   * @param string $name Object name
+   * @return bool True if the named object is of this PHID type
+   */
   public function canLoadNamedObject($name) {
     return preg_match('/^P\d*[1-9]\d*$/i', $name);
   }

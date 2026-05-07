@@ -3,6 +3,8 @@
 /**
  * @task config Configuring the Query
  * @task exec   Query Execution
+ *
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorFeedStory>
  */
 final class PhabricatorNotificationQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
@@ -31,9 +33,9 @@ final class PhabricatorNotificationQuery
    * only unread notifications, while `false` means to return only //read//
    * notifications. The default is `null`, which returns both.
    *
-   * @param mixed True or false to filter results by read status. Null to remove
-   *              the filter.
-   * @return this
+   * @param mixed $unread True or false to filter results by read status. Null
+   *              to remove the filter.
+   * @return $this
    * @task config
    */
   public function withUnread($unread) {
@@ -190,7 +192,7 @@ final class PhabricatorNotificationQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorNotificationsApplication';
+    return PhabricatorNotificationsApplication::class;
   }
 
 }

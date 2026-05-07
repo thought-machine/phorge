@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorBadgesAward>
+ */
 final class PhabricatorBadgesAwardQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -115,7 +118,7 @@ final class PhabricatorBadgesAwardQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorBadgesApplication';
+    return PhabricatorBadgesApplication::class;
   }
 
 }

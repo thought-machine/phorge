@@ -7,15 +7,24 @@ abstract class PhabricatorFactEngine extends Phobject {
 
   final public static function loadAllEngines() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->execute();
   }
 
+  /**
+   * @return array All types of facts known by this FactEngine
+   */
   abstract public function newFacts();
 
+  /**
+   * @return bool
+   */
   abstract public function supportsDatapointsForObject(
     PhabricatorLiskDAO $object);
 
+  /**
+   * Add new datapoints (due to a transaction) about an object
+   */
   abstract public function newDatapointsForObject(PhabricatorLiskDAO $object);
 
   final protected function getFact($key) {

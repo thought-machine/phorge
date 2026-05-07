@@ -3,6 +3,8 @@
 final class PhabricatorViewerDatasource
   extends PhabricatorTypeaheadDatasource {
 
+  const FUNCTION_TOKEN = 'viewer()';
+
   public function getBrowseTitle() {
     return pht('Browse Viewer');
   }
@@ -12,7 +14,7 @@ final class PhabricatorViewerDatasource
   }
 
   public function getDatasourceApplicationClass() {
-    return 'PhabricatorPeopleApplication';
+    return PhabricatorPeopleApplication::class;
   }
 
   public function getDatasourceFunctions() {
@@ -34,8 +36,12 @@ final class PhabricatorViewerDatasource
     );
   }
 
+  protected function isFunctionWithLoginRequired($function) {
+    return true;
+  }
+
   public function loadResults() {
-    if ($this->getViewer()->getPHID()) {
+    if ($this->getViewer()->isLoggedIn()) {
       $results = array($this->renderViewerFunctionToken());
     } else {
       $results = array();
@@ -45,7 +51,7 @@ final class PhabricatorViewerDatasource
   }
 
   protected function canEvaluateFunction($function) {
-    if (!$this->getViewer()->getPHID()) {
+    if (!$this->getViewer()->isLoggedIn()) {
       return false;
     }
 

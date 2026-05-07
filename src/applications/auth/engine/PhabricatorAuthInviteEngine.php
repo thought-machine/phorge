@@ -32,6 +32,9 @@ final class PhabricatorAuthInviteEngine extends Phobject {
     return $this->userHasConfirmedVerify;
   }
 
+  /**
+   * @return PhabricatorAuthInvite
+   */
   public function processInviteCode($code) {
     $viewer = $this->getViewer();
 
@@ -125,7 +128,7 @@ final class PhabricatorAuthInviteEngine extends Phobject {
   private function handleLoggedInInvite(
     PhabricatorAuthInvite $invite,
     PhabricatorUser $viewer,
-    PhabricatorUserEmail $email = null) {
+    ?PhabricatorUserEmail $email = null) {
 
     if ($email && ($email->getUserPHID() !== $viewer->getPHID())) {
       $other_user = $this->loadUserForEmail($email);

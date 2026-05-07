@@ -93,7 +93,7 @@ final class PhabricatorStandardPageView extends PhabricatorBarePageView
     }
 
     $conpherence_installed = PhabricatorApplication::isClassInstalledForViewer(
-      'PhabricatorConpherenceApplication',
+      PhabricatorConpherenceApplication::class,
       $viewer);
     if (!$conpherence_installed) {
       return false;
@@ -216,12 +216,13 @@ final class PhabricatorStandardPageView extends PhabricatorBarePageView
 
     parent::willRenderPage();
 
-    if (!$this->getRequest()) {
+    $request = $this->getRequest();
+    if (!$request) {
       throw new Exception(
         pht(
           'You must set the %s to render a %s.',
           'Request',
-          __CLASS__));
+          self::class));
     }
 
     $console = $this->getConsole();
@@ -237,30 +238,28 @@ final class PhabricatorStandardPageView extends PhabricatorBarePageView
 
     Javelin::initBehavior('workflow', array());
 
-    $request = $this->getRequest();
-    $user = null;
-    if ($request) {
-      $user = $request->getUser();
-    }
-
+    $user = $request->getUser();
     if ($user) {
       if ($user->isUserActivated()) {
-        $offset = $user->getTimeZoneOffset();
+        // Only bother user about timezone offset if they have not set UTC
+        if ($user->getTimezoneIdentifier() !== 'UTC') {
+          $offset = $user->getTimeZoneOffset();
 
-        $ignore_key = PhabricatorTimezoneIgnoreOffsetSetting::SETTINGKEY;
-        $ignore = $user->getUserSetting($ignore_key);
+          $ignore_key = PhabricatorTimezoneIgnoreOffsetSetting::SETTINGKEY;
+          $ignore = $user->getUserSetting($ignore_key);
 
-        Javelin::initBehavior(
-          'detect-timezone',
-          array(
-            'offset' => $offset,
-            'uri' => '/settings/timezone/',
-            'message' => pht(
-              'Your browser timezone setting differs from the timezone '.
-              'setting in your profile, click to reconcile.'),
-            'ignoreKey' => $ignore_key,
-            'ignore' => $ignore,
-          ));
+          Javelin::initBehavior(
+            'detect-timezone',
+            array(
+              'offset' => $offset,
+              'uri' => '/settings/timezone/',
+              'message' => pht(
+                'Your browser timezone setting differs from the timezone '.
+                'setting in your profile, click to reconcile.'),
+              'ignoreKey' => $ignore_key,
+              'ignore' => $ignore,
+            ));
+        }
 
         if ($user->getIsAdmin()) {
           $server_https = $request->isHTTPS();
@@ -351,7 +350,7 @@ final class PhabricatorStandardPageView extends PhabricatorBarePageView
     }
 
     $menu = id(new PhabricatorMainMenuView())
-      ->setUser($viewer);
+      ->setViewer($viewer);
 
     if ($this->getController()) {
       $menu->setController($this->getController());
@@ -378,9 +377,8 @@ final class PhabricatorStandardPageView extends PhabricatorBarePageView
 
   /**
    * Insert a HTML element into <head> of the page to render.
-   * Used by PhameBlogViewController.
    *
-   * @param PhutilSafeHTML HTML header to add
+   * @param PhutilSafeHTML $html HTML header to add
    */
   public function addHeadItem($html) {
     if ($html instanceof PhutilSafeHTML) {
@@ -502,7 +500,7 @@ final class PhabricatorStandardPageView extends PhabricatorBarePageView
       $is_minimize = $this->getDurableColumnMinimize();
       $durable_column = id(new ConpherenceDurableColumnView())
         ->setSelectedConpherence(null)
-        ->setUser($user)
+        ->setViewer($user)
         ->setQuicksandConfig($this->buildQuicksandConfig())
         ->setVisible($is_visible)
         ->setMinimize($is_minimize)
@@ -627,20 +625,25 @@ final class PhabricatorStandardPageView extends PhabricatorBarePageView
     // Try to guess the device resolution based on UA strings to avoid a flash
     // of incorrectly-styled content.
     $device_guess = 'device-desktop';
-    if (preg_match('@iPhone|iPod|(Android.*Chrome/[.0-9]* Mobile)@', $agent)) {
-      $device_guess = 'device-phone device';
-    } else if (preg_match('@iPad|(Android.*Chrome/)@', $agent)) {
-      $device_guess = 'device-tablet device';
+    if (phutil_nonempty_string($agent)) {
+      if (preg_match('@iPhone|iPod|Android.*(Chrome/[.0-9]* Mobile|'.
+        'Mobile.*Firefox/[.0-9]*)@', $agent)) {
+        $device_guess = 'device-phone device';
+      } else if (preg_match('@iPad|(Android.*Chrome/)@', $agent)) {
+        $device_guess = 'device-tablet device';
+      }
     }
 
     $classes[] = $device_guess;
 
-    if (preg_match('@Windows@', $agent)) {
-      $classes[] = 'platform-windows';
-    } else if (preg_match('@Macintosh@', $agent)) {
-      $classes[] = 'platform-mac';
-    } else if (preg_match('@X11@', $agent)) {
-      $classes[] = 'platform-linux';
+    if (phutil_nonempty_string($agent)) {
+      if (preg_match('@Windows@', $agent)) {
+        $classes[] = 'platform-windows';
+      } else if (preg_match('@Macintosh@', $agent)) {
+        $classes[] = 'platform-mac';
+      } else if (preg_match('@X11@', $agent)) {
+        $classes[] = 'platform-linux';
+      }
     }
 
     if ($this->getRequest()->getStr('__print__')) {

@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorOwnersPackage>
+ */
 final class PhabricatorOwnersPackageQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -284,7 +287,7 @@ final class PhabricatorOwnersPackageQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorOwnersApplication';
+    return PhabricatorOwnersApplication::class;
   }
 
   protected function getPrimaryTableAlias() {

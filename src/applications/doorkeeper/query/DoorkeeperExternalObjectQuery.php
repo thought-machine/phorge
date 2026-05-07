@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<DoorkeeperExternalObject>
+ */
 final class DoorkeeperExternalObjectQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -41,7 +44,7 @@ final class DoorkeeperExternalObjectQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDoorkeeperApplication';
+    return PhabricatorDoorkeeperApplication::class;
   }
 
 }

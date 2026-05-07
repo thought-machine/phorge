@@ -1,13 +1,19 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<DifferentialHunk>
+ */
 final class DifferentialHunkQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
   private $changesets;
   private $shouldAttachToChangesets;
 
+  /**
+   * @param array<DifferentialChangeset> $changesets
+   */
   public function withChangesets(array $changesets) {
-    assert_instances_of($changesets, 'DifferentialChangeset');
+    assert_instances_of($changesets, DifferentialChangeset::class);
     $this->changesets = $changesets;
     return $this;
   }
@@ -78,7 +84,7 @@ final class DifferentialHunkQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDifferentialApplication';
+    return PhabricatorDifferentialApplication::class;
   }
 
   protected function getDefaultOrderVector() {

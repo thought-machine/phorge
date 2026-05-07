@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends AlmanacQuery<AlmanacDevice>
+ */
 final class AlmanacDeviceQuery
   extends AlmanacQuery {
 
@@ -148,7 +151,7 @@ final class AlmanacDeviceQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorAlmanacApplication';
+    return PhabricatorAlmanacApplication::class;
   }
 
 }

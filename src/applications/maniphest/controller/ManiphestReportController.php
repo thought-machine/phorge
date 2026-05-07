@@ -36,7 +36,7 @@ final class ManiphestReportController extends ManiphestController {
     $nav->addFilter('user', pht('By User'));
     $nav->addFilter('project', pht('By Project'));
 
-    $class = 'PhabricatorFactApplication';
+    $class = PhabricatorFactApplication::class;
     if (PhabricatorApplication::isClassInstalledForViewer($class, $viewer)) {
       $nav->addLabel(pht('Burnup'));
       $nav->addFilter('burn', pht('Burnup Rate'));
@@ -71,6 +71,14 @@ final class ManiphestReportController extends ManiphestController {
 
   }
 
+  /**
+   * Render the "Burnup Rate" on /maniphest/report/burn/.
+   *
+   * Ironically this is not called for the "Burndown" on /project/reports/$id/
+   * as that's handled by PhabricatorProjectReportsController instead.
+   *
+   * @return array<AphrontListFilterView, PHUIObjectBoxView>
+   */
   public function renderBurn() {
     $request = $this->getRequest();
     $viewer = $request->getUser();
@@ -84,308 +92,12 @@ final class ManiphestReportController extends ManiphestController {
       $handle = $handles[$project_phid];
     }
 
-    $table = new ManiphestTransaction();
-    $conn = $table->establishConnection('r');
-
-    if ($project_phid) {
-      $joins = qsprintf(
-        $conn,
-        'JOIN %T t ON x.objectPHID = t.phid
-          JOIN %T p ON p.src = t.phid AND p.type = %d AND p.dst = %s',
-        id(new ManiphestTask())->getTableName(),
-        PhabricatorEdgeConfig::TABLE_NAME_EDGE,
-        PhabricatorProjectObjectHasProjectEdgeType::EDGECONST,
-        $project_phid);
-      $create_joins = qsprintf(
-        $conn,
-        'JOIN %T p ON p.src = t.phid AND p.type = %d AND p.dst = %s',
-        PhabricatorEdgeConfig::TABLE_NAME_EDGE,
-        PhabricatorProjectObjectHasProjectEdgeType::EDGECONST,
-        $project_phid);
-    } else {
-      $joins = qsprintf($conn, '');
-      $create_joins = qsprintf($conn, '');
-    }
-
-    $data = queryfx_all(
-      $conn,
-      'SELECT x.transactionType, x.oldValue, x.newValue, x.dateCreated
-        FROM %T x %Q
-        WHERE transactionType IN (%Ls)
-        ORDER BY x.dateCreated ASC',
-      $table->getTableName(),
-      $joins,
-      array(
-        ManiphestTaskStatusTransaction::TRANSACTIONTYPE,
-        ManiphestTaskMergedIntoTransaction::TRANSACTIONTYPE,
-      ));
-
-    // See PHI273. After the move to EditEngine, we no longer create a
-    // "status" transaction if a task is created directly into the default
-    // status. This likely impacted API/email tasks after 2016 and all other
-    // tasks after late 2017. Until Facts can fix this properly, use the
-    // task creation dates to generate synthetic transactions which look like
-    // the older transactions that this page expects.
-
-    $default_status = ManiphestTaskStatus::getDefaultStatus();
-    $duplicate_status = ManiphestTaskStatus::getDuplicateStatus();
-
-    // Build synthetic transactions which take status from `null` to the
-    // default value.
-    $create_rows = queryfx_all(
-      $conn,
-      'SELECT t.dateCreated FROM %T t %Q',
-      id(new ManiphestTask())->getTableName(),
-      $create_joins);
-    foreach ($create_rows as $key => $create_row) {
-      $create_rows[$key] = array(
-        'transactionType' => 'status',
-        'oldValue' => null,
-        'newValue' => $default_status,
-        'dateCreated' => $create_row['dateCreated'],
-      );
-    }
-
-    // Remove any actual legacy status transactions which take status from
-    // `null` to any open status.
-    foreach ($data as $key => $row) {
-      if ($row['transactionType'] != 'status') {
-        continue;
-      }
-
-      $oldv = trim($row['oldValue'], '"');
-      $newv = trim($row['newValue'], '"');
-
-      // If this is a status change, preserve it.
-      if ($oldv != 'null') {
-        continue;
-      }
-
-      // If this task was created directly into a closed status, preserve
-      // the transaction.
-      if (!ManiphestTaskStatus::isOpenStatus($newv)) {
-        continue;
-      }
-
-      // If this is a legacy "create" transaction, discard it in favor of the
-      // synthetic one.
-      unset($data[$key]);
-    }
-
-    // Merge the synthetic rows into the real transactions.
-    $data = array_merge($create_rows, $data);
-    $data = array_values($data);
-    $data = isort($data, 'dateCreated');
-
-    $stats = array();
-    $day_buckets = array();
-
-    $open_tasks = array();
-
-    foreach ($data as $key => $row) {
-      switch ($row['transactionType']) {
-        case ManiphestTaskStatusTransaction::TRANSACTIONTYPE:
-          // NOTE: Hack to avoid json_decode().
-          $oldv = $row['oldValue'];
-          if ($oldv !== null) {
-            $oldv = trim($oldv, '"');
-          }
-          $newv = trim($row['newValue'], '"');
-          break;
-        case ManiphestTaskMergedIntoTransaction::TRANSACTIONTYPE:
-          // NOTE: Merging a task does not generate a "status" transaction.
-          // We pretend it did. Note that this is not always accurate: it is
-          // possible to merge a task which was previously closed, but this
-          // fake transaction always counts a merge as a closure.
-          $oldv = $default_status;
-          $newv = $duplicate_status;
-          break;
-      }
-
-      if ($oldv == 'null') {
-        $old_is_open = false;
-      } else {
-        $old_is_open = ManiphestTaskStatus::isOpenStatus($oldv);
-      }
-
-      $new_is_open = ManiphestTaskStatus::isOpenStatus($newv);
-
-      $is_open  = ($new_is_open && !$old_is_open);
-      $is_close = ($old_is_open && !$new_is_open);
-
-      $data[$key]['_is_open'] = $is_open;
-      $data[$key]['_is_close'] = $is_close;
-
-      if (!$is_open && !$is_close) {
-        // This is either some kind of bogus event, or a resolution change
-        // (e.g., resolved -> invalid). Just skip it.
-        continue;
-      }
-
-      $day_bucket = phabricator_format_local_time(
-        $row['dateCreated'],
-        $viewer,
-        'Yz');
-      $day_buckets[$day_bucket] = $row['dateCreated'];
-      if (empty($stats[$day_bucket])) {
-        $stats[$day_bucket] = array(
-          'open'  => 0,
-          'close' => 0,
-        );
-      }
-      $stats[$day_bucket][$is_close ? 'close' : 'open']++;
-    }
-
-    $template = array(
-      'open'  => 0,
-      'close' => 0,
-    );
-
-    $rows = array();
-    $rowc = array();
-    $last_month = null;
-    $last_month_epoch = null;
-    $last_week = null;
-    $last_week_epoch = null;
-    $week = null;
-    $month = null;
-
-    $last = last_key($stats) - 1;
-    $period = $template;
-
-    foreach ($stats as $bucket => $info) {
-      $epoch = $day_buckets[$bucket];
-
-      $week_bucket = phabricator_format_local_time(
-        $epoch,
-        $viewer,
-        'YW');
-      if ($week_bucket != $last_week) {
-        if ($week) {
-          $rows[] = $this->formatBurnRow(
-            pht('Week of %s', phabricator_date($last_week_epoch, $viewer)),
-            $week);
-          $rowc[] = 'week';
-        }
-        $week = $template;
-        $last_week = $week_bucket;
-        $last_week_epoch = $epoch;
-      }
-
-      $month_bucket = phabricator_format_local_time(
-        $epoch,
-        $viewer,
-        'Ym');
-      if ($month_bucket != $last_month) {
-        if ($month) {
-          $rows[] = $this->formatBurnRow(
-            phabricator_format_local_time($last_month_epoch, $viewer, 'F, Y'),
-            $month);
-          $rowc[] = 'month';
-        }
-        $month = $template;
-        $last_month = $month_bucket;
-        $last_month_epoch = $epoch;
-      }
-
-      $rows[] = $this->formatBurnRow(phabricator_date($epoch, $viewer), $info);
-      $rowc[] = null;
-      $week['open'] += $info['open'];
-      $week['close'] += $info['close'];
-      $month['open'] += $info['open'];
-      $month['close'] += $info['close'];
-      $period['open'] += $info['open'];
-      $period['close'] += $info['close'];
-    }
-
-    if ($week) {
-      $rows[] = $this->formatBurnRow(
-        pht('Week To Date'),
-        $week);
-      $rowc[] = 'week';
-    }
-
-    if ($month) {
-      $rows[] = $this->formatBurnRow(
-        pht('Month To Date'),
-        $month);
-      $rowc[] = 'month';
-    }
-
-    $rows[] = $this->formatBurnRow(
-      pht('All Time'),
-      $period);
-    $rowc[] = 'aggregate';
-
-    $rows = array_reverse($rows);
-    $rowc = array_reverse($rowc);
-
-    $table = new AphrontTableView($rows);
-    $table->setRowClasses($rowc);
-    $table->setHeaders(
-      array(
-        pht('Period'),
-        pht('Opened'),
-        pht('Closed'),
-        pht('Change'),
-      ));
-    $table->setColumnClasses(
-      array(
-        'right wide',
-        'n',
-        'n',
-        'n',
-      ));
-
-    if ($handle) {
-      $inst = pht(
-        'NOTE: This table reflects tasks currently in '.
-        'the project. If a task was opened in the past but added to '.
-        'the project recently, it is counted on the day it was '.
-        'opened, not the day it was categorized. If a task was part '.
-        'of this project in the past but no longer is, it is not '.
-        'counted at all. This table may not agree exactly with the chart '.
-        'above.');
-      $header = pht('Task Burn Rate for Project %s', $handle->renderLink());
-      $caption = phutil_tag('p', array(), $inst);
-    } else {
-      $header = pht('Task Burn Rate for All Tasks');
-      $caption = null;
-    }
-
-    if ($caption) {
-      $caption = id(new PHUIInfoView())
-        ->appendChild($caption)
-        ->setSeverity(PHUIInfoView::SEVERITY_NOTICE);
-    }
-
-    $panel = new PHUIObjectBoxView();
-    $panel->setHeaderText($header);
-    if ($caption) {
-      $panel->setInfoView($caption);
-    }
-    $panel->setTable($table);
-
     $tokens = array();
     if ($handle) {
       $tokens = array($handle);
     }
 
     $filter = $this->renderReportFilters($tokens, $has_window = false);
-
-    $id = celerity_generate_unique_node_id();
-    $chart = phutil_tag(
-      'div',
-      array(
-        'id' => $id,
-        'style' => 'border: 1px solid #BFCFDA; '.
-                   'background-color: #fff; '.
-                   'margin: 8px 16px; '.
-                   'height: 400px; ',
-      ),
-      '');
-
-    list($burn_x, $burn_y) = $this->buildSeries($data);
 
     if ($project_phid) {
       $projects = id(new PhabricatorProjectQuery())
@@ -412,6 +124,11 @@ final class ManiphestReportController extends ManiphestController {
     return array($filter, $chart_view);
   }
 
+  /**
+   * @param array $tokens
+   * @param bool $has_window
+   * @return AphrontListFilterView
+   */
   private function renderReportFilters(array $tokens, $has_window) {
     $request = $this->getRequest();
     $viewer = $request->getUser();
@@ -451,42 +168,20 @@ final class ManiphestReportController extends ManiphestController {
     return $filter;
   }
 
-  private function buildSeries(array $data) {
-    $out = array();
-
-    $counter = 0;
-    foreach ($data as $row) {
-      $t = (int)$row['dateCreated'];
-      if ($row['_is_close']) {
-        --$counter;
-        $out[$t] = $counter;
-      } else if ($row['_is_open']) {
-        ++$counter;
-        $out[$t] = $counter;
-      }
-    }
-
-    return array(array_keys($out), array_values($out));
+  /**
+   * @return int 50, the default value of the default "normal" Priority
+   */
+  private function getAveragePriority() {
+    // TODO: This is sort of a hard-code for the default "normal" status.
+    // When reports are more powerful, this should be made more general.
+    return 50;
   }
 
-  private function formatBurnRow($label, $info) {
-    $delta = $info['open'] - $info['close'];
-    $fmt = number_format($delta);
-    if ($delta > 0) {
-      $fmt = '+'.$fmt;
-      $fmt = phutil_tag('span', array('class' => 'red'), $fmt);
-    } else {
-      $fmt = phutil_tag('span', array('class' => 'green'), $fmt);
-    }
-
-    return array(
-      $label,
-      number_format($info['open']),
-      number_format($info['close']),
-      $fmt,
-    );
-  }
-
+  /**
+   * Render all table cells in the "Open Tasks" table on /maniphest/report/*.
+   *
+   * @return array<AphrontListFilterView,PHUIObjectBoxView>
+   */
   public function renderOpenTasks() {
     $request = $this->getRequest();
     $viewer = $request->getUser();
@@ -626,9 +321,7 @@ final class ManiphestReportController extends ManiphestController {
 
       $normal_or_better = array();
       foreach ($taskv as $id => $task) {
-        // TODO: This is sort of a hard-code for the default "normal" status.
-        // When reports are more powerful, this should be made more general.
-        if ($task->getPriority() < 50) {
+        if ($task->getPriority() < $this->getAveragePriority()) {
           continue;
         }
         $normal_or_better[$id] = $task;
@@ -700,13 +393,22 @@ final class ManiphestReportController extends ManiphestController {
       ),
       pht('Oldest (All)'));
     $cclass[] = 'n';
+    $low_priorities = array();
+    $priorities_map = ManiphestTaskPriority::getTaskPriorityMap();
+    $normal_priority = $this->getAveragePriority();
+    foreach ($priorities_map as $pri => $full_label) {
+      if ($pri < $normal_priority) {
+        $low_priorities[] = $full_label;
+      }
+    }
+    $pri_string = implode(', ', $low_priorities);
     $cname[] = javelin_tag(
       'span',
       array(
         'sigil' => 'has-tooltip',
         'meta'  => array(
           'tip' => pht(
-            'Oldest open task, excluding those with Low or Wishlist priority.'),
+            'Oldest open task, excluding those with priority %s', $pri_string),
           'size' => 200,
         ),
       ),
@@ -764,7 +466,10 @@ final class ManiphestReportController extends ManiphestController {
 
 
   /**
-   * Load all the tasks that have been recently closed.
+   * Load all tasks that have been recently closed.
+   * This is used for the "Recently Closed" column on /maniphest/report/*.
+   *
+   * @return array<ManiphestTask|null>
    */
   private function loadRecentlyClosedTasks() {
     list($ignored, $window_epoch) = $this->getWindow();
@@ -817,11 +522,17 @@ final class ManiphestReportController extends ManiphestController {
   }
 
   /**
-   * Parse the "Recently Means" filter into:
-   *
+   * Parse the "Recently Means" filter on /maniphest/report/* into:
    *    - A string representation, like "12 AM 7 days ago" (default);
    *    - a locale-aware epoch representation; and
    *    - a possible error.
+   * This is used for the "Recently Closed" column on /maniphest/report/*.
+   *
+   * @return array Array with three items: "Recently Means" user input;
+   *         Resulting epoch timeframe used to get "Recently Closed" numbers
+   *         (when user input is invalid, it defaults to a week ago); "Invalid"
+   *         if first parameter could not be parsed as an epoch, else null.
+   *         array<string,integer,string|null>
    */
   private function getWindow() {
     $request = $this->getRequest();
@@ -856,8 +567,16 @@ final class ManiphestReportController extends ManiphestController {
     return array($window_str, $window_epoch, $error);
   }
 
+  /**
+   * Render date of oldest open task per user or per project with a link.
+   * Used on /maniphest/report/user/ and /maniphest/report/project/ URIs.
+   *
+   * @param array<ManiphestTask> $tasks
+   * @return array<PhutilSafeHTML,int> HTML link markup and the timespan
+   *         (as epoch) since task creation
+   */
   private function renderOldest(array $tasks) {
-    assert_instances_of($tasks, 'ManiphestTask');
+    assert_instances_of($tasks, ManiphestTask::class);
     $oldest = null;
     foreach ($tasks as $id => $task) {
       if (($oldest === null) ||

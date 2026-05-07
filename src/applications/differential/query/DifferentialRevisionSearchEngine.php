@@ -8,7 +8,7 @@ final class DifferentialRevisionSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorDifferentialApplication';
+    return PhabricatorDifferentialApplication::class;
   }
 
   protected function newResultBuckets() {
@@ -172,23 +172,16 @@ final class DifferentialRevisionSearchEngine
     return parent::buildSavedQueryFromBuiltin($query_key);
   }
 
-  private function getStatusOptions() {
-    return array(
-      DifferentialLegacyQuery::STATUS_ANY            => pht('All'),
-      DifferentialLegacyQuery::STATUS_OPEN           => pht('Open'),
-      DifferentialLegacyQuery::STATUS_ACCEPTED       => pht('Accepted'),
-      DifferentialLegacyQuery::STATUS_NEEDS_REVIEW   => pht('Needs Review'),
-      DifferentialLegacyQuery::STATUS_NEEDS_REVISION => pht('Needs Revision'),
-      DifferentialLegacyQuery::STATUS_CLOSED         => pht('Closed'),
-      DifferentialLegacyQuery::STATUS_ABANDONED      => pht('Abandoned'),
-    );
-  }
-
+  /**
+   * @param array<DifferentialRevision> $revisions
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $revisions,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($revisions, 'DifferentialRevision');
+    assert_instances_of($revisions, DifferentialRevision::class);
 
     $viewer = $this->requireViewer();
     $template = id(new DifferentialRevisionListView())
@@ -198,6 +191,10 @@ final class DifferentialRevisionSearchEngine
     $bucket = $this->getResultBucket($query);
 
     $unlanded = $this->loadUnlandedDependencies($revisions);
+
+    $custom_field_lists = $this->loadCustomFields(
+      $revisions,
+      PhabricatorCustomField::ROLE_LIST);
 
     $views = array();
     if ($bucket) {
@@ -231,6 +228,7 @@ final class DifferentialRevisionSearchEngine
 
     foreach ($views as $view) {
       $view->setUnlandedDependencies($unlanded);
+      $view->setCustomFieldLists($custom_field_lists);
     }
 
     if (count($views) == 1) {

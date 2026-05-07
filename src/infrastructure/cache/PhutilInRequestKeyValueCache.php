@@ -26,8 +26,8 @@ final class PhutilInRequestKeyValueCache extends PhutilKeyValueCache {
    * When too many keys are inserted, the oldest keys are removed from the
    * cache. Setting a limit of `0` disables the cache.
    *
-   * @param int Maximum number of items to store in the cache.
-   * @return this
+   * @param int $limit Maximum number of items to store in the cache.
+   * @return $this
    */
   public function setLimit($limit) {
     $this->limit = $limit;

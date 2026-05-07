@@ -31,9 +31,6 @@
  * into an autoscale pool, this will cause the pool to automatically scale up
  * when busy and down when idle.
  *
- * See @{class:PhutilHighIntensityIntervalDaemon} for an example of a simple
- * autoscaling daemon.
- *
  * Launching a daemon which does not make these callbacks into an autoscale
  * pool will have no effect.
  *
@@ -88,7 +85,7 @@ abstract class PhutilDaemon extends Phobject {
     if (!$router->getHandler($handler_key)) {
       $handler = new PhutilCallbackSignalHandler(
         SIGTERM,
-        __CLASS__.'::onTermSignal');
+        self::class.'::onTermSignal');
       $router->installHandler($handler_key, $handler);
     }
 
@@ -347,7 +344,7 @@ abstract class PhutilDaemon extends Phobject {
    * that are part of an autoscale pool are continuously busy for a prolonged
    * period of time, the overseer may scale up the pool.
    *
-   * @return this
+   * @return $this
    * @task autoscale
    */
   protected function willBeginWork() {
@@ -368,7 +365,7 @@ abstract class PhutilDaemon extends Phobject {
    * that are part of an autoscale pool are idle for a prolonged period of
    * time, they may exit to scale the pool down.
    *
-   * @return this
+   * @return $this
    * @task autoscale
    */
   protected function willBeginIdle() {

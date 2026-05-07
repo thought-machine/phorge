@@ -3,7 +3,7 @@
 /**
  * Handle request startup, before loading the environment or libraries. This
  * class bootstraps the request state up to the point where we can enter
- * Phabricator code.
+ * Phorge code.
  *
  * NOTE: This class MUST NOT have any dependencies. It runs before libraries
  * load.
@@ -11,8 +11,8 @@
  * Rate Limiting
  * =============
  *
- * Phabricator limits the rate at which clients can request pages, and issues
- * HTTP 429 "Too Many Requests" responses if clients request too many pages too
+ * Phorge limits the rate at which clients can request pages, and issues HTTP
+ * 429" Too Many Requests" responses if clients request too many pages too
  * quickly. Although this is not a complete defense against high-volume attacks,
  * it can  protect an install against aggressive crawlers, security scanners,
  * and some types of malicious activity.
@@ -112,7 +112,7 @@ final class PhabricatorStartup {
 
 
   /**
-   * @param float Request start time, from `microtime(true)`.
+   * @param float $start_time Request start time, from `microtime(true)`.
    * @task hook
    */
   public static function didStartup($start_time) {
@@ -128,7 +128,7 @@ final class PhabricatorStartup {
       // NOTE: This protects us against multiple calls to didStartup() in the
       // same request, but also against repeated requests to the same
       // interpreter state, which we may implement in the future.
-      register_shutdown_function(array(__CLASS__, 'didShutdown'));
+      register_shutdown_function(array(self::class, 'didShutdown'));
       $registered = true;
     }
 
@@ -213,7 +213,7 @@ final class PhabricatorStartup {
         '"phorge/" on disk.');
     }
 
-    // Load Phabricator itself using the absolute path, so we never end up doing
+    // Load Phorge itself using the absolute path, so we never end up doing
     // anything surprising (loading index.php and libraries from different
     // directories).
     phutil_load_library($phabricator_root.'/src');
@@ -255,7 +255,7 @@ final class PhabricatorStartup {
    * The limit is implemented with a tick function, so enabling it implies
    * some accounting overhead.
    *
-   * @param int Time limit in seconds.
+   * @param int $limit Time limit in seconds.
    * @return void
    */
   public static function setDebugTimeLimit($limit) {
@@ -264,7 +264,7 @@ final class PhabricatorStartup {
     static $initialized = false;
     if (!$initialized) {
       declare(ticks=1);
-      register_tick_function(array(__CLASS__, 'onDebugTick'));
+      register_tick_function(array(self::class, 'onDebugTick'));
       $initialized = true;
     }
   }
@@ -312,12 +312,12 @@ final class PhabricatorStartup {
    * Fatal the request completely in response to an exception, sending a plain
    * text message to the client. Calls @{method:didFatal} internally.
    *
-   * @param   string    Brief description of the exception context, like
+   * @param   string    $note Brief description of the exception context, like
    *                    `"Rendering Exception"`.
-   * @param   Throwable The exception itself.
-   * @param   bool      True if it's okay to show the exception's stack trace
-   *                    to the user. The trace will always be logged.
-   * @return  exit      This method **does not return**.
+   * @param   Throwable $ex The exception itself.
+   * @param   bool      $show_trace True if it's okay to show the exception's
+   *                    stack trace to the user. The trace will always be
+   *                    logged.
    *
    * @task apocalypse
    */
@@ -343,12 +343,12 @@ final class PhabricatorStartup {
   /**
    * Fatal the request completely, sending a plain text message to the client.
    *
-   * @param   string  Plain text message to send to the client.
-   * @param   string  Plain text message to send to the error log. If not
-   *                  provided, the client message is used. You can pass a more
-   *                  detailed message here (e.g., with stack traces) to avoid
-   *                  showing it to users.
-   * @return  exit    This method **does not return**.
+   * @param   string  $message Plain text message to send to the client.
+   * @param   string  $log_message (optional) Plain text message to send to the
+   *                  error log. If not provided, the client message is used.
+   *                  You can pass a more detailed message here (e.g., with
+   *                  stack traces) to avoid showing it to users.
+   * @return  never-returns This method **does not return**.
    *
    * @task apocalypse
    */
@@ -388,7 +388,7 @@ final class PhabricatorStartup {
    * @task validation
    */
   private static function setupPHP() {
-    error_reporting(E_ALL | E_STRICT);
+    error_reporting(E_ALL);
     self::$oldMemoryLimit = ini_get('memory_limit');
     ini_set('memory_limit', -1);
 
@@ -462,7 +462,7 @@ final class PhabricatorStartup {
         case INPUT_COOKIE:
           $_COOKIE = array_merge($_COOKIE, $filtered);
           break;
-        case INPUT_ENV;
+        case INPUT_ENV:
           $env = array_merge($_ENV, $filtered);
           $_ENV = self::filterEnvSuperglobal($env);
           break;
@@ -514,7 +514,7 @@ final class PhabricatorStartup {
    * Adjustments here primarily impact the environment as seen by subprocesses.
    * The environment is forwarded explicitly by @{class:ExecFuture}.
    *
-   * @param map<string, wild> Input `$_ENV`.
+   * @param map<string, mixed> $env Input `$_ENV`.
    * @return map<string, string> Suitable `$_ENV`.
    * @task validation
    */
@@ -535,7 +535,7 @@ final class PhabricatorStartup {
    * @task validation
    */
   private static function verifyPHP() {
-    $required_version = '5.2.3';
+    $required_version = '7.2.25';
     if (version_compare(PHP_VERSION, $required_version) < 0) {
       self::didFatal(
         "You are running PHP version '".PHP_VERSION."', which is older than ".
@@ -552,24 +552,8 @@ final class PhabricatorStartup {
           'This feature is "highly discouraged" by PHP\'s developers, and '.
           'has been removed entirely in PHP8.'.
           "\n\n".
-          'You must disable "magic_quotes_gpc" to run Phabricator. Consult '.
-          'the PHP manual for instructions.');
-      }
-    }
-
-    if (extension_loaded('apc')) {
-      $apc_version = phpversion('apc');
-      $known_bad = array(
-        '3.1.14' => true,
-        '3.1.15' => true,
-        '3.1.15-dev' => true,
-      );
-      if (isset($known_bad[$apc_version])) {
-        self::didFatal(
-          "You have APC {$apc_version} installed. This version of APC is ".
-          "known to be bad, and does not work with Phabricator (it will ".
-          "cause Phabricator to fatal unrecoverably with nonsense errors). ".
-          "Downgrade to version 3.1.13.");
+          'You must disable "magic_quotes_gpc" to run Phorge. Consult the '.
+          'PHP manual for instructions.');
       }
     }
 
@@ -577,7 +561,7 @@ final class PhabricatorStartup {
       self::didFatal(
         'This HTTP request included a "Proxy:" header, poisoning the '.
         'environment (CVE-2016-5385 / httpoxy). Declining to process this '.
-        'request. For details, see: https://phurl.io/u/httpoxy');
+        'request. For details, see: https://secure.phabricator.com/T11359');
     }
   }
 
@@ -597,8 +581,18 @@ final class PhabricatorStartup {
     // to "$_REQUEST" here won't always work, because later code may rebuild
     // "$_REQUEST" from other sources.
 
-    if (isset($_REQUEST['__path__']) && strlen($_REQUEST['__path__'])) {
-      self::setRequestPath($_REQUEST['__path__']);
+    if (isset($_REQUEST['__path__']) && $_REQUEST['__path__'] !== '') {
+      // Carefully crafted urls can supply their own __path__.
+      // Harmless normally, but when specified as __path__[],
+      // it becomes an array and overwrites the initial __path__.
+      // Parse the request uri directly to send the user to the right place.
+      if (is_array($_REQUEST['__path__'])) {
+        $path = parse_url($_SERVER['REQUEST_URI'])['path'];
+      } else {
+        $path = $_REQUEST['__path__'];
+      }
+
+      self::setRequestPath($path);
       return;
     }
 
@@ -615,7 +609,7 @@ final class PhabricatorStartup {
         "are not configured correctly.");
     }
 
-    if (!strlen($_REQUEST['__path__'])) {
+    if ($_REQUEST['__path__'] === '') {
       self::didFatal(
         "Request parameter '__path__' is set, but empty. Your rewrite rules ".
         "are not configured correctly. The '__path__' should always ".
@@ -634,7 +628,7 @@ final class PhabricatorStartup {
         'Request attempted to access request path, but no request path is '.
         'available for this request. You may be calling web request code '.
         'from a non-request context, or your webserver may not be passing '.
-        'a request path to Phabricator in a format that it understands.');
+        'a request path to Phorge in a format that it understands.');
     }
 
     return $path;
@@ -642,6 +636,7 @@ final class PhabricatorStartup {
 
   /**
    * @task request-path
+   * @param string $path
    */
   public static function setRequestPath($path) {
     self::$requestPath = $path;
@@ -654,7 +649,7 @@ final class PhabricatorStartup {
   /**
    * Add a new client limits.
    *
-   * @param PhabricatorClientLimit New limit.
+   * @param PhabricatorClientLimit $limit New limit.
    * @return PhabricatorClientLimit The limit.
    */
   public static function addRateLimit(PhabricatorClientLimit $limit) {
@@ -699,7 +694,8 @@ final class PhabricatorStartup {
   /**
    * Tear down rate limiting and allow limits to score the request.
    *
-   * @param map<string, wild> Additional, freeform request state.
+   * @param map<string, mixed> $request_state Additional, freeform request
+   *   state.
    * @return void
    * @task ratelimit
    */
@@ -721,7 +717,7 @@ final class PhabricatorStartup {
    * Emit an HTTP 429 "Too Many Requests" response (indicating that the user
    * has exceeded application rate limits) and exit.
    *
-   * @return exit This method **does not return**.
+   * @return never-returns This method **does not return**.
    * @task ratelimit
    */
   private static function didRateLimit($reason) {
@@ -746,7 +742,7 @@ final class PhabricatorStartup {
    * time and record it with @{method:recordStartupPhase} after the class is
    * available.
    *
-   * @param string Phase name.
+   * @param string $phase Phase name.
    * @task phases
    */
   public static function beginStartupPhase($phase) {
@@ -762,8 +758,8 @@ final class PhabricatorStartup {
    * record a time before the class loads, then hand it over once the class
    * becomes available.
    *
-   * @param string Phase name.
-   * @param float Phase start time, from `microtime(true)`.
+   * @param string $phase Phase name.
+   * @param float $time Phase start time, from `microtime(true)`.
    * @task phases
    */
   public static function recordStartupPhase($phase, $time) {

@@ -40,6 +40,39 @@ final class DifferentialRevisionViewController
     return $this;
   }
 
+
+  private function newMentionsTab(
+    DifferentialRevision $revision) {
+
+    $phid = $revision->getPHID();
+
+    $edge_types = array(
+      PhabricatorObjectMentionedByObjectEdgeType::EDGECONST,
+      PhabricatorObjectMentionsObjectEdgeType::EDGECONST,
+    );
+
+    $edge_query = id(new PhabricatorEdgeQuery())
+      ->withSourcePHIDs(array($phid))
+      ->withEdgeTypes($edge_types);
+
+    $edge_query->execute();
+
+    $view = (new PhorgeApplicationMentionsListView())
+      ->setEdgeQuery($edge_query)
+      ->setViewer($this->getViewer())
+      ->getMentionsView();
+
+    if (!$view ) {
+      return null;
+    }
+
+    return id(new PHUITabView())
+      ->setName(pht('Mentions'))
+      ->setKey('mentions')
+      ->appendChild($view);
+  }
+
+
   public function handleRequest(AphrontRequest $request) {
     $viewer = $this->getViewer();
     $this->revisionID = $request->getURIData('id');
@@ -333,9 +366,14 @@ final class DifferentialRevisionViewController
         ->setErrors($revision_warnings);
     }
 
+    if ($diff_vs === null) {
+      $diff_keys = array($target->getID());
+    } else {
+      $diff_keys = array($diff_vs, $target->getID());
+    }
     $detail_diffs = array_select_keys(
       $diffs,
-      array($diff_vs, $target->getID()));
+      $diff_keys);
     $detail_diffs = mpull($detail_diffs, null, 'getPHID');
 
     $this->loadHarbormasterData($detail_diffs);
@@ -382,7 +420,7 @@ final class DifferentialRevisionViewController
         ->setRawFileURIs(
           '/differential/changeset/?view=old',
           '/differential/changeset/?view=new')
-        ->setUser($viewer)
+        ->setViewer($viewer)
         ->setDiff($target)
         ->setRenderingReferences($rendering_references)
         ->setVsMap($vs_map)
@@ -408,7 +446,7 @@ final class DifferentialRevisionViewController
     $broken_diffs = $this->loadHistoryDiffStatus($diffs);
 
     $history = id(new DifferentialRevisionUpdateHistoryView())
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->setDiffs($diffs)
       ->setDiffUnitStatuses($broken_diffs)
       ->setSelectedVersusDiffID($diff_vs)
@@ -416,7 +454,7 @@ final class DifferentialRevisionViewController
       ->setCommitsForLinks($commits_for_links);
 
     $local_table = id(new DifferentialLocalCommitsView())
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->setLocalCommits(idx($props, 'local:commits'))
       ->setCommitsForLinks($commits_for_links);
 
@@ -487,6 +525,12 @@ final class DifferentialRevisionViewController
         ->setName(pht('History'))
         ->setKey('history')
         ->appendChild($history));
+
+    $mentions_tab = $this->newMentionsTab($revision);
+
+    if ($mentions_tab) {
+      $tab_group->addTab($mentions_tab);
+    }
 
     $filetree = id(new DifferentialFileTreeEngine())
       ->setViewer($viewer);
@@ -667,7 +711,7 @@ final class DifferentialRevisionViewController
   private function buildHeader(DifferentialRevision $revision) {
     $view = id(new PHUIHeaderView())
       ->setHeader($revision->getTitle($revision))
-      ->setUser($this->getViewer())
+      ->setViewer($this->getViewer())
       ->setPolicyObject($revision)
       ->setHeaderIcon('fa-cog');
 
@@ -724,7 +768,7 @@ final class DifferentialRevisionViewController
     $custom_fields) {
     $viewer = $this->getViewer();
     $properties = id(new PHUIPropertyListView())
-      ->setUser($viewer);
+      ->setViewer($viewer);
 
     if ($custom_fields) {
       $custom_fields->appendFieldsToPropertyList(
@@ -825,8 +869,11 @@ final class DifferentialRevisionViewController
     return $curtain;
   }
 
+  /**
+   * @param array<DifferentialDiff> $diffs
+   */
   private function loadHistoryDiffStatus(array $diffs) {
-    assert_instances_of($diffs, 'DifferentialDiff');
+    assert_instances_of($diffs, DifferentialDiff::class);
 
     $diff_phids = mpull($diffs, 'getPHID');
     $bad_unit_status = array(
@@ -866,8 +913,8 @@ final class DifferentialRevisionViewController
 
   private function loadChangesetsAndVsMap(
     DifferentialDiff $target,
-    DifferentialDiff $diff_vs = null,
-    PhabricatorRepository $repository = null) {
+    ?DifferentialDiff $diff_vs = null,
+    ?PhabricatorRepository $repository = null) {
     $viewer = $this->getViewer();
 
     $load_diffs = array($target);
@@ -942,10 +989,14 @@ final class DifferentialRevisionViewController
     return array($changesets, $vs_map, $vs_changesets, $refs);
   }
 
+  /**
+   * @param PhabricatorRepository $repository
+   * @param array<DifferentialChangeset> $unfolded_changesets
+   */
   private function buildSymbolIndexes(
     PhabricatorRepository $repository,
     array $unfolded_changesets) {
-    assert_instances_of($unfolded_changesets, 'DifferentialChangeset');
+    assert_instances_of($unfolded_changesets, DifferentialChangeset::class);
 
     $engine = PhabricatorSyntaxHighlighter::newEngine();
 
@@ -983,11 +1034,16 @@ final class DifferentialRevisionViewController
     return $symbol_indexes;
   }
 
+  /**
+   * @param array<DifferentialChangeset> $changesets
+   * @param DifferentialDiff $target
+   * @param PhabricatorRepository $repository
+   */
   private function loadOtherRevisions(
     array $changesets,
     DifferentialDiff $target,
     PhabricatorRepository $repository) {
-    assert_instances_of($changesets, 'DifferentialChangeset');
+    assert_instances_of($changesets, DifferentialChangeset::class);
 
     $viewer = $this->getViewer();
 
@@ -1032,8 +1088,11 @@ final class DifferentialRevisionViewController
     return $results;
   }
 
+  /**
+   * @param array<DifferentialRevision> $revisions
+   */
   private function renderOtherRevisions(array $revisions) {
-    assert_instances_of($revisions, 'DifferentialRevision');
+    assert_instances_of($revisions, DifferentialRevision::class);
     $viewer = $this->getViewer();
 
     $header = id(new PHUIHeaderView())
@@ -1046,16 +1105,22 @@ final class DifferentialRevisionViewController
       ->setNoBox(true);
   }
 
-
+  /**
+   * @param DifferentialRevision $revision
+   * @param array<DifferentialChangeset> $changesets
+   * @param array<DifferentialChangeset> $vs_changesets
+   * @param array $vs_map
+   * @param ?PhabricatorRepository $repository
+   */
   private function buildRawDiffResponse(
     DifferentialRevision $revision,
     array $changesets,
     array $vs_changesets,
     array $vs_map,
-    PhabricatorRepository $repository = null) {
+    ?PhabricatorRepository $repository = null) {
 
-    assert_instances_of($changesets,    'DifferentialChangeset');
-    assert_instances_of($vs_changesets, 'DifferentialChangeset');
+    assert_instances_of($changesets,    DifferentialChangeset::class);
+    assert_instances_of($vs_changesets, DifferentialChangeset::class);
 
     $viewer = $this->getViewer();
 
@@ -1093,20 +1158,13 @@ final class DifferentialRevisionViewController
 
     $request_uri = $this->getRequest()->getRequestURI();
 
-    // this ends up being something like
-    //   D123.diff
-    // or the verbose
-    //   D123.vs123.id123.highlightjs.diff
-    // lame but nice to include these options
-    $file_name = ltrim($request_uri->getPath(), '/').'.';
-    foreach ($request_uri->getQueryParamsAsPairList() as $pair) {
-      list($key, $value) = $pair;
-      if ($key == 'download') {
-        continue;
-      }
-      $file_name .= $key.$value.'.';
-    }
-    $file_name .= 'diff';
+    // Filename ends up being something like D123.1692295858.diff
+    // This discards some options in the query string that may affect the diff
+    // response, but is intentional to avoid spammy titles from bot requests.
+    $timestamp =
+      PhabricatorTime::getNow() +
+      phutil_units('24 hours in seconds');
+    $file_name = ltrim($request_uri->getPath(), '/').'.'.$timestamp.'.diff';
 
     $iterator = new ArrayIterator(array($raw_diff));
 
@@ -1210,7 +1268,7 @@ final class DifferentialRevisionViewController
     return id(new PHUIObjectBoxView())
       ->setHeaderText(pht('Diff Detail'))
       ->setBackground(PHUIObjectBoxView::BLUE_PROPERTY)
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->addTabGroup($tab_group);
   }
 
@@ -1221,7 +1279,7 @@ final class DifferentialRevisionViewController
     $viewer = $this->getViewer();
 
     $view = id(new PHUIPropertyListView())
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->setObject($diff);
 
     foreach ($fields as $field) {
@@ -1321,8 +1379,12 @@ final class DifferentialRevisionViewController
       ->setShowViewAll(true);
   }
 
+  /**
+   * @param DifferentialRevision $revision
+   * @param array<DifferentialDiff> $diffs
+   */
   private function getOldDiffID(DifferentialRevision $revision, array $diffs) {
-    assert_instances_of($diffs, 'DifferentialDiff');
+    assert_instances_of($diffs, DifferentialDiff::class);
     $request = $this->getRequest();
 
     $diffs = mpull($diffs, null, 'getID');
@@ -1423,15 +1485,19 @@ final class DifferentialRevisionViewController
       }
     }
 
-    if (isset($diffs[$old_id])) {
+    if ($old_id && isset($diffs[$old_id])) {
       return $old_id;
     }
 
     return null;
   }
 
+  /**
+   * @param DifferentialRevision $revision
+   * @param array<DifferentialDiff> $diffs
+   */
   private function getNewDiffID(DifferentialRevision $revision, array $diffs) {
-    assert_instances_of($diffs, 'DifferentialDiff');
+    assert_instances_of($diffs, DifferentialDiff::class);
     $request = $this->getRequest();
 
     $diffs = mpull($diffs, null, 'getID');
@@ -1443,7 +1509,7 @@ final class DifferentialRevisionViewController
       return new Aphront404Response();
     }
 
-    if (isset($diffs[$new_id])) {
+    if ($new_id && isset($diffs[$new_id])) {
       return $new_id;
     }
 

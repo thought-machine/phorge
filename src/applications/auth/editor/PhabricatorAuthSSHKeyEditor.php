@@ -15,7 +15,7 @@ final class PhabricatorAuthSSHKeyEditor
   }
 
   public function getEditorApplicationClass() {
-    return 'PhabricatorAuthApplication';
+    return PhabricatorAuthApplication::class;
   }
 
   public function getEditorObjectsDescription() {
@@ -124,7 +124,7 @@ final class PhabricatorAuthSSHKeyEditor
         }
         break;
 
-      case PhabricatorAuthSSHKeyTransaction::TYPE_KEY;
+      case PhabricatorAuthSSHKeyTransaction::TYPE_KEY:
         $missing = $this->validateIsEmptyTextField(
           $object->getName(),
           $xactions);

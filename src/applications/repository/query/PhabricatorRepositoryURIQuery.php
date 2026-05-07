@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorRepositoryURI>
+ */
 final class PhabricatorRepositoryURIQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -91,7 +94,7 @@ final class PhabricatorRepositoryURIQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorDiffusionApplication';
+    return PhabricatorDiffusionApplication::class;
   }
 
 }

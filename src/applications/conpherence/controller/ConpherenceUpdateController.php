@@ -79,6 +79,30 @@ final class ConpherenceUpdateController
               $user,
               $conpherence,
               $message);
+
+            $xaction_comment = PhabricatorTransactions::findOneByType(
+              $xactions,
+              PhabricatorTransactions::TYPE_COMMENT);
+
+            $text_metadata = $request->getStr('text_metadata');
+            if ($text_metadata) {
+              $text_metadata = phutil_json_decode($text_metadata);
+              $attached_file_phids = idx(
+                $text_metadata,
+                'attachedFilePHIDs',
+                array());
+
+              if ($attached_file_phids) {
+                $metadata_object = array(
+                  'remarkup.control' => array(
+                    'attachedFilePHIDs' => $attached_file_phids,
+                  ),
+                );
+
+                $xaction_comment->setMetadata($metadata_object);
+              }
+            }
+
             $delete_draft = true;
           } else {
             $action = ConpherenceUpdateActions::LOAD;
@@ -115,7 +139,6 @@ final class ConpherenceUpdateController
           break;
         default:
           throw new Exception(pht('Unknown action: %s', $action));
-          break;
       }
 
       if ($xactions) {
@@ -149,19 +172,16 @@ final class ConpherenceUpdateController
               $latest_transaction_id);
             return id(new AphrontAjaxResponse())
               ->setContent($content);
-            break;
           case 'go-home':
             $content = array(
               'href' => $this->getApplicationURI(),
             );
             return id(new AphrontAjaxResponse())
               ->setContent($content);
-            break;
           case 'redirect':
           default:
             return id(new AphrontRedirectResponse())
               ->setURI('/'.$conpherence->getMonogram());
-            break;
         }
       }
     }
@@ -305,11 +325,9 @@ final class ConpherenceUpdateController
 
     $need_transactions = false;
     switch ($action) {
-      case ConpherenceUpdateActions::LOAD:
-        $need_transactions = true;
-        break;
-      case ConpherenceUpdateActions::MESSAGE:
       case ConpherenceUpdateActions::ADD_PERSON:
+      case ConpherenceUpdateActions::LOAD:
+      case ConpherenceUpdateActions::MESSAGE:
         $need_transactions = true;
         break;
       case ConpherenceUpdateActions::REMOVE_PERSON:

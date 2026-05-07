@@ -10,7 +10,7 @@ abstract class PhabricatorPHIDType extends Phobject {
         pht(
           '%s class "%s" has an invalid %s property. PHID '.
           'constants must be a four character uppercase string.',
-          __CLASS__,
+          self::class,
           get_class($this),
           'TYPECONST'));
     }
@@ -52,8 +52,8 @@ abstract class PhabricatorPHIDType extends Phobject {
    * can provide a dummy implementation for this method and overload
    * @{method:loadObjects} instead.
    *
-   * @param PhabricatorObjectQuery Query being executed.
-   * @param list<phid> PHIDs to load.
+   * @param PhabricatorObjectQuery $query Query being executed.
+   * @param list<string> $phids PHIDs to load.
    * @return PhabricatorPolicyAwareQuery Query object which loads the
    *   specified PHIDs when executed.
    */
@@ -67,9 +67,9 @@ abstract class PhabricatorPHIDType extends Phobject {
    * necessary to implement @{method:buildQueryForObjects} to get object
    * loading to work.
    *
-   * @param PhabricatorObjectQuery Query being executed.
-   * @param list<phid> PHIDs to load.
-   * @return list<wild> Corresponding objects.
+   * @param PhabricatorObjectQuery $query Query being executed.
+   * @param list<string> $phids PHIDs to load.
+   * @return array<object> Corresponding objects.
    */
   public function loadObjects(
     PhabricatorObjectQuery $query,
@@ -113,10 +113,11 @@ abstract class PhabricatorPHIDType extends Phobject {
    * each handle at a minimum. See @{class:PhabricatorObjectHandle} for other
    * handle properties.
    *
-   * @param PhabricatorHandleQuery          Issuing query object.
-   * @param list<PhabricatorObjectHandle>   Handles to populate with data.
-   * @param list<Object>                    Objects for these PHIDs loaded by
-   *                                        @{method:buildQueryForObjects()}.
+   * @param PhabricatorHandleQuery        $query    Issuing query object.
+   * @param list<PhabricatorObjectHandle> $handles  Handles to populate with
+   *   data.
+   * @param list<Object>                  $objects  Objects for these PHIDs
+   *   loaded by @{method:buildQueryForObjects()}.
    * @return void
    */
   abstract public function loadHandles(
@@ -124,6 +125,11 @@ abstract class PhabricatorPHIDType extends Phobject {
     array $handles,
     array $objects);
 
+  /**
+   * Check whether a named object is of this PHID type
+   * @param string $name Object name
+   * @return bool True if the named object is of this PHID type
+   */
   public function canLoadNamedObject($name) {
     return false;
   }
@@ -141,7 +147,7 @@ abstract class PhabricatorPHIDType extends Phobject {
    * To get PHID types a given user has access to, see
    * @{method:getAllInstalledTypes}.
    *
-   * @return dict<string, PhabricatorPHIDType> Map of type constants to types.
+   * @return array<string, PhabricatorPHIDType> Map of type constants to types.
    */
   final public static function getAllTypes() {
     return self::newClassMapQuery()
@@ -157,7 +163,7 @@ abstract class PhabricatorPHIDType extends Phobject {
 
   private static function newClassMapQuery() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setUniqueMethod('getTypeConstant');
   }
 
@@ -165,8 +171,8 @@ abstract class PhabricatorPHIDType extends Phobject {
   /**
    * Get all PHID types of applications installed for a given viewer.
    *
-   * @param PhabricatorUser Viewing user.
-   * @return dict<string, PhabricatorPHIDType> Map of constants to installed
+   * @param PhabricatorUser $viewer Viewing user.
+   * @return array<string, PhabricatorPHIDType> Map of constants to installed
    *  types.
    */
   public static function getAllInstalledTypes(PhabricatorUser $viewer) {
@@ -207,11 +213,12 @@ abstract class PhabricatorPHIDType extends Phobject {
 
 
   /**
-   * Get all PHID types of applications installed for a given viewer.
+   * Get all PHID types of an application.
    *
-   * @param PhabricatorUser Viewing user.
-   * @return dict<string, PhabricatorPHIDType> Map of constants to installed
-   *  types.
+   * @param class-string<PhabricatorApplication> $application Class name of an
+   *   application.
+   * @return array<string, PhabricatorPHIDType> Map of constants of
+   *   application.
    */
   public static function getAllTypesForApplication(
     string $application) {

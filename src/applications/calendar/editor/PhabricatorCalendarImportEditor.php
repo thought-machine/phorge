@@ -4,7 +4,7 @@ final class PhabricatorCalendarImportEditor
   extends PhabricatorApplicationTransactionEditor {
 
   public function getEditorApplicationClass() {
-    return 'PhabricatorCalendarApplication';
+    return PhabricatorCalendarApplication::class;
   }
 
   public function getEditorObjectsDescription() {
@@ -44,8 +44,6 @@ final class PhabricatorCalendarImportEditor
           $should_reload = true;
           break;
         case PhabricatorCalendarImportFrequencyTransaction::TRANSACTIONTYPE:
-          $should_trigger = true;
-          break;
         case PhabricatorCalendarImportDisableTransaction::TRANSACTIONTYPE:
           $should_trigger = true;
           break;

@@ -139,7 +139,7 @@ final class DiffusionBrowseController extends DiffusionController {
     if ($hit_byte_limit) {
       $corpus = $this->buildErrorCorpus(
         pht(
-          'This file is larger than %s byte(s), and too large to display '.
+          'This file is larger than %s bytes, and too large to display '.
           'in the web UI.',
           phutil_format_bytes($byte_limit)));
     } else if ($hit_time_limit) {
@@ -326,9 +326,11 @@ final class DiffusionBrowseController extends DiffusionController {
       ));
 
     $crumbs->setBorder(true);
+    $locate_file = $this->buildLocateFile();
     $tabs = $this->buildTabsView('code');
     $owners_list = $this->buildOwnersList($drequest);
     $bar = id(new PHUILeftRightView())
+      ->setLeft($locate_file)
       ->setRight($this->corpusButtons)
       ->addClass('diffusion-action-bar');
 
@@ -501,7 +503,7 @@ final class DiffusionBrowseController extends DiffusionController {
     $viewer = $this->getViewer();
 
     $have_owners = PhabricatorApplication::isClassInstalledForViewer(
-      'PhabricatorOwnersApplication',
+      PhabricatorOwnersApplication::class,
       $viewer);
     if (!$have_owners) {
       return null;
@@ -1018,14 +1020,11 @@ final class DiffusionBrowseController extends DiffusionController {
       ->setHeader($header)
       ->setBackground(PHUIObjectBoxView::BLUE_PROPERTY)
       ->addClass('diffusion-mobile-view')
-      ->setCollapsed(true);
-
-    if ($messages) {
-      $corpus->setInfoView(
+      ->setCollapsed(true)
+      ->setInfoView(
         id(new PHUIInfoView())
           ->setSeverity($severity)
           ->setErrors($messages));
-    }
 
     return $corpus;
   }

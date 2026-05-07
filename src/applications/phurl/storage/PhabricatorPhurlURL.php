@@ -31,13 +31,18 @@ final class PhabricatorPhurlURL extends PhabricatorPhurlDAO
   public static function initializeNewPhurlURL(PhabricatorUser $actor) {
     $app = id(new PhabricatorApplicationQuery())
       ->setViewer($actor)
-      ->withClasses(array('PhabricatorPhurlApplication'))
+      ->withClasses(array(PhabricatorPhurlApplication::class))
       ->executeOne();
+
+    $view_policy = $app->getPolicy(
+      PhabricatorPhurlURLDefaultViewCapability::CAPABILITY);
+    $edit_policy = $app->getPolicy(
+      PhabricatorPhurlURLDefaultEditCapability::CAPABILITY);
 
     return id(new PhabricatorPhurlURL())
       ->setAuthorPHID($actor->getPHID())
-      ->setViewPolicy(PhabricatorPolicies::getMostOpenPolicy())
-      ->setEditPolicy($actor->getPHID())
+      ->setViewPolicy($view_policy)
+      ->setEditPolicy($edit_policy)
       ->setSpacePHID($actor->getDefaultSpacePHID());
   }
 
@@ -147,7 +152,7 @@ final class PhabricatorPhurlURL extends PhabricatorPhurlDAO
   }
 
   public function describeAutomaticCapability($capability) {
-    return pht('The owner of a URL can always view and edit it.');
+    return pht('The author of a URL can always view and edit it.');
   }
 
 /* -(  PhabricatorApplicationTransactionInterface  )------------------------- */

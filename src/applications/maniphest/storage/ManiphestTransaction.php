@@ -27,7 +27,7 @@ final class ManiphestTransaction
   }
 
   public function getBaseTransactionClass() {
-    return 'ManiphestTaskTransactionType';
+    return ManiphestTaskTransactionType::class;
   }
 
   public function shouldGenerateOldValue() {
@@ -130,7 +130,6 @@ final class ManiphestTransaction
           $this->renderHandleLink($author_phid),
           $this->renderSubtypeName($old),
           $this->renderSubtypeName($new));
-        break;
     }
 
     return parent::getTitle();
@@ -203,7 +202,7 @@ final class ManiphestTransaction
       case ManiphestTaskStatusTransaction::TRANSACTIONTYPE:
         return pht('The task already has the selected status.');
       case ManiphestTaskOwnerTransaction::TRANSACTIONTYPE:
-        return pht('The task already has the selected owner.');
+        return pht('The task already has the selected assignee.');
       case ManiphestTaskPriorityTransaction::TRANSACTIONTYPE:
         return pht('The task already has the selected priority.');
     }

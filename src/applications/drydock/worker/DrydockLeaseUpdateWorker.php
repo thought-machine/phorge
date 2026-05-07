@@ -168,8 +168,8 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
    * Find or build a resource which can satisfy a given lease request, then
    * acquire the lease.
    *
-   * @param DrydockLease Requested lease.
-   * @return void
+   * @param DrydockLease $lease Requested lease.
+   * @return DrydockResource
    * @task allocator
    */
   private function executeAllocator(DrydockLease $lease) {
@@ -240,8 +240,12 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
     throw new PhabricatorWorkerYieldException(15);
   }
 
+  /**
+   * @param DrydockLease $lease
+   * @param array<DrydockBlueprint> $blueprints
+   */
   private function reclaimAnyResource(DrydockLease $lease, array $blueprints) {
-    assert_instances_of($blueprints, 'DrydockBlueprint');
+    assert_instances_of($blueprints, DrydockBlueprint::class);
 
     $blueprints = $this->rankBlueprints($blueprints, $lease);
 
@@ -331,10 +335,14 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
     throw new PhabricatorWorkerYieldException(15);
   }
 
+  /**
+   * @param DrydockLease $lease
+   * @param array<DrydockBlueprint> $blueprints
+   */
   private function newLeasedResource(
     DrydockLease $lease,
     array $blueprints) {
-    assert_instances_of($blueprints, 'DrydockBlueprint');
+    assert_instances_of($blueprints, DrydockBlueprint::class);
 
     $usable_blueprints = $this->removeOverallocatedBlueprints(
       $blueprints,
@@ -390,11 +398,15 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
     throw new PhabricatorWorkerYieldException(15);
   }
 
+  /**
+   * @param DrydockLease $lease
+   * @param array<DrydockResource> $resources
+   */
   private function partitionResources(
     DrydockLease $lease,
     array $resources) {
 
-    assert_instances_of($resources, 'DrydockResource');
+    assert_instances_of($resources, DrydockResource::class);
     $viewer = $this->getViewer();
 
     $lease_statuses = array(
@@ -438,10 +450,14 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
     return array($free_resources, $used_resources);
   }
 
+  /**
+   * @param DrydockLease $lease
+   * @param array<DrydockBlueprint> $blueprints
+   */
   private function newResources(
     DrydockLease $lease,
     array $blueprints) {
-    assert_instances_of($blueprints, 'DrydockBlueprint');
+    assert_instances_of($blueprints, DrydockBlueprint::class);
 
     $resources = array();
     $exceptions = array();
@@ -510,11 +526,14 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
     return $resources;
   }
 
-
+  /**
+   * @param DrydockLease $lease
+   * @param array<DrydockResource> $resources
+   */
   private function leaseAnyResource(
     DrydockLease $lease,
     array $resources) {
-    assert_instances_of($resources, 'DrydockResource');
+    assert_instances_of($resources, DrydockResource::class);
 
     if (!$resources) {
       return null;
@@ -573,7 +592,7 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
    * Get all the concrete @{class:DrydockBlueprint}s which can possibly
    * build a resource to satisfy a lease.
    *
-   * @param DrydockLease Requested lease.
+   * @param DrydockLease $lease Requested lease.
    * @return list<DrydockBlueprint> List of qualifying blueprints.
    * @task allocator
    */
@@ -645,17 +664,17 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
    * Load a list of all resources which a given lease can possibly be
    * allocated against.
    *
-   * @param list<DrydockBlueprint> Blueprints which may produce suitable
-   *   resources.
-   * @param DrydockLease Requested lease.
-   * @return list<DrydockResource> Resources which may be able to allocate
+   * @param array<DrydockBlueprint> $blueprints Blueprints which may produce
+   *   suitable resources.
+   * @param DrydockLease $lease Requested lease.
+   * @return array<DrydockResource> Resources which may be able to allocate
    *   the lease.
    * @task allocator
    */
   private function loadAcquirableResourcesForLease(
     array $blueprints,
     DrydockLease $lease) {
-    assert_instances_of($blueprints, 'DrydockBlueprint');
+    assert_instances_of($blueprints, DrydockBlueprint::class);
     $viewer = $this->getViewer();
 
     $resources = id(new DrydockResourceQuery())
@@ -675,8 +694,8 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
   /**
    * Remove resources which can not be acquired by a given lease from a list.
    *
-   * @param list<DrydockResource> Candidate resources.
-   * @param DrydockLease Acquiring lease.
+   * @param list<DrydockResource> $resources Candidate resources.
+   * @param DrydockLease $lease Acquiring lease.
    * @return list<DrydockResource> Resources which the lease may be able to
    *   acquire.
    * @task allocator
@@ -703,15 +722,16 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
    * Remove blueprints which are too heavily allocated to build a resource for
    * a lease from a list of blueprints.
    *
-   * @param list<DrydockBlueprint> List of blueprints.
-   * @return list<DrydockBlueprint> List with blueprints that can not allocate
-   *   a resource for the lease right now removed.
+   * @param array<DrydockBlueprint> $blueprints List of blueprints.
+   * @param DrydockLease $lease
+   * @return array<DrydockBlueprint> $lease List with blueprints that can not
+   *   allocate a resource for the lease right now removed.
    * @task allocator
    */
   private function removeOverallocatedBlueprints(
     array $blueprints,
     DrydockLease $lease) {
-    assert_instances_of($blueprints, 'DrydockBlueprint');
+    assert_instances_of($blueprints, DrydockBlueprint::class);
 
     $keep = array();
 
@@ -731,13 +751,13 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
    * Rank blueprints by suitability for building a new resource for a
    * particular lease.
    *
-   * @param list<DrydockBlueprint> List of blueprints.
-   * @param DrydockLease Requested lease.
-   * @return list<DrydockBlueprint> Ranked list of blueprints.
+   * @param array<DrydockBlueprint> $blueprints List of blueprints.
+   * @param DrydockLease $lease Requested lease.
+   * @return array<DrydockBlueprint> Ranked list of blueprints.
    * @task allocator
    */
   private function rankBlueprints(array $blueprints, DrydockLease $lease) {
-    assert_instances_of($blueprints, 'DrydockBlueprint');
+    assert_instances_of($blueprints, DrydockBlueprint::class);
 
     // TODO: Implement improvements to this ranking algorithm if they become
     // available.
@@ -750,13 +770,13 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
   /**
    * Rank resources by suitability for allocating a particular lease.
    *
-   * @param list<DrydockResource> List of resources.
-   * @param DrydockLease Requested lease.
-   * @return list<DrydockResource> Ranked list of resources.
+   * @param array<DrydockResource> $resources List of resources.
+   * @param DrydockLease $lease Requested lease.
+   * @return array<DrydockResource> Ranked list of resources.
    * @task allocator
    */
   private function rankResources(array $resources, DrydockLease $lease) {
-    assert_instances_of($resources, 'DrydockResource');
+    assert_instances_of($resources, DrydockResource::class);
 
     // TODO: Implement improvements to this ranking algorithm if they become
     // available.
@@ -769,8 +789,9 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
   /**
    * Perform an actual resource allocation with a particular blueprint.
    *
-   * @param DrydockBlueprint The blueprint to allocate a resource from.
-   * @param DrydockLease Requested lease.
+   * @param DrydockBlueprint $blueprint The blueprint to allocate a resource
+   *   from.
+   * @param DrydockLease $lease Requested lease.
    * @return DrydockResource Allocated resource.
    * @task allocator
    */
@@ -815,9 +836,10 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
    * Check that the resource a blueprint allocated is roughly the sort of
    * object we expect.
    *
-   * @param DrydockBlueprint Blueprint which built the resource.
-   * @param wild Thing which the blueprint claims is a valid resource.
-   * @param DrydockLease Lease the resource was allocated for.
+   * @param DrydockBlueprint $blueprint Blueprint which built the resource.
+   * @param mixed $resource Thing which the blueprint claims is a valid
+   *   resource.
+   * @param DrydockLease $lease Lease the resource was allocated for.
    * @return void
    * @task allocator
    */
@@ -899,8 +921,8 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
   /**
    * Perform an actual lease acquisition on a particular resource.
    *
-   * @param DrydockResource Resource to acquire a lease on.
-   * @param DrydockLease Lease to acquire.
+   * @param DrydockResource $resource Resource to acquire a lease on.
+   * @param DrydockLease $lease Lease to acquire.
    * @return void
    * @task acquire
    */
@@ -917,7 +939,7 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
     // activate it.
     if ($lease->getStatus() == DrydockLeaseStatus::STATUS_ACQUIRED) {
       $this->queueTask(
-        __CLASS__,
+        self::class,
         array(
           'leasePHID' => $lease->getPHID(),
         ),
@@ -931,9 +953,9 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
   /**
    * Make sure that a lease was really acquired properly.
    *
-   * @param DrydockBlueprint Blueprint which created the resource.
-   * @param DrydockResource Resource which was acquired.
-   * @param DrydockLease The lease which was supposedly acquired.
+   * @param DrydockBlueprint $blueprint Blueprint which created the resource.
+   * @param DrydockResource $resource Resource which was acquired.
+   * @param DrydockLease $lease The lease which was supposedly acquired.
    * @return void
    * @task acquire
    */
@@ -1064,10 +1086,11 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
       case DrydockLeaseStatus::STATUS_BROKEN:
       case DrydockLeaseStatus::STATUS_RELEASED:
       case DrydockLeaseStatus::STATUS_DESTROYED:
-        throw new PhutilProxyException(
+        throw new Exception(
           pht(
             'Unexpected failure while destroying lease ("%s").',
             $lease->getPHID()),
+          0,
           $ex);
     }
 
@@ -1085,7 +1108,7 @@ final class DrydockLeaseUpdateWorker extends DrydockWorker {
     $lease->awakenTasks();
 
     $this->queueTask(
-      __CLASS__,
+      self::class,
       array(
         'leasePHID' => $lease->getPHID(),
       ),

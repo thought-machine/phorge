@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorEditEngineConfiguration>
+ */
 final class PhabricatorEditEngineConfigurationQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -278,7 +281,7 @@ final class PhabricatorEditEngineConfigurationQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorTransactionsApplication';
+    return PhabricatorTransactionsApplication::class;
   }
 
 }

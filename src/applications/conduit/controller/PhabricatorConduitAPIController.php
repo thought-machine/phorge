@@ -9,6 +9,15 @@ final class PhabricatorConduitAPIController
 
   public function handleRequest(AphrontRequest $request) {
     $method = $request->getURIData('method');
+    // PhabricatorConduitMethodCallLog limits 'method' to 'text64' so truncate
+    // the method name. This entire call will fail anyway; truncation allows us
+    // to at least show a meaningful error message instead of returning a raw
+    // DB write error while still logging the failed call in the Call Logs.
+    $limit = 64;
+    if (strlen($method) > $limit) {
+      $method = substr($method, 0, $limit);
+    }
+
     $time_start = microtime(true);
 
     $api_request = null;
@@ -159,9 +168,10 @@ final class PhabricatorConduitAPIController
   /**
    * Authenticate the client making the request to a Phabricator user account.
    *
-   * @param   ConduitAPIRequest Request being executed.
-   * @param   dict              Request metadata.
-   * @return  null|pair         Null to indicate successful authentication, or
+   * @param   ConduitAPIRequest $api_request Request being executed.
+   * @param   array             $metadata Dictionary of request metadata.
+   * @param   string            $method
+   * @return  null|array        Null to indicate successful authentication, or
    *                            an error code and error message pair.
    */
   private function authenticateUser(
@@ -526,9 +536,9 @@ final class PhabricatorConduitAPIController
 
   private function buildHumanReadableResponse(
     $method,
-    ConduitAPIRequest $request = null,
+    ?ConduitAPIRequest $request = null,
     $result = null,
-    ConduitAPIMethod $method_implementation = null) {
+    ?ConduitAPIMethod $method_implementation = null) {
 
     $param_rows = array();
     $param_rows[] = array('Method', $this->renderAPIValue($method));
@@ -688,10 +698,11 @@ final class PhabricatorConduitAPIController
       try {
         $params = phutil_json_decode($params_json);
       } catch (PhutilJSONParserException $ex) {
-        throw new PhutilProxyException(
+        throw new Exception(
           pht(
             "Invalid parameter information was passed to method '%s'.",
             $method),
+          0,
           $ex);
       }
 

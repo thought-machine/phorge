@@ -34,7 +34,7 @@ abstract class MetaMTAEmailTransactionCommand extends Phobject {
    *
    * This can be as long as necessary to explain the command.
    *
-   * @return string Human-readable remarkup of whatever length is desired.
+   * @return string|null Human-readable remarkup of whatever length is desired.
    * @task docs
    */
   public function getCommandDescription() {
@@ -61,7 +61,7 @@ abstract class MetaMTAEmailTransactionCommand extends Phobject {
 
   public static function getAllCommands() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setExpandMethod('getCommandObjects')
       ->setUniqueMethod('getCommand')
       ->execute();
@@ -81,7 +81,7 @@ abstract class MetaMTAEmailTransactionCommand extends Phobject {
   }
 
   public static function getCommandMap(array $commands) {
-    assert_instances_of($commands, __CLASS__);
+    assert_instances_of($commands, self::class);
 
     $map = array();
     foreach ($commands as $command) {

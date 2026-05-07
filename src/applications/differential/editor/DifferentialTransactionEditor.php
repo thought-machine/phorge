@@ -15,7 +15,7 @@ final class DifferentialTransactionEditor
   private $ownersChangesets;
 
   public function getEditorApplicationClass() {
-    return 'PhabricatorDifferentialApplication';
+    return PhabricatorDifferentialApplication::class;
   }
 
   public function getEditorObjectsDescription() {
@@ -211,8 +211,8 @@ final class DifferentialTransactionEditor
         // "T123" or similar, automatically associate the commit with the
         // task that the branch names.
 
-        $maniphest = 'PhabricatorManiphestApplication';
-        if (PhabricatorApplication::isClassInstalled($maniphest)) {
+        $maniphest_class = PhabricatorManiphestApplication::class;
+        if (PhabricatorApplication::isClassInstalled($maniphest_class)) {
           $diff = $this->requireDiff($xaction->getNewValue());
           $branch = $diff->getBranch();
 
@@ -1382,11 +1382,6 @@ final class DifferentialTransactionEditor
     }
 
     return implode("\n", $filenames);
-  }
-
-  private function renderPatchHTMLForMail($patch) {
-    return phutil_tag('pre',
-      array('style' => 'font-family: monospace;'), $patch);
   }
 
   private function buildPatchForMail(DifferentialDiff $diff, $byte_limit) {

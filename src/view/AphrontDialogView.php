@@ -273,7 +273,7 @@ final class AphrontDialogView
   }
 
   public function setValidationException(
-    PhabricatorApplicationTransactionValidationException $ex = null) {
+    ?PhabricatorApplicationTransactionValidationException $ex = null) {
     $this->validationException = $ex;
     return $this;
   }
@@ -322,7 +322,7 @@ final class AphrontDialogView
         pht(
           'You must call %s when rendering an %s.',
           'setViewer()',
-          __CLASS__));
+          self::class));
     }
 
     $classes = array();

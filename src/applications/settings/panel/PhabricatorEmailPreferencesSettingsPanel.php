@@ -97,14 +97,15 @@ final class PhabricatorEmailPreferencesSettingsPanel
             'count' => 0,
             'name' => $name,
           );
+        } else {
+          $all_tags[$tag]['count']++;
         }
-        $all_tags[$tag]['count'];
       }
     }
 
     $common_tags = array();
     foreach ($all_tags as $tag => $info) {
-      if ($info['count'] > 1) {
+      if ($info['count'] > 0) {
         $common_tags[$tag] = $info['name'];
       }
     }
@@ -119,7 +120,7 @@ final class PhabricatorEmailPreferencesSettingsPanel
     }
 
     // Sort them, then put "Common" at the top.
-    $tag_groups = isort($tag_groups, 0);
+    $tag_groups = isort($tag_groups, '0');
     if ($common_tags) {
       array_unshift($tag_groups, array(pht('Common'), $common_tags));
     }
@@ -145,9 +146,9 @@ final class PhabricatorEmailPreferencesSettingsPanel
     return $form_box;
   }
 
-  private function getAllEditorsWithTags(PhabricatorUser $user = null) {
+  private function getAllEditorsWithTags(?PhabricatorUser $user = null) {
     $editors = id(new PhutilClassMapQuery())
-      ->setAncestorClass('PhabricatorApplicationTransactionEditor')
+      ->setAncestorClass(PhabricatorApplicationTransactionEditor::class)
       ->setFilterMethod('getMailTagsMap')
       ->execute();
 
@@ -164,7 +165,7 @@ final class PhabricatorEmailPreferencesSettingsPanel
     return $editors;
   }
 
-  private function getAllTags(PhabricatorUser $user = null) {
+  private function getAllTags(?PhabricatorUser $user = null) {
     $tags = array();
     foreach ($this->getAllEditorsWithTags($user) as $editor) {
       $tags += $editor->getMailTagsMap();

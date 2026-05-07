@@ -8,7 +8,7 @@ final class PhabricatorAuthInviteSearchEngine
   }
 
   public function getApplicationClassName() {
-    return 'PhabricatorAuthApplication';
+    return PhabricatorAuthApplication::class;
   }
 
   public function canUseInPanelContext() {
@@ -70,11 +70,16 @@ final class PhabricatorAuthInviteSearchEngine
     return array_keys($phids);
   }
 
+  /**
+   * @param array<PhabricatorAuthInvite> $invites
+   * @param PhabricatorSavedQuery $query
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   protected function renderResultList(
     array $invites,
     PhabricatorSavedQuery $query,
     array $handles) {
-    assert_instances_of($invites, 'PhabricatorAuthInvite');
+    assert_instances_of($invites, PhabricatorAuthInvite::class);
 
     $viewer = $this->requireViewer();
 

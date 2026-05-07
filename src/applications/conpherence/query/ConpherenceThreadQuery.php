@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<ConpherenceThread>
+ */
 final class ConpherenceThreadQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -335,7 +338,7 @@ final class ConpherenceThreadQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorConpherenceApplication';
+    return PhabricatorConpherenceApplication::class;
   }
 
   protected function getPrimaryTableAlias() {

@@ -180,8 +180,8 @@ final class PhabricatorUserEmail
   /**
    * Send a verification email from $user to this address.
    *
-   * @param PhabricatorUser The user sending the verification.
-   * @return this
+   * @param PhabricatorUser $user The user sending the verification.
+   * @return $this
    * @task email
    */
   public function sendVerificationEmail(PhabricatorUser $user) {
@@ -229,9 +229,8 @@ final class PhabricatorUserEmail
    * Send a notification email from $user to this address, informing the
    * recipient that this is no longer their account's primary address.
    *
-   * @param PhabricatorUser The user sending the notification.
-   * @param PhabricatorUserEmail New primary email address.
-   * @return this
+   * @param PhabricatorUser $user The user sending the notification.
+   * @param PhabricatorUserEmail $new New primary email address.
    * @task email
    */
   public function sendOldPrimaryEmail(
@@ -270,8 +269,8 @@ final class PhabricatorUserEmail
    * Send a notification email from $user to this address, informing the
    * recipient that this is now their account's new primary email address.
    *
-   * @param PhabricatorUser The user sending the verification.
-   * @return this
+   * @param PhabricatorUser $user The user sending the verification.
+   * @return $this
    * @task email
    */
   public function sendNewPrimaryEmail(PhabricatorUser $user) {

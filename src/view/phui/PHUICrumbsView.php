@@ -15,15 +15,18 @@ final class PHUICrumbsView extends AphrontView {
    * Convenience method for adding a simple crumb with just text, or text and
    * a link.
    *
-   * @param string  Text of the crumb.
-   * @param string? Optional href for the crumb.
-   * @return this
+   * @param string $text Text of the crumb.
+   * @param string $href (optional) href for the crumb.
+   * @param bool   $strikethrough (optional) Strikethrough (=inactive/disabled)
+   *               for the crumb.
+   * @return $this
    */
-  public function addTextCrumb($text, $href = null) {
+  public function addTextCrumb($text, $href = null, $strikethrough = false) {
     return $this->addCrumb(
       id(new PHUICrumbView())
         ->setName($text)
-        ->setHref($href));
+        ->setHref($href)
+        ->setStrikethrough($strikethrough));
   }
 
   public function addCrumb(PHUICrumbView $crumb) {
@@ -103,12 +106,19 @@ final class PHUICrumbsView extends AphrontView {
           $action_classes[] = 'phui-crumbs-action-disabled';
         }
 
+        $aria_label = null;
+        $metadata = $action->getMetadata();
+        if ($metadata && isset($metadata['tip'])) {
+          $aria_label = $metadata['tip'];
+        }
+
         $actions[] = javelin_tag(
           'a',
           array(
             'href' => $action->getHref(),
             'class' => implode(' ', $action_classes),
             'sigil' => implode(' ', $action_sigils),
+            'aria-label' => $aria_label,
             'style' => $action->getStyle(),
             'meta' => $action->getMetadata(),
           ),

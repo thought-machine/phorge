@@ -19,6 +19,10 @@ final class PhabricatorDiffusionConfigOptions
     return 'apps';
   }
 
+  public function getApplicationClassName() {
+    return PhabricatorDiffusionApplication::class;
+  }
+
   public function getOptions() {
     $custom_field_type = 'custom:PhabricatorCustomFieldConfigOptionType';
 
@@ -62,22 +66,6 @@ final class PhabricatorDiffusionConfigOptions
       $this->newOption('metamta.diffusion.time-limit', 'int', 60)
         ->setDescription(pht('Hard time limit on generating patches.')),
 
-      $this->newOption(
-        'audit.can-author-close-audit',
-        'bool',
-        false)
-        ->setBoolOptions(
-          array(
-            pht('Enable Self-Accept'),
-            pht('Disable Self-Accept'),
-          ))
-        ->setDescription(
-          pht(
-            'Allows the author of a commit to be an auditor and accept their '.
-            'own commits. Note that this behavior is different from the '.
-            'behavior implied by the name of the option: long ago, it did '.
-            'something else.')),
-
       $this->newOption('bugtraq.url', 'string', null)
         ->addExample('https://bugs.php.net/%BUGID%', pht('PHP bugs'))
         ->addExample('/%BUGID%', pht('Local Maniphest URL'))
@@ -96,7 +84,7 @@ final class PhabricatorDiffusionConfigOptions
         ->setDescription(
           pht(
             'Regular expression to link external bug tracker. See '.
-            'http://tortoisesvn.net/docs/release/TortoiseSVN_en/'.
+            'https://tortoisesvn.net/docs/release/TortoiseSVN_en/'.
             'tsvn-dug-bugtracker.html for further explanation.')),
       $this->newOption('diffusion.allow-http-auth', 'bool', false)
         ->setBoolOptions(

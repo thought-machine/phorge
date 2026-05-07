@@ -12,7 +12,7 @@ final class PhabricatorPeopleDatasource
   }
 
   public function getDatasourceApplicationClass() {
-    return 'PhabricatorPeopleApplication';
+    return PhabricatorPeopleApplication::class;
   }
 
   public function loadResults() {
@@ -35,6 +35,7 @@ final class PhabricatorPeopleDatasource
     $users = $this->executeQuery($query);
 
     $is_browse = $this->getIsBrowse();
+    $handles = array();
 
     if ($is_browse && $users) {
       $phids = mpull($users, 'getPHID');

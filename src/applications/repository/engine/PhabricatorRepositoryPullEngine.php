@@ -172,7 +172,7 @@ final class PhabricatorRepositoryPullEngine
     $this->donePull();
   }
 
-  private function abortPull($message, Exception $ex = null) {
+  private function abortPull($message, ?Exception $ex = null) {
     $code_error = PhabricatorRepositoryStatusMessage::CODE_ERROR;
     $this->updateRepositoryInitStatus($code_error, $message);
     if ($ex) {
@@ -226,9 +226,10 @@ final class PhabricatorRepositoryPullEngine
   private function installHookDirectory($path) {
     $readme = pht(
       "To add custom hook scripts to this repository, add them to this ".
-      "directory.\n\nPhabricator will run any executables in this directory ".
+      "directory.\n\n%s will run any executables in this directory ".
       "after running its own checks, as though they were normal hook ".
-      "scripts.");
+      "scripts.",
+      PlatformSymbols::getPlatformServerName());
 
     Filesystem::createDirectory($path, 0755);
     Filesystem::writeFile($path.'/README', $readme);
@@ -454,7 +455,7 @@ final class PhabricatorRepositoryPullEngine
   }
 
   private function getGitRefRules(PhabricatorRepository $repository) {
-    $ref_rules = $repository->getFetchRules($repository);
+    $ref_rules = $repository->getFetchRules();
 
     if (!$ref_rules) {
       $ref_rules = array(
@@ -602,22 +603,6 @@ final class PhabricatorRepositoryPullEngine
     return $map;
   }
 
-  private function loadGitLocalRefs(PhabricatorRepository $repository) {
-    $refs = id(new DiffusionLowLevelGitRefQuery())
-      ->setRepository($repository)
-      ->execute();
-
-    $map = array();
-    foreach ($refs as $ref) {
-      $fields = $ref->getRawFields();
-      $map[idx($fields, 'refname')] = $ref->getCommitIdentifier();
-    }
-
-    ksort($map);
-
-    return $map;
-  }
-
   private function logRefDifferences(array $remote, array $local) {
     $all = $local + $remote;
 
@@ -756,7 +741,7 @@ final class PhabricatorRepositoryPullEngine
    * error message. To prevent this, censor response bodies out of error
    * messages.
    *
-   * @param string Uncensored Mercurial command output.
+   * @param string $message Uncensored Mercurial command output.
    * @return string Censored Mercurial command output.
    */
   private function censorMercurialErrorMessage($message) {

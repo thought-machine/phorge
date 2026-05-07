@@ -23,7 +23,7 @@ abstract class PhabricatorApplicationTransactionQuery
     $target_class = get_class($xaction);
 
     $queries = id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->execute();
     foreach ($queries as $query) {
       $query_xaction = $query->getTemplateApplicationTransaction();
@@ -292,8 +292,14 @@ abstract class PhabricatorApplicationTransactionQuery
     return parent::shouldGroupQueryResultRows();
   }
 
+  /**
+   * Get name of class of application queried by the query.
+   *
+   * To be overwritten by child classes when applicable.
+   *
+   * @return  string|null Application class name
+   */
   public function getQueryApplicationClass() {
-    // TODO: Sort this out?
     return null;
   }
 

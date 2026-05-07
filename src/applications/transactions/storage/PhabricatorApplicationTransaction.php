@@ -217,7 +217,7 @@ abstract class PhabricatorApplicationTransaction
 
   public function getRemarkupChanges() {
     $changes = $this->newRemarkupChanges();
-    assert_instances_of($changes, 'PhabricatorTransactionRemarkupChange');
+    assert_instances_of($changes, PhabricatorTransactionRemarkupChange::class);
 
     // Convert older-style remarkup blocks into newer-style remarkup changes.
     // This builds changes that do not have the correct "old value", so rules
@@ -536,7 +536,7 @@ abstract class PhabricatorApplicationTransaction
 
   public function getColor() {
     switch ($this->getTransactionType()) {
-      case PhabricatorTransactions::TYPE_COMMENT;
+      case PhabricatorTransactions::TYPE_COMMENT:
         $comment = $this->getComment();
         if ($comment && $comment->getIsRemoved()) {
           return 'grey';
@@ -550,7 +550,7 @@ abstract class PhabricatorApplicationTransaction
             return 'sky';
         }
         break;
-      case PhabricatorTransactions::TYPE_MFA;
+      case PhabricatorTransactions::TYPE_MFA:
         return 'pink';
     }
     return null;
@@ -678,7 +678,6 @@ abstract class PhabricatorApplicationTransaction
         } else {
           return false;
         }
-        break;
       case PhabricatorTransactions::TYPE_CUSTOMFIELD:
         $field = $this->getTransactionCustomField();
         if ($field) {
@@ -705,7 +704,6 @@ abstract class PhabricatorApplicationTransaction
               return true;
             }
             return false;
-            break;
           default:
             break;
         }
@@ -793,6 +791,7 @@ abstract class PhabricatorApplicationTransaction
     switch ($this->getTransactionType()) {
       case PhabricatorTransactions::TYPE_TOKEN:
       case PhabricatorTransactions::TYPE_MFA:
+      case PhabricatorTransactions::TYPE_INLINESTATE:
         return true;
       case PhabricatorTransactions::TYPE_SUBSCRIBERS:
         // See T8952. When an application (usually Herald) modifies
@@ -817,8 +816,6 @@ abstract class PhabricatorApplicationTransaction
             break;
         }
         break;
-     case PhabricatorTransactions::TYPE_INLINESTATE:
-       return true;
     }
 
     return $this->shouldHide();
@@ -1061,7 +1058,6 @@ abstract class PhabricatorApplicationTransaction
             '%s updated subscribers...',
             $this->renderHandleLink($author_phid));
         }
-        break;
       case PhabricatorTransactions::TYPE_FILE:
         $add = array_diff_key($new, $old);
         $add = array_keys($add);
@@ -1121,7 +1117,7 @@ abstract class PhabricatorApplicationTransaction
             '%s updated %s attached file(s), added %s: %s; removed %s: %s; '.
             'modified %s: %s.',
             $this->renderHandleLink($author_phid),
-            new PhutilNumber(count($add) + count($rem)),
+            new PhutilNumber(count($add) + count($rem) + count($mod)),
             phutil_count($add),
             $this->renderHandleList($add),
             phutil_count($rem),
@@ -1179,7 +1175,6 @@ abstract class PhabricatorApplicationTransaction
             $this->renderHandleLink($author_phid));
         }
 
-        break;
       case PhabricatorTransactions::TYPE_EDGE:
         $record = PhabricatorEdgeChangeRecord::newFromTransaction($this);
         $add = $record->getAddedPHIDs();
@@ -1275,7 +1270,6 @@ abstract class PhabricatorApplicationTransaction
             $this->renderHandleLink($author_phid),
             new PhutilNumber($undone));
         }
-        break;
 
       case PhabricatorTransactions::TYPE_COLUMNS:
         $moves = $this->getInterestingMoves($new);
@@ -1315,8 +1309,6 @@ abstract class PhabricatorApplicationTransaction
             phutil_count($moves),
             phutil_implode_html(', ', $fragments));
         }
-        break;
-
 
       case PhabricatorTransactions::TYPE_MFA:
         return pht(
@@ -1475,6 +1467,8 @@ abstract class PhabricatorApplicationTransaction
         } else {
           $fragments = array();
           foreach ($moves as $move) {
+            $to_column = $move['columnPHID'];
+            $board_phid = $move['boardPHID'];
             $fragments[] = pht(
               '%s (%s)',
               $this->renderHandleLink($board_phid),
@@ -1488,7 +1482,6 @@ abstract class PhabricatorApplicationTransaction
             phutil_count($moves),
             phutil_implode_html(', ', $fragments));
         }
-        break;
 
       case PhabricatorTransactions::TYPE_MFA:
         return null;
@@ -1578,6 +1571,10 @@ abstract class PhabricatorApplicationTransaction
     return 100;
   }
 
+  /**
+   * Whether the transaction concerns a comment (e.g. add, edit, remove)
+   * @return bool True if the transaction concerns a comment
+   */
   public function isCommentTransaction() {
     if ($this->hasComment()) {
       return true;
@@ -1606,6 +1603,8 @@ abstract class PhabricatorApplicationTransaction
         return pht('Changed Policy');
       case PhabricatorTransactions::TYPE_SUBSCRIBERS:
         return pht('Changed Subscribers');
+      case PhabricatorTransactions::TYPE_CREATE:
+        return pht('Created');
       default:
         return pht('Updated');
     }
@@ -1674,8 +1673,11 @@ abstract class PhabricatorApplicationTransaction
       ->setNewText($new);
   }
 
+  /**
+   * @param array<PhabricatorApplicationTransaction> $group
+   */
   public function attachTransactionGroup(array $group) {
-    assert_instances_of($group, __CLASS__);
+    assert_instances_of($group, self::class);
     $this->transactionGroup = $group;
     return $this;
   }
@@ -1688,7 +1690,7 @@ abstract class PhabricatorApplicationTransaction
    * Should this transaction be visually grouped with an existing transaction
    * group?
    *
-   * @param list<PhabricatorApplicationTransaction> List of transactions.
+   * @param list<PhabricatorApplicationTransaction> $group List of transactions.
    * @return bool True to display in a group with the other transactions.
    */
   public function shouldDisplayGroupWith(array $group) {

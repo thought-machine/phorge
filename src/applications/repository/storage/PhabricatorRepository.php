@@ -73,7 +73,7 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
   public static function initializeNewRepository(PhabricatorUser $actor) {
     $app = id(new PhabricatorApplicationQuery())
       ->setViewer($actor)
-      ->withClasses(array('PhabricatorDiffusionApplication'))
+      ->withClasses(array(PhabricatorDiffusionApplication::class))
       ->executeOne();
 
     $view_policy = $app->getPolicy(DiffusionDefaultViewCapability::CAPABILITY);
@@ -250,7 +250,7 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
   }
 
   public function attachMostRecentCommit(
-    PhabricatorRepositoryCommit $commit = null) {
+    ?PhabricatorRepositoryCommit $commit = null) {
     $this->mostRecentCommit = $commit;
     return $this;
   }
@@ -604,6 +604,9 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
     return "/R{$id}:{$identifier}";
   }
 
+  /**
+   * @return array|null
+   */
   public static function parseRepositoryServicePath($request_path, $vcs) {
     $is_git = ($vcs == PhabricatorRepositoryType::REPOSITORY_TYPE_GIT);
 
@@ -1050,6 +1053,10 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
     return array_keys($this->getDetail('close-commits-filter', array()));
   }
 
+  /**
+   * Set Refs which should not automatically get closed via commits.
+   * This usually includes the name of the main development branch.
+   */
   public function setPermanentRefRules(array $rules) {
     $rules = array_fill_keys($rules, true);
     $this->setDetail('close-commits-filter', $rules);
@@ -1060,6 +1067,18 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
     return array_keys($this->getDetail('branch-filter', array()));
   }
 
+  /**
+   * The "Track Only" feature has been deprecated since 2019 in
+   * https://secure.phabricator.com/T13277 and
+   * https://we.phorge.it/rPc33f544e741775c52c223bc435331bc3422231ee
+   * "Track Only" rules can be moved to "Permanent Refs" and/or "Fetch Only".
+   * The only use case left may be for performance reasons limiting what is
+   * fetched from an observed remote with tens of thousands of branches.
+   *
+   * You can find all repositories which still use this deprecated setting via
+   * SELECT * FROM phabricator_repository.repository WHERE
+   * JSON_LENGTH(JSON_EXTRACT(details, '$.branch-filter')) > 0;
+   */
   public function setTrackOnlyRules(array $rules) {
     $rules = array_fill_keys($rules, true);
     $this->setDetail('branch-filter', $rules);
@@ -1155,7 +1174,7 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
   /**
    * Get a parsed object representation of the repository's remote URI..
    *
-   * @return wild A @{class@arcanist:PhutilURI}.
+   * @return PhutilURI A @{class@arcanist:PhutilURI}.
    * @task uri
    */
   public function getRemoteURIObject() {
@@ -1230,66 +1249,10 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
     return $uri;
   }
 
-
-  /**
-   * Determine if we should connect to the remote using SSH flags and
-   * credentials.
-   *
-   * @return bool True to use the SSH protocol.
-   * @task uri
-   */
-  private function shouldUseSSH() {
-    if ($this->isHosted()) {
-      return false;
-    }
-
-    $protocol = $this->getRemoteProtocol();
-    if ($this->isSSHProtocol($protocol)) {
-      return true;
-    }
-
-    return false;
-  }
-
-
-  /**
-   * Determine if we should connect to the remote using HTTP flags and
-   * credentials.
-   *
-   * @return bool True to use the HTTP protocol.
-   * @task uri
-   */
-  private function shouldUseHTTP() {
-    if ($this->isHosted()) {
-      return false;
-    }
-
-    $protocol = $this->getRemoteProtocol();
-    return ($protocol == 'http' || $protocol == 'https');
-  }
-
-
-  /**
-   * Determine if we should connect to the remote using SVN flags and
-   * credentials.
-   *
-   * @return bool True to use the SVN protocol.
-   * @task uri
-   */
-  private function shouldUseSVNProtocol() {
-    if ($this->isHosted()) {
-      return false;
-    }
-
-    $protocol = $this->getRemoteProtocol();
-    return ($protocol == 'svn');
-  }
-
-
   /**
    * Determine if a protocol is SSH or SSH-like.
    *
-   * @param string A protocol string, like "http" or "ssh".
+   * @param string $protocol A protocol string, like "http" or "ssh".
    * @return bool True if the protocol is SSH-like.
    * @task uri
    */
@@ -1544,7 +1507,10 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
 
     $uri = $this->getRawHTTPCloneURIObject();
     $uri = (string)$uri;
-    $uri = $uri.'/'.$path;
+    if ($uri[-1] !== '/') {
+      $uri .= '/';
+    }
+    $uri .= $path;
 
     return $uri;
   }
@@ -1702,7 +1668,8 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
    * 2037). We adjust the pull frequency based on when the most recent commit
    * occurred.
    *
-   * @param   int   The minimum update interval to use, in seconds.
+   * @param   int  $minimum (optional) The minimum update interval to use, in
+   *   seconds.
    * @return  int   Repository update interval, in seconds.
    */
   public function loadUpdateInterval($minimum = 15) {
@@ -1837,8 +1804,8 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
    * with repository services. This method provides lower-level resolution of
    * services, returning raw URIs.
    *
-   * @param PhabricatorUser Viewing user.
-   * @param map<string, wild> Constraints on selectable services.
+   * @param PhabricatorUser $viewer Viewing user.
+   * @param map<string, mixed> $options Constraints on selectable services.
    * @return string|null URI, or `null` for local repositories.
    */
   public function getAlmanacServiceURI(
@@ -2004,14 +1971,20 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
     return array_values($refs);
   }
 
+  /**
+   * @param array<DiffusionServiceRef> $refs
+   */
   private function sortReadableAlmanacServiceRefs(array $refs) {
-    assert_instances_of($refs, 'DiffusionServiceRef');
+    assert_instances_of($refs, DiffusionServiceRef::class);
     shuffle($refs);
     return $refs;
   }
 
+  /**
+   * @param array<DiffusionServiceRef> $refs
+   */
   private function sortWritableAlmanacServiceRefs(array $refs) {
-    assert_instances_of($refs, 'DiffusionServiceRef');
+    assert_instances_of($refs, DiffusionServiceRef::class);
 
     // See T13109 for discussion of how this method routes requests.
 
@@ -2169,8 +2142,9 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
    *
    * For lower-level service resolution, see @{method:getAlmanacServiceURI}.
    *
-   * @param PhabricatorUser Viewing user.
-   * @param bool `true` to throw if a client would be returned.
+   * @param PhabricatorUser $viewer Viewing user.
+   * @param bool $never_proxy (optional) `true` to throw if a client would be
+   *   returned.
    * @return ConduitClient|null Client, or `null` for local repositories.
    */
   public function newConduitClient(
@@ -2303,14 +2277,14 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
       );
       foreach ($git_env as $key) {
         $value = getenv($key);
-        if (strlen($value)) {
+        if ($value && strlen($value)) {
           $env[$key] = $value;
         }
       }
 
       $key = 'GIT_PUSH_OPTION_COUNT';
       $git_count = getenv($key);
-      if (strlen($git_count)) {
+      if ($git_count && strlen($git_count)) {
         $git_count = (int)$git_count;
         $env[$key] = $git_count;
         for ($ii = 0; $ii < $git_count; $ii++) {
@@ -2830,6 +2804,7 @@ final class PhabricatorRepository extends PhabricatorRepositoryDAO
       'callsign' => $this->getCallsign(),
       'shortName' => $this->getRepositorySlug(),
       'status' => $this->getStatus(),
+      'isHosted' => $this->isHosted(),
       'isImporting' => (bool)$this->isImporting(),
       'almanacServicePHID' => $this->getAlmanacServicePHID(),
       'refRules' => array(

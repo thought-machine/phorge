@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @template R of PhabricatorPolicyInterface
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<R>
+ */
 abstract class AlmanacQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -55,7 +59,7 @@ abstract class AlmanacQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorAlmanacApplication';
+    return PhabricatorAlmanacApplication::class;
   }
 
 }

@@ -3,7 +3,6 @@
 final class HeraldEngine extends Phobject {
 
   protected $rules = array();
-  protected $activeRule;
   protected $transcript;
 
   private $fieldCache = array();
@@ -123,8 +122,13 @@ final class HeraldEngine extends Phobject {
     return $this->ruleResults[$phid];
   }
 
+  /**
+   * @param array<HeraldRule> $rules
+   * @param HeraldAdapter $object
+   * @return array<HeraldEffect>
+   */
   public function applyRules(array $rules, HeraldAdapter $object) {
-    assert_instances_of($rules, 'HeraldRule');
+    assert_instances_of($rules, HeraldRule::class);
     $t_start = microtime(true);
 
     // Rules execute in a well-defined order: sort them into execution order.
@@ -255,12 +259,18 @@ final class HeraldEngine extends Phobject {
     return $effects;
   }
 
+  /**
+   * @param array<HeraldEffect> $effects
+   * @param HeraldAdapter $adapter
+   * @param array<HeraldRule> $rules
+   * @return array
+   */
   public function applyEffects(
     array $effects,
     HeraldAdapter $adapter,
     array $rules) {
-    assert_instances_of($effects, 'HeraldEffect');
-    assert_instances_of($rules, 'HeraldRule');
+    assert_instances_of($effects, HeraldEffect::class);
+    assert_instances_of($rules, HeraldRule::class);
 
     $this->transcript->setDryRun((int)$this->getDryRun());
 
@@ -276,7 +286,7 @@ final class HeraldEngine extends Phobject {
       $xscripts = $adapter->applyHeraldEffects($effects);
     }
 
-    assert_instances_of($xscripts, 'HeraldApplyTranscript');
+    assert_instances_of($xscripts, HeraldApplyTranscript::class);
     foreach ($xscripts as $apply_xscript) {
       $this->transcript->addApplyTranscript($apply_xscript);
     }
@@ -533,8 +543,12 @@ final class HeraldEngine extends Phobject {
     if ($caught) {
       $result_data = array(
         'exception.class' => get_class($caught),
-        'exception.message' => $ex->getMessage(),
+        'exception.message' => $caught->getMessage(),
       );
+      phlog(pht('An exception occurred executing Herald rule %s: "%s" Review '.
+        'the Herald transcripts and correct or disable the problematic rule.',
+        $rule->getMonogram(),
+        $caught->getMessage()));
     }
 
     $result = HeraldConditionResult::newFromResultCode($result_code)
@@ -590,6 +604,10 @@ final class HeraldEngine extends Phobject {
     $this->popProfilerRule($rule);
 
     if ($caught) {
+      phlog(pht('An exception occurred executing Herald rule %s: "%s" Review '.
+        'the Herald transcripts and correct or disable the problematic rule.',
+        $rule->getMonogram(),
+        $caught->getMessage()));
       throw $caught;
     }
 
@@ -680,6 +698,14 @@ final class HeraldEngine extends Phobject {
         ->setAction($action->getAction())
         ->setTarget($action->getTarget())
         ->setRule($rule);
+
+      if ($object->getActionImplementation($action->getAction()) === null) {
+        phlog(pht('An exception occurred executing Herald rule %s: Unknown '.
+          'action: "%s". Review the Herald transcripts and correct or '.
+          'disable the problematic rule.',
+        $rule->getMonogram(),
+        $action->getAction()));
+      }
 
       $name = $rule->getName();
       $id = $rule->getID();

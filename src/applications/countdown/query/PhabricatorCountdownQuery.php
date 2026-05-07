@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorCountdown>
+ */
 final class PhabricatorCountdownQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -67,7 +70,7 @@ final class PhabricatorCountdownQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorCountdownApplication';
+    return PhabricatorCountdownApplication::class;
   }
 
   public function getBuiltinOrders() {

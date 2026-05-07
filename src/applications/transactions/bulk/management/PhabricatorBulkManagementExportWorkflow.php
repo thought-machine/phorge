@@ -8,7 +8,7 @@ final class PhabricatorBulkManagementExportWorkflow
       ->setName('export')
       ->setExamples('**export** [options]')
       ->setSynopsis(
-        pht('Export data to a flat file (JSON, CSV, Excel, etc).'))
+        pht('Export data to a flat file (JSON, CSV, Excel, etc.).'))
       ->setArguments(
         array(
           array(
@@ -51,7 +51,7 @@ final class PhabricatorBulkManagementExportWorkflow
     list($engine, $queries) = $this->newQueries($args);
 
     $format_key = $args->getArg('format');
-    if (!strlen($format_key)) {
+    if (!phutil_nonempty_string($format_key)) {
       throw new PhutilArgumentUsageException(
         pht(
           'Specify an export format with "--format".'));
@@ -77,7 +77,7 @@ final class PhabricatorBulkManagementExportWorkflow
     $is_overwrite = $args->getArg('overwrite');
     $output_path = $args->getArg('output');
 
-    if (!strlen($output_path)) {
+    if (!phutil_nonempty_string($output_path)) {
       throw new PhutilArgumentUsageException(
         pht(
           'Use "--output <path>" to specify an output file, or "--output -" '.
@@ -160,11 +160,11 @@ final class PhabricatorBulkManagementExportWorkflow
     }
 
     $engine_classes = id(new PhutilClassMapQuery())
-      ->setAncestorClass('PhabricatorApplicationSearchEngine')
+      ->setAncestorClass(PhabricatorApplicationSearchEngine::class)
       ->execute();
 
     $class = $args->getArg('class');
-    if (strlen($class)) {
+    if (phutil_nonempty_string($class)) {
 
       $class_list = array();
       foreach ($engine_classes as $class_name => $engine_object) {
@@ -283,11 +283,15 @@ final class PhabricatorBulkManagementExportWorkflow
     return array($engine, $queries);
   }
 
+  /**
+   * @param PhabricatorApplicationSearchEngine $engine
+   * @param array<PhabricatorSavedQuery> $queries
+   */
   private function newUnionQuery(
     PhabricatorApplicationSearchEngine $engine,
     array $queries) {
 
-    assert_instances_of($queries, 'PhabricatorSavedQuery');
+    assert_instances_of($queries, PhabricatorSavedQuery::class);
 
     $engine = clone $engine;
 

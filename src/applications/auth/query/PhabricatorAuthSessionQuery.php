@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorAuthSession>
+ */
 final class PhabricatorAuthSessionQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -107,7 +110,7 @@ final class PhabricatorAuthSessionQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorAuthApplication';
+    return PhabricatorAuthApplication::class;
   }
 
 }

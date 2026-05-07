@@ -104,7 +104,7 @@ final class ConpherenceListController extends ConpherenceController {
     $threads = $this->loadConpherenceThreadData($all_participation);
 
     $thread_view = id(new ConpherenceThreadListView())
-      ->setUser($user)
+      ->setViewer($user)
       ->setBaseURI($this->getApplicationURI())
       ->setThreads($threads);
 
@@ -133,8 +133,7 @@ final class ConpherenceListController extends ConpherenceController {
           ->setObject($conpherence)
           ->execute();
         $layout->setHeader($this->buildHeaderPaneContent(
-            $conpherence,
-            $policy_objects));
+            $conpherence));
         $response = $this->newPage()
           ->setTitle($title)
           ->appendChild($layout);

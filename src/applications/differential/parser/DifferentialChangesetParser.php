@@ -240,13 +240,13 @@ final class DifferentialChangesetParser extends Phobject {
    * the left and right halves of the displayed diff to be correctly mapped to
    * storage changesets.
    *
-   * @param id    The Differential Changeset ID that comments added to the right
-   *              side of the visible diff should be attached to.
-   * @param bool  If true, attach new comments to the right side of the storage
-   *              changeset. Note that this may be false, if the left side of
-   *              some storage changeset is being shown as the right side of
-   *              a display diff.
-   * @return this
+   * @param int   $id The Differential Changeset ID that comments added to the
+   *              right side of the visible diff should be attached to.
+   * @param bool  $is_new If true, attach new comments to the right side of the
+   *              storage changeset. Note that this may be false, if the left
+   *              side of some storage changeset is being shown as the right
+   *              side of a display diff.
+   * @return $this
    */
   public function setRightSideCommentMapping($id, $is_new) {
     $this->rightSideChangesetID = $id;
@@ -295,8 +295,9 @@ final class DifferentialChangesetParser extends Phobject {
    * By default, there is no render cache key and parsers do not use the cache.
    * This is appropriate for rarely-viewed changesets.
    *
-   * @param   string  Key for identifying this changeset in the render cache.
-   * @return  this
+   * @param   string $key  Key for identifying this changeset in the render
+   *   cache.
+   * @return  $this
    */
   public function setRenderCacheKey($key) {
     $this->renderCacheKey = $key;
@@ -333,8 +334,11 @@ final class DifferentialChangesetParser extends Phobject {
     return $this;
   }
 
+  /**
+   * @param array<PhabricatorObjectHandle> $handles
+   */
   public function setHandles(array $handles) {
-    assert_instances_of($handles, 'PhabricatorObjectHandle');
+    assert_instances_of($handles, PhabricatorObjectHandle::class);
     $this->handles = $handles;
     return $this;
   }
@@ -1192,7 +1196,7 @@ final class DifferentialChangesetParser extends Phobject {
    * "show more"). The $mask returned is a sparsely populated dictionary
    * of $visible_line_number => true.
    *
-   * @return array($gaps, $mask)
+   * @return array Array of <$gaps, $mask>
    */
   private function calculateGapsAndMask(
     $mask_force,
@@ -1238,7 +1242,7 @@ final class DifferentialChangesetParser extends Phobject {
    * taking into consideration which halves of which changesets will actually
    * be shown.
    *
-   * @param PhabricatorInlineComment Comment to test for visibility.
+   * @param PhabricatorInlineComment $comment Comment to test for visibility.
    * @return bool True if the comment is visible on the rendered diff.
    */
   private function isCommentVisibleOnRenderedDiff(
@@ -1266,7 +1270,7 @@ final class DifferentialChangesetParser extends Phobject {
    * Note that the comment must appear somewhere on the rendered changeset, as
    * per isCommentVisibleOnRenderedDiff().
    *
-   * @param PhabricatorInlineComment Comment to test for display
+   * @param PhabricatorInlineComment $comment Comment to test for display
    *              location.
    * @return bool True for right, false for left.
    */
@@ -1298,9 +1302,9 @@ final class DifferentialChangesetParser extends Phobject {
    *   list($start, $end, $mask) = $parsed;
    *   $parser->render($start, $end, $mask);
    *
-   * @param string Range specification, indicating the range of the diff that
-   *               should be rendered.
-   * @return tuple List of <start, end, mask> suitable for passing to
+   * @param string $spec Range specification, indicating the range of the diff
+   *               that should be rendered.
+   * @return array Tuple of <start, end, mask> suitable for passing to
    *               @{method:render}.
    */
   public static function parseRangeSpecification($spec) {

@@ -11,6 +11,7 @@ final class DifferentialRevisionListView extends AphrontView {
   private $noBox;
   private $background = null;
   private $unlandedDependencies = array();
+  private $customFieldLists = array();
 
   public function setUnlandedDependencies(array $unlanded_dependencies) {
     $this->unlandedDependencies = $unlanded_dependencies;
@@ -31,8 +32,11 @@ final class DifferentialRevisionListView extends AphrontView {
     return $this;
   }
 
+  /**
+   * @param array<DifferentialRevision> $revisions
+   */
   public function setRevisions(array $revisions) {
-    assert_instances_of($revisions, 'DifferentialRevision');
+    assert_instances_of($revisions, DifferentialRevision::class);
     $this->revisions = $revisions;
     return $this;
   }
@@ -47,6 +51,14 @@ final class DifferentialRevisionListView extends AphrontView {
     return $this;
   }
 
+  public function setCustomFieldLists(array $lists) {
+    $this->customFieldLists = $lists;
+    return $this;
+  }
+
+  /**
+   * @return PHUIObjectItemListView
+   */
   public function render() {
     $viewer = $this->getViewer();
 
@@ -180,6 +192,12 @@ final class DifferentialRevisionListView extends AphrontView {
       $item->setStatusIcon(
         "{$icon} {$color}",
         $revision->getStatusDisplayName());
+
+      $field_list = idx($this->customFieldLists, $revision->getPHID());
+      if ($field_list) {
+        $field_list
+          ->addFieldsToListViewItem($revision, $viewer, $item);
+      }
 
       $list->addItem($item);
     }

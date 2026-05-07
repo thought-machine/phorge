@@ -3,10 +3,14 @@
 final class DiffusionCommitRevisionQuery
   extends Phobject {
 
+  /**
+   * @param PhabricatorUser $viewer
+   * @param array<PhabricatorRepositoryCommit> $commits
+   */
   public static function loadRevisionMapForCommits(
     PhabricatorUser $viewer,
     array $commits) {
-    assert_instances_of($commits, 'PhabricatorRepositoryCommit');
+    assert_instances_of($commits, PhabricatorRepositoryCommit::class);
 
     if (!$commits) {
       return array();
@@ -68,7 +72,7 @@ final class DiffusionCommitRevisionQuery
     PhabricatorUser $viewer,
     $source_object,
     array $object_names,
-    PhabricatorRepository $repository_scope = null) {
+    ?PhabricatorRepository $repository_scope = null) {
 
     // Fetch commits first, since we need to load data on commits in order
     // to identify associated revisions later on.

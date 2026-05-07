@@ -6,6 +6,7 @@ abstract class PhabricatorTimelineEngine
   private $viewer;
   private $object;
   private $xactions;
+  private $request;
   private $viewData;
 
   final public static function newForObject($object) {
@@ -38,8 +39,11 @@ abstract class PhabricatorTimelineEngine
     return $this->object;
   }
 
+  /**
+   * @param array<PhabricatorApplicationTransaction> $xactions
+   */
   final public function setTransactions(array $xactions) {
-    assert_instances_of($xactions, 'PhabricatorApplicationTransaction');
+    assert_instances_of($xactions, PhabricatorApplicationTransaction::class);
     $this->xactions = $xactions;
     return $this;
   }

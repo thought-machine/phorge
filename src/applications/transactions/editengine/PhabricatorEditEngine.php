@@ -78,6 +78,12 @@ abstract class PhabricatorEditEngine
     return true;
   }
 
+  /**
+   * Whether this EditEngine creates by default an entry in the Favorites
+   * dropdown in the top bar to use the Default Form for this EditEngine
+   *
+   * @return bool
+   */
   public function isDefaultQuickCreateEngine() {
     return false;
   }
@@ -96,6 +102,13 @@ abstract class PhabricatorEditEngine
     return $keys;
   }
 
+  /**
+   * Split the Full Key into its Edit Engine Key and its Form Key
+   *
+   * @param string $full_key 'Edit Engine Key/Form Key' string, e.g.
+   *   'macro.image/default' or 'maniphest.task/5'
+   * @return array<string,string> Edit Engine Key and Form Key
+   */
   public static function splitFullKey($full_key) {
     return explode('/', $full_key, 2);
   }
@@ -190,7 +203,7 @@ abstract class PhabricatorEditEngine
         $template_object);
 
       // TODO: Validate this in more detail with a more tailored error.
-      assert_instances_of($extension_fields, 'PhabricatorEditField');
+      assert_instances_of($extension_fields, PhabricatorEditField::class);
 
       foreach ($extension_fields as $field) {
         $field
@@ -339,7 +352,17 @@ abstract class PhabricatorEditEngine
     return null;
   }
 
-
+  /**
+   * Set default placeholder plain text in the comment textarea of the engine.
+   * To be overwritten by conditions defined in the child EditEngine class.
+   *
+   * @param  object $object Object in which the comment textarea is displayed.
+   * @return string Placeholder text to display in the comment textarea.
+   * @task text
+   */
+  public function getCommentFieldPlaceholderText($object) {
+    return '';
+  }
 
   /**
    * Return a human-readable header describing what this engine is used to do,
@@ -457,7 +480,9 @@ abstract class PhabricatorEditEngine
           get_class($this)));
     }
 
-    assert_instances_of($configurations, 'PhabricatorEditEngineConfiguration');
+    assert_instances_of(
+      $configurations,
+      PhabricatorEditEngineConfiguration::class);
 
     $has_default = false;
     foreach ($configurations as $config) {
@@ -668,7 +693,7 @@ abstract class PhabricatorEditEngine
    * Initialize a new object for object creation via Conduit.
    *
    * @return object Newly initialized object.
-   * @param list<wild> Raw transactions.
+   * @param array<mixed> $raw_xactions Raw transactions.
    * @task load
    */
   protected function newEditableObjectFromConduit(array $raw_xactions) {
@@ -688,8 +713,8 @@ abstract class PhabricatorEditEngine
   /**
    * Flag this workflow as a create or edit.
    *
-   * @param bool True if this is a create workflow.
-   * @return this
+   * @param bool $is_create True if this is a create workflow.
+   * @return $this
    * @task load
    */
   private function setIsCreate($is_create) {
@@ -702,9 +727,9 @@ abstract class PhabricatorEditEngine
    * Try to load an object by ID, PHID, or monogram. This is done primarily
    * to make Conduit a little easier to use.
    *
-   * @param wild ID, PHID, or monogram.
-   * @param list<const> List of required capability constants, or omit for
-   *   defaults.
+   * @param int|string $identifier ID, PHID, or monogram.
+   * @param list<string> $capabilities (optional) List of required capability
+   *   constants, or omit for defaults.
    * @return object Corresponding editable object.
    * @task load
    */
@@ -782,9 +807,9 @@ abstract class PhabricatorEditEngine
   /**
    * Load an object by ID.
    *
-   * @param int Object ID.
-   * @param list<const> List of required capability constants, or omit for
-   *   defaults.
+   * @param int $id Object ID.
+   * @param list<string> $capabilities (optional) List of required capability
+   *   constants, or omit for defaults.
    * @return object|null Object, or null if no such object exists.
    * @task load
    */
@@ -799,9 +824,9 @@ abstract class PhabricatorEditEngine
   /**
    * Load an object by PHID.
    *
-   * @param phid Object PHID.
-   * @param list<const> List of required capability constants, or omit for
-   *   defaults.
+   * @param string $phid Object PHID.
+   * @param list<string> $capabilities (optional) List of required capability
+   *   constants, or omit for defaults.
    * @return object|null Object, or null if no such object exists.
    * @task load
    */
@@ -816,9 +841,9 @@ abstract class PhabricatorEditEngine
   /**
    * Load an object given a configured query.
    *
-   * @param PhabricatorPolicyAwareQuery Configured query.
-   * @param list<const> List of required capability constants, or omit for
-   *  defaults.
+   * @param PhabricatorPolicyAwareQuery $query Configured query.
+   * @param list<string> $capabilities (optional) List of required capability
+   *  constants, or omit for defaults.
    * @return object|null Object, or null if no such object exists.
    * @task load
    */
@@ -850,7 +875,7 @@ abstract class PhabricatorEditEngine
   /**
    * Verify that an object is appropriate for editing.
    *
-   * @param wild Loaded value.
+   * @param PhabricatorApplicationTransactionInterface $object Loaded value.
    * @return void
    * @task load
    */
@@ -1274,7 +1299,7 @@ abstract class PhabricatorEditEngine
     $tail = $this->newEditFormTailContent($page_state);
 
     $box = id(new PHUIObjectBoxView())
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->setHeader($box_header)
       ->setValidationException($validation_exception)
       ->setBackground(PHUIObjectBoxView::WHITE_CONFIG)
@@ -1347,7 +1372,7 @@ abstract class PhabricatorEditEngine
     $request_path = $request->getPath();
 
     $form = id(new AphrontFormView())
-      ->setUser($viewer)
+      ->setViewer($viewer)
       ->setAction($request_path)
       ->addHiddenInput('editEngine', 'true');
 
@@ -1412,6 +1437,9 @@ abstract class PhabricatorEditEngine
     return $fields;
   }
 
+  /**
+   * @return PHUIButtonView|null
+   */
   private function buildEditFormActionButton($object) {
     if (!$this->isEngineConfigurable()) {
       return null;
@@ -1420,7 +1448,7 @@ abstract class PhabricatorEditEngine
     $viewer = $this->getViewer();
 
     $action_view = id(new PhabricatorActionListView())
-      ->setUser($viewer);
+      ->setViewer($viewer);
 
     foreach ($this->buildEditFormActions($object) as $action) {
       $action_view->addAction($action);
@@ -1436,6 +1464,9 @@ abstract class PhabricatorEditEngine
     return $action_button;
   }
 
+  /**
+   * @return array<PhabricatorActionView>
+   */
   private function buildEditFormActions($object) {
     $actions = array();
 
@@ -1663,11 +1694,13 @@ abstract class PhabricatorEditEngine
     }
 
     $view = id(new PhabricatorApplicationTransactionCommentView())
-      ->setUser($viewer)
-      ->setObjectPHID($object_phid)
+      ->setViewer($viewer)
       ->setHeaderText($header_text)
       ->setAction($comment_uri)
+      ->setRequestURI(new PhutilURI($this->getObjectViewURI($object)))
       ->setRequiresMFA($requires_mfa)
+      ->setObject($object)
+      ->setEditEngine($this)
       ->setSubmitButtonName($button_text);
 
     $draft = PhabricatorVersionedDraft::loadDraft(
@@ -1755,7 +1788,7 @@ abstract class PhabricatorEditEngine
   /**
    * Respond to a request for documentation on HTTP parameters.
    *
-   * @param object Editable object.
+   * @param object $object Editable object.
    * @return AphrontResponse Response object.
    * @task http
    */
@@ -1909,7 +1942,7 @@ abstract class PhabricatorEditEngine
     $comment_text = $request->getStr('comment');
 
     $comment_metadata = $request->getStr('comment_metadata');
-    if (strlen($comment_metadata)) {
+    if (phutil_nonempty_string($comment_metadata)) {
       $comment_metadata = phutil_json_decode($comment_metadata);
     }
 
@@ -2009,7 +2042,7 @@ abstract class PhabricatorEditEngine
       $xactions[] = $xaction;
     }
 
-    if (strlen($comment_text) || !$xactions) {
+    if (phutil_nonempty_string($comment_text) || !$xactions) {
       $xactions[] = id(clone $template)
         ->setTransactionType(PhabricatorTransactions::TYPE_COMMENT)
         ->setMetadataValue('remarkup.control', $comment_metadata)
@@ -2232,10 +2265,11 @@ abstract class PhabricatorEditEngine
    * Generate transactions which can be applied from edit actions in a Conduit
    * request.
    *
-   * @param ConduitAPIRequest The request.
-   * @param list<wild> Raw conduit transactions.
-   * @param list<PhabricatorEditType> Supported edit types.
-   * @param PhabricatorApplicationTransaction Template transaction.
+   * @param ConduitAPIRequest $request The request.
+   * @param array<array{type:string,value:mixed}> $xactions Raw conduit
+   *                                              transactions.
+   * @param list<PhabricatorEditType> $types Supported edit types.
+   * @param PhabricatorApplicationTransaction $template Template transaction.
    * @return list<PhabricatorApplicationTransaction> Generated transactions.
    * @task conduit
    */
@@ -2283,11 +2317,12 @@ abstract class PhabricatorEditEngine
         $value = $type->getTransactionValueFromConduit($value);
         $xaction['value'] = $value;
       } catch (Exception $ex) {
-        throw new PhutilProxyException(
+        throw new Exception(
           pht(
             'Exception when processing transaction of type "%s": %s',
             $xaction['type'],
             $ex->getMessage()),
+          0,
           $ex);
       }
 
@@ -2337,7 +2372,7 @@ abstract class PhabricatorEditEngine
 
   final public static function getAllEditEngines() {
     return id(new PhutilClassMapQuery())
-      ->setAncestorClass(__CLASS__)
+      ->setAncestorClass(self::class)
       ->setUniqueMethod('getEngineKey')
       ->execute();
   }
@@ -2458,7 +2493,7 @@ abstract class PhabricatorEditEngine
     if ($this->pages === null) {
       $pages = $this->newPages($object);
 
-      assert_instances_of($pages, 'PhabricatorEditPage');
+      assert_instances_of($pages, PhabricatorEditPage::class);
       $pages = mpull($pages, null, 'getKey');
 
       $this->pages = $pages;

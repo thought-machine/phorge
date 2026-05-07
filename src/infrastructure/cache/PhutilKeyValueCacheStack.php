@@ -38,12 +38,13 @@ final class PhutilKeyValueCacheStack extends PhutilKeyValueCache {
   /**
    * Set the caches which comprise this stack.
    *
-   * @param   list<PhutilKeyValueCache> Ordered list of key-value caches.
-   * @return  this
+   * @param   array<PhutilKeyValueCache> $caches Ordered list of key-value
+   *   caches.
+   * @return  $this
    * @task    config
    */
   public function setCaches(array $caches) {
-    assert_instances_of($caches, 'PhutilKeyValueCache');
+    assert_instances_of($caches, parent::class);
     $this->cachesForward  = $caches;
     $this->cachesBackward = array_reverse($caches);
 
@@ -62,8 +63,8 @@ final class PhutilKeyValueCacheStack extends PhutilKeyValueCache {
    *   // TTL does not persist; this will use no TTL.
    *   $stack->getKey('hedgehog');
    *
-   * @param   int TTL in seconds.
-   * @return  this
+   * @param   int $ttl TTL in seconds.
+   * @return  $this
    *
    * @task    config
    */
@@ -112,6 +113,7 @@ final class PhutilKeyValueCacheStack extends PhutilKeyValueCache {
     foreach ($this->cachesBackward as $cache) {
       $cache->setKeys($keys, $ttl);
     }
+    return $this;
   }
 
 
@@ -119,6 +121,7 @@ final class PhutilKeyValueCacheStack extends PhutilKeyValueCache {
     foreach ($this->cachesBackward as $cache) {
       $cache->deleteKeys($keys);
     }
+    return $this;
   }
 
 
@@ -126,6 +129,7 @@ final class PhutilKeyValueCacheStack extends PhutilKeyValueCache {
     foreach ($this->cachesBackward as $cache) {
       $cache->destroyCache();
     }
+    return $this;
   }
 
 }

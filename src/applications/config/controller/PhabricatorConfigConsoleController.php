@@ -60,7 +60,7 @@ final class PhabricatorConfigConsoleController
       ->setBackground(PHUIObjectBoxView::WHITE_CONFIG)
       ->setObjectList($menu);
 
-    $versions = $this->newLibraryVersionTable($viewer);
+    $versions = $this->newLibraryVersionTable();
     $binary_versions = $this->newBinaryVersionTable();
 
     $launcher_view = id(new PHUILauncherView())
@@ -153,6 +153,10 @@ final class PhabricatorConfigConsoleController
     foreach ($specs as $lib) {
       $root = dirname(phutil_get_library_root($lib));
 
+      if (Filesystem::isPharPath($root)) {
+        continue;
+      }
+
       $log_command = csprintf(
         'git log --format=%s -n 1 --',
         '%H %ct');
@@ -187,6 +191,9 @@ final class PhabricatorConfigConsoleController
     $upstream_futures = array();
     $lib_upstreams = array();
     foreach ($specs as $lib) {
+      if (!array_key_exists($lib, $remote_futures)) {
+        continue;
+      }
       $remote_future = $remote_futures[$lib];
 
       try {
@@ -293,6 +300,17 @@ final class PhabricatorConfigConsoleController
       $results[$lib] = $result;
     }
 
+    foreach ($specs as $lib) {
+      if (!array_key_exists($lib, $results)) {
+        $results[$lib] = array(
+          'hash' => null,
+          'epoch' => null,
+          'upstream' => null,
+          'branchpoint' => null,
+        );
+      }
+    }
+
     return $results;
   }
 
@@ -367,11 +385,19 @@ final class PhabricatorConfigConsoleController
         $lib,
         'https://we.phorge.it/T15282',
         $lib_root));
-    } else {
-
-      // Otherwise show a generic error message
-      phlog($e);
+      return;
     }
+
+    // Second, detect if .git does not exist
+    // https://we.phorge.it/T16023
+    $expected_error_msg_part = 'fatal: not a git repository '.
+      '(or any of the parent directories): .git';
+    if (strpos($stderr, $expected_error_msg_part) !== false) {
+      return;
+    }
+
+    // Otherwise show a generic error message
+    phlog($e);
   }
 
 }

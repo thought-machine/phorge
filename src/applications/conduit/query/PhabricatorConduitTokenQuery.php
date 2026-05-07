@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * @extends PhabricatorCursorPagedPolicyAwareQuery<PhabricatorConduitToken>
+ */
 final class PhabricatorConduitTokenQuery
   extends PhabricatorCursorPagedPolicyAwareQuery {
 
@@ -109,7 +112,7 @@ final class PhabricatorConduitTokenQuery
   }
 
   public function getQueryApplicationClass() {
-    return 'PhabricatorConduitApplication';
+    return PhabricatorConduitApplication::class;
   }
 
 }

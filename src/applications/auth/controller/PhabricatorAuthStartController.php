@@ -31,7 +31,7 @@ final class PhabricatorAuthStartController
     $session_token = $request->getCookie(PhabricatorCookies::COOKIE_SESSION);
     $did_clear = $request->getStr('cleared');
 
-    if (strlen($session_token)) {
+    if (phutil_nonempty_string($session_token)) {
       $kind = PhabricatorAuthSessionEngine::getSessionKindFromToken(
         $session_token);
       switch ($kind) {
@@ -309,8 +309,11 @@ final class PhabricatorAuthStartController
       ->setURI($auto_uri);
   }
 
+  /**
+   * @param array<PhabricatorAuthProviderConfig> $configs
+   */
   private function newEmailLoginView(array $configs) {
-    assert_instances_of($configs, 'PhabricatorAuthProviderConfig');
+    assert_instances_of($configs, PhabricatorAuthProviderConfig::class);
 
     // Check if password auth is enabled. If it is, the password login form
     // renders a "Forgot password?" link, so we don't need to provide a

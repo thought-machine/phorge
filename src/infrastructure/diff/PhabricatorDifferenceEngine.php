@@ -21,8 +21,8 @@ final class PhabricatorDifferenceEngine extends Phobject {
   /**
    * Set the name to identify the old file with. Primarily cosmetic.
    *
-   * @param  string Old file name.
-   * @return this
+   * @param  string $old_name Old file name.
+   * @return $this
    * @task config
    */
   public function setOldName($old_name) {
@@ -34,8 +34,8 @@ final class PhabricatorDifferenceEngine extends Phobject {
   /**
    * Set the name to identify the new file with. Primarily cosmetic.
    *
-   * @param  string New file name.
-   * @return this
+   * @param  string $new_name New file name.
+   * @return $this
    * @task config
    */
   public function setNewName($new_name) {
@@ -62,8 +62,8 @@ final class PhabricatorDifferenceEngine extends Phobject {
    * @{method:generateChangesetFromFileContent}, but may be useful if you need
    * to use a custom parser configuration, as with Diffusion.
    *
-   * @param string Entire previous file content.
-   * @param string Entire current file content.
+   * @param string $old Entire previous file content.
+   * @param string $new Entire current file content.
    * @return string Raw diff between the two files.
    * @task diff
    */
@@ -132,9 +132,9 @@ final class PhabricatorDifferenceEngine extends Phobject {
    * principally useful because you can feed the output to
    * @{class:DifferentialChangesetParser} in order to render it.
    *
-   * @param string Entire previous file content.
-   * @param string Entire current file content.
-   * @return @{class:DifferentialChangeset} Synthetic changeset.
+   * @param string $old Entire previous file content.
+   * @param string $new Entire current file content.
+   * @return DifferentialChangeset Synthetic changeset.
    * @task diff
    */
   public function generateChangesetFromFileContent($old, $new) {
