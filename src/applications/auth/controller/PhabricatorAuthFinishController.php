@@ -25,6 +25,16 @@ final class PhabricatorAuthFinishController
       return id(new AphrontRedirectResponse())->setURI('/');
     }
 
+    $next_uri = PhabricatorCookies::getNextURICookie($request);
+    if (!phutil_nonempty_string($next_uri)) {
+      if ($this->getDelegatingController()) {
+        $next_uri = (string)$request->getRequestURI();
+        if (!$request->isFormPost()) {
+          PhabricatorCookies::setNextURICookie($request, $next_uri);
+        }
+      }
+    }
+
     $engine = new PhabricatorAuthSessionEngine();
 
     // If this cookie is set, the user is headed into a high security area

@@ -30,6 +30,16 @@ final class PhabricatorAuthNeedsMultiFactorController
       return new Aphront400Response();
     }
 
+    $next_uri = PhabricatorCookies::getNextURICookie($request);
+    if (!phutil_nonempty_string($next_uri)) {
+      if ($this->getDelegatingController()) {
+        $next_uri = (string)$request->getRequestURI();
+        if (!$request->isFormPost()) {
+          PhabricatorCookies::setNextURICookie($request, $next_uri);
+        }
+      }
+    }
+
     $panels = $this->loadPanels();
 
     $multifactor_key = id(new PhabricatorMultiFactorSettingsPanel())
@@ -190,11 +200,17 @@ final class PhabricatorAuthNeedsMultiFactorController
         'You can make adjustments from the [[ /settings/ | Settings ]] panel '.
         'later.');
 
+      $request = $this->getRequest();
+      $next = PhabricatorCookies::getNextURICookie($request);
+      if (!PhabricatorEnv::isValidLocalURIForLink($next)) {
+        $next = '/';
+      }
+
       return $this->newDialog()
         ->setTitle(pht('Multi-Factor Authentication Setup Complete'))
         ->setWidth(AphrontDialogView::WIDTH_FULL)
         ->appendChild(new PHUIRemarkupView($viewer, $guidance))
-        ->addCancelButton('/', pht('Continue'));
+        ->addCancelButton($next, pht('Continue'));
     }
 
     $views = array();
