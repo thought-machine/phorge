@@ -206,12 +206,17 @@ EOREMARKUP
             // removed comments.
             $content = array(
               'raw' => '',
-              'inlineSuggestion' => '',
+              'inlineSuggestion' => null,
             );
           } else {
+            $inline_suggestion = null;
+            $comment_state = $comment->getContentState();
+            if ($comment_state->getContentHasSuggestion()) {
+              $inline_suggestion = (string)$comment_state->getContentSuggestionText();
+            }
             $content = array(
               'raw' => (string)$comment->getContent(),
-              'inlineSuggestion' => (string)$comment->getContentState()->getContentSuggestionText()
+              'inlineSuggestion' => $inline_suggestion,
             );
           }
 
