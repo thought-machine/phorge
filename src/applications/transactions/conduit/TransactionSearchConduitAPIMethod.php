@@ -198,6 +198,7 @@ EOREMARKUP
       if ($comments) {
         $removed = head($comments)->getIsDeleted();
 
+        /** @var PhabricatorInlineComment $comment */
         foreach ($comments as $comment) {
           if ($removed) {
             // If the most recent version of the comment has been removed,
