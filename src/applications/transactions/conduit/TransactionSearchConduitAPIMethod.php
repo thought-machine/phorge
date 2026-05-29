@@ -198,7 +198,7 @@ EOREMARKUP
       if ($comments) {
         $removed = head($comments)->getIsDeleted();
 
-        /** @var PhabricatorInlineComment $comment */
+        /** @var PhabricatorApplicationTransactionComment $comment */
         foreach ($comments as $comment) {
           if ($removed) {
             // If the most recent version of the comment has been removed,
@@ -211,9 +211,13 @@ EOREMARKUP
             );
           } else {
             $inline_suggestion = null;
-            $comment_state = $comment->getContentState();
-            if ($comment_state->getContentHasSuggestion()) {
-              $inline_suggestion = (string)$comment_state->getContentSuggestionText();
+            // If we're looking at a comment on a differential transaction, then we can get inline suggestion data
+            if ($comment instanceof DifferentialTransactionComment) {
+              $inline_comment = $comment->newInlineCommentObject();
+              $comment_state = $inline_comment->getContentState();
+              if ($comment_state->getContentHasSuggestion()) {
+                $inline_suggestion = (string)$comment_state->getContentSuggestionText();
+              }
             }
             $content = array(
               'raw' => (string)$comment->getContent(),
