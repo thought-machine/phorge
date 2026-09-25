@@ -540,16 +540,8 @@ final class DiffusionBrowseController extends DiffusionController {
 
         $owners = $package->getOwners();
         if ($owners) {
-          $owner_phids = mpull($owners, 'getUserPHID');
-          $owner_handles = $viewer->loadHandles($owner_phids);
-
-          $owner_names = array();
-          foreach ($owner_handles as $owner_phid => $owner_handle) {
-            $owner_names[$owner_phid] = $owner_handle->getName();
-          }
-          asort($owner_names);
-
-          $owner_list = $viewer->renderHandleList(array_keys($owner_names));
+          $owner_list = $viewer->renderHandleList(
+            mpull($owners, 'getUserPHID'));
         } else {
           $owner_list = phutil_tag('em', array(), pht('None'));
         }
