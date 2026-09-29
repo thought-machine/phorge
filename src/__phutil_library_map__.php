@@ -7869,6 +7869,7 @@ phutil_register_library_map(array(
       'PhabricatorApplicationTransactionInterface',
       'PhabricatorFlaggableInterface',
       'PhabricatorPolicyInterface',
+      'PhabricatorConduitResultInterface',
       'PhabricatorDestructibleInterface',
       'PhabricatorIndexableInterface',
       'PhabricatorSubscribableInterface',
