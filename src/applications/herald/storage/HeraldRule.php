@@ -480,7 +480,7 @@ final class HeraldRule extends HeraldDAO
   public function getFieldValuesForConduit()
   {
     $conditions_list = array();
-    foreach ($this->getConditions() as $condition) {
+    foreach ($this->loadConditions() as $condition) {
       $conditions_list[] = array(
         'field' => $condition->getFieldName(),
         'condition' => $condition->getFieldCondition(),
@@ -489,7 +489,7 @@ final class HeraldRule extends HeraldDAO
     }
 
     $actions_list = array();
-    foreach ($this->getActions() as $action) {
+    foreach ($this->loadActions() as $action) {
       $actions_list[] = array(
         'action' => $action->getAction(),
         'target' => $action->getTarget(),
