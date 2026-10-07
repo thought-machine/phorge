@@ -57,7 +57,11 @@ final class PhabricatorApplyEditField
   }
 
   protected function newConduitParameterType() {
-    return new ConduitBoolParameterType();
+    if ($this->getOptions()) {
+      return new ConduitBoolOrPHIDListParameterType();
+    } else {
+      return new ConduitBoolParameterType();
+    }
   }
 
   public function shouldGenerateTransactionsFromSubmit() {
