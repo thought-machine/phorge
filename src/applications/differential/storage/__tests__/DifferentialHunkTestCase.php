@@ -34,6 +34,22 @@ final class DifferentialHunkTestCase extends PhutilTestCase {
 
   }
 
+  public function testForceEncodingAfterReadingLines() {
+    $hunk = new DifferentialHunk();
+    $hunk->setChanges("+caf\xC3\xA9\n");
+    $hunk->setOldOffset(1);
+    $hunk->setNewOffset(1);
+
+    $this->assertEqual(array(1 => "caf\xC3\xA9\n"), $hunk->getAddedLines());
+
+    // Reading the lines again after forcing an encoding should decode them
+    // with that encoding, not return the lines decoded earlier.
+    $hunk->forceEncoding('ISO-8859-1');
+    $this->assertEqual(
+      array(1 => "caf\xC3\x83\xC2\xA9\n"),
+      $hunk->getAddedLines());
+  }
+
   public function testMakeStructuredChanges1() {
     $hunk = $this->loadHunk('fruit1.diff');
 
