@@ -52,76 +52,44 @@ final class DifferentialRevisionAcceptTransaction
     return pht('Accept a revision.');
   }
 
+  /**
+   * Get the reviewers the viewer may accept on behalf of, including by force
+   * and including reviewers who have already accepted. These are the PHIDs
+   * accepted as the value of an "accept" transaction.
+   *
+   * @return list<phid> Reviewer PHIDs, or an empty list if the viewer can not
+   *   accept the revision at all.
+   */
+  public function getAcceptableReviewerPHIDs(
+    PhabricatorUser $viewer,
+    DifferentialRevision $revision) {
+
+    if (!$this->isActionAvailable($revision, $viewer)) {
+      return array();
+    }
+
+    $reviewers = $this->getAcceptableReviewers($viewer, $revision, true);
+    return array_keys($reviewers);
+  }
+
   protected function getActionOptions(
     PhabricatorUser $viewer,
     DifferentialRevision $revision,
     $include_accepted = false) {
 
-    $reviewers = $revision->getReviewers();
+    $reviewers = $this->getAcceptableReviewers(
+      $viewer,
+      $revision,
+      $include_accepted);
 
     $options = array();
     $value = array();
 
-    // Put the viewer's user reviewer first, if it exists, so that "Accept as
-    // yourself" is always at the top.
-    $head = array();
-    $tail = array();
-    foreach ($reviewers as $key => $reviewer) {
-      if ($reviewer->isUser()) {
-        $head[$key] = $reviewer;
-      } else {
-        $tail[$key] = $reviewer;
-      }
-    }
-    $reviewers = $head + $tail;
-
-    $diff_phid = $this->getActiveDiffPHID($revision);
-    $reviewer_phids = array();
-
-    // If the viewer isn't a reviewer, add them to the list of options first.
-    // This happens when you navigate to some revision you aren't involved in:
-    // you can accept and become a reviewer.
-
-    $viewer_phid = $viewer->getPHID();
-    if ($viewer_phid) {
-      if (!isset($reviewers[$viewer_phid])) {
-        $reviewer_phids[$viewer_phid] = $viewer_phid;
-      }
-    }
-
-    $default_unchecked = array();
-    foreach ($reviewers as $reviewer) {
-      $reviewer_phid = $reviewer->getReviewerPHID();
-
-      if (!$reviewer->hasAuthority($viewer)) {
-        // If the viewer doesn't have authority to act on behalf of a reviewer,
-        // we check if they can accept by force.
-        if ($revision->canReviewerForceAccept($viewer, $reviewer)) {
-          $default_unchecked[$reviewer_phid] = true;
-        } else {
-          continue;
-        }
-      }
-
-      if (!$include_accepted) {
-        if ($reviewer->isAccepted($diff_phid)) {
-          // If a reviewer is already in a full "accepted" state, don't
-          // include that reviewer as an option unless we're listing all
-          // reviewers, including reviewers who have already accepted.
-          continue;
-        }
-      }
-
-      $reviewer_phids[$reviewer_phid] = $reviewer_phid;
-    }
-
-    $handles = $viewer->loadHandles($reviewer_phids);
+    $handles = $viewer->loadHandles(array_keys($reviewers));
 
     $head = array();
     $tail = array();
-    foreach ($reviewer_phids as $reviewer_phid) {
-      $is_force = isset($default_unchecked[$reviewer_phid]);
-
+    foreach ($reviewers as $reviewer_phid => $is_force) {
       if ($is_force) {
         $tail[] = $reviewer_phid;
 
@@ -144,6 +112,73 @@ final class DifferentialRevisionAcceptTransaction
       array_select_keys($options, $tail);
 
     return array($options, $value);
+  }
+
+  /**
+   * @return map<phid, bool> Map of reviewer PHIDs the viewer may accept on
+   *   behalf of to whether they would be accepting by force.
+   */
+  private function getAcceptableReviewers(
+    PhabricatorUser $viewer,
+    DifferentialRevision $revision,
+    $include_accepted) {
+
+    $reviewers = $revision->getReviewers();
+
+    // Put the viewer's user reviewer first, if it exists, so that "Accept as
+    // yourself" is always at the top.
+    $head = array();
+    $tail = array();
+    foreach ($reviewers as $key => $reviewer) {
+      if ($reviewer->isUser()) {
+        $head[$key] = $reviewer;
+      } else {
+        $tail[$key] = $reviewer;
+      }
+    }
+    $reviewers = $head + $tail;
+
+    $diff_phid = $this->getActiveDiffPHID($revision);
+    $result = array();
+
+    // If the viewer isn't a reviewer, add them to the list of options first.
+    // This happens when you navigate to some revision you aren't involved in:
+    // you can accept and become a reviewer.
+
+    $viewer_phid = $viewer->getPHID();
+    if ($viewer_phid) {
+      if (!isset($reviewers[$viewer_phid])) {
+        $result[$viewer_phid] = false;
+      }
+    }
+
+    foreach ($reviewers as $reviewer) {
+      $reviewer_phid = $reviewer->getReviewerPHID();
+      $is_force = false;
+
+      if (!$reviewer->hasAuthority($viewer)) {
+        // If the viewer doesn't have authority to act on behalf of a reviewer,
+        // we check if they can accept by force.
+        if ($revision->canReviewerForceAccept($viewer, $reviewer)) {
+          $is_force = true;
+        } else {
+          continue;
+        }
+      }
+
+      if (!$include_accepted) {
+        if ($reviewer->isAccepted($diff_phid)) {
+          // If a reviewer is already in a full "accepted" state, don't
+          // include that reviewer as an option unless we're listing all
+          // reviewers, including reviewers who have already accepted.
+          continue;
+        }
+      }
+
+      $result[$reviewer_phid] = $is_force;
+    }
+
+    return $result;
   }
 
   public function generateOldValue($object) {
