@@ -18,6 +18,23 @@ final class DifferentialRevisionAcceptTransaction
     return pht('These changes will be approved.');
   }
 
+  public function newEditField(
+    DifferentialRevision $revision,
+    PhabricatorUser $viewer) {
+
+    return parent::newEditField($revision, $viewer)
+      ->setConduitDocumentation(
+        pht(
+          'Pass `true` to accept on behalf of yourself and every reviewer '.
+          'you have authority over (the same defaults as the web UI). To '.
+          'choose which reviewers to accept as, pass a list of reviewer '.
+          'PHIDs instead; each must be yourself, or a reviewer you have '.
+          'authority over or can force accept on behalf of. A list is only '.
+          'accepted when you could act as some reviewer other than '.
+          'yourself, mirroring when the web UI shows "Accept as" '.
+          'checkboxes.'));
+  }
+
   public function getIcon() {
     return 'fa-check-circle-o';
   }
