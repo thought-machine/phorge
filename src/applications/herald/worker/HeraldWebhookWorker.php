@@ -3,6 +3,10 @@
 final class HeraldWebhookWorker
   extends PhabricatorWorker {
 
+  public function getMaximumRetryCount() {
+    return 10;
+  }
+
   protected function doWork() {
     $viewer = PhabricatorUser::getOmnipotentUser();
 
