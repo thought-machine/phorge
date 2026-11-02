@@ -57,6 +57,10 @@ final class PhabricatorApplyEditField
   }
 
   protected function newConduitParameterType() {
+    // Options are only set when the viewer can act on behalf of reviewers
+    // other than themselves (see DifferentialRevisionActionTransaction). In
+    // that case, Conduit callers may pass either "true" to use the defaults
+    // or an explicit list of PHIDs, mirroring the HTTP parameter type above.
     if ($this->getOptions()) {
       return new ConduitBoolOrPHIDListParameterType();
     } else {
