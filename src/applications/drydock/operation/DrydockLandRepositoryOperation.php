@@ -160,6 +160,36 @@ final class DrydockLandRepositoryOperation
     }
   }
 
+  private function getCommitterInfo(DrydockRepositoryOperation $operation) {
+    $viewer = $this->getViewer();
+
+    $committer_name = null;
+
+    $author_phid = $operation->getAuthorPHID();
+    $object = id(new PhabricatorObjectQuery())
+      ->setViewer($viewer)
+      ->withPHIDs(array($author_phid))
+      ->executeOne();
+
+    if ($object) {
+      if ($object instanceof PhabricatorUser) {
+        $committer_name = $object->getUsername();
+      }
+    }
+
+    if (!strlen($committer_name)) {
+      $committer_name = pht('autocommitter');
+    }
+
+    // TODO: Probably let users choose a VCS email address in settings. For
+    // now just make something up so we don't leak anyone's stuff.
+
+    return array(
+      'name' => $committer_name,
+      'email' => 'autocommitter@example.com',
+    );
+  }
+
   private function loadDiff(DrydockRepositoryOperation $operation) {
     $viewer = $this->getViewer();
     $revision = $operation->getObject();
