@@ -73,17 +73,40 @@ final class DrydockLandRepositoryOperation
     if ($object instanceof DifferentialRevision) {
       $revision = $object;
 
-      $diff = $this->loadDiff($operation);
+      // The landed commit's author should be the revision author.
+      $author_user = id(new PhabricatorUser())->loadOneWhere(
+        'phid = %s',
+        $revision->getAuthorPHID());
 
-      $dict = $diff->getDiffAuthorshipDict();
-      $author_name = idx($dict, 'authorName');
-      $author_email = idx($dict, 'authorEmail');
+      if (!$author_user) {
+        throw new Exception(
+          pht(
+            'Could not determine revision author identity for PHID: %s',
+            $revision->getAuthorPHID()));
+      }
+      $author_name = $author_user->getUsername();
+      $author_email = $author_user->loadPrimaryEmailAddress();
+
+      // The landed commit's committer should be the person who pushed the
+      // button to land the revision; they are the author of the landing
+      // operation.
+      $committer_user = id(new PhabricatorUser())->loadOneWhere(
+        'phid = %s',
+        $operation->getAuthorPHID());
+
+      if (!$committer_user) {
+        throw new Exception(
+          pht(
+            'Could not determine revision committer identity for PHID: %s',
+            $operation->getAuthorPHID()));
+      }
+      $committer_name = $committer_user->getUsername();
+      $committer_email = $committer_user->loadPrimaryEmailAddress();
 
       $api_method = 'differential.getcommitmessage';
       $api_params = array(
         'revision_id' => $revision->getID(),
       );
-
       $commit_message = id(new ConduitCall($api_method, $api_params))
         ->setUser($viewer)
         ->execute();
@@ -109,16 +132,14 @@ final class DrydockLandRepositoryOperation
             $target));
     }
 
-    $committer_info = $this->getCommitterInfo($operation);
-
     // NOTE: We're doing this commit with "-F -" so we don't run into trouble
     // with enormous commit messages which might otherwise exceed the maximum
     // size of a command.
 
     $future = $interface->getExecFuture(
       'git -c user.name=%s -c user.email=%s commit --author %s -F - --',
-      $committer_info['name'],
-      $committer_info['email'],
+      $committer_name,
+      $committer_email,
       "{$author_name} <{$author_email}>");
 
     $future->write($commit_message);
@@ -159,36 +180,6 @@ final class DrydockLandRepositoryOperation
 
       throw $ex;
     }
-  }
-
-  private function getCommitterInfo(DrydockRepositoryOperation $operation) {
-    $viewer = $this->getViewer();
-
-    $committer_name = null;
-
-    $author_phid = $operation->getAuthorPHID();
-    $object = id(new PhabricatorObjectQuery())
-      ->setViewer($viewer)
-      ->withPHIDs(array($author_phid))
-      ->executeOne();
-
-    if ($object) {
-      if ($object instanceof PhabricatorUser) {
-        $committer_name = $object->getUsername();
-      }
-    }
-
-    if (!strlen($committer_name)) {
-      $committer_name = pht('autocommitter');
-    }
-
-    // TODO: Probably let users choose a VCS email address in settings. For
-    // now just make something up so we don't leak anyone's stuff.
-
-    return array(
-      'name' => $committer_name,
-      'email' => 'autocommitter@example.com',
-    );
   }
 
   private function loadDiff(DrydockRepositoryOperation $operation) {
