@@ -75,16 +75,16 @@ final class DrydockLandRepositoryOperation
 
       $diff = $this->loadDiff($operation);
       $author_user = id(new PhabricatorUser())->loadOneWhere(
-      'phid = %s',
-      $revision->getAuthorPHID());
-      $author_name = $author_user->getFullName();
+        'phid = %s',
+        $revision->getAuthorPHID());
+
+      $author_name = $author_user->getUsername();
       $author_email = $author_user->loadPrimaryEmailAddress();
 
       $api_method = 'differential.getcommitmessage';
       $api_params = array(
         'revision_id' => $revision->getID(),
       );
-
       $commit_message = id(new ConduitCall($api_method, $api_params))
         ->setUser($viewer)
         ->execute();
@@ -176,19 +176,15 @@ final class DrydockLandRepositoryOperation
     if ($object) {
       if ($object instanceof PhabricatorUser) {
         $committer_name = $object->getUsername();
+        $committer_email = $object->loadPrimaryEmailAddress();
       }
-    }
-
-    if (!strlen($committer_name)) {
-      $committer_name = pht('autocommitter');
     }
 
     // TODO: Probably let users choose a VCS email address in settings. For
     // now just make something up so we don't leak anyone's stuff.
-
     return array(
       'name' => $committer_name,
-      'email' => 'autocommitter@example.com',
+      'email' => $committer_email,
     );
   }
 
