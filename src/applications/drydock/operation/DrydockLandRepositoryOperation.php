@@ -110,14 +110,16 @@ final class DrydockLandRepositoryOperation
             $target));
     }
 
+    $committer_info = $this->getCommitterInfo($operation);
+
     // NOTE: We're doing this commit with "-F -" so we don't run into trouble
     // with enormous commit messages which might otherwise exceed the maximum
     // size of a command.
 
     $future = $interface->getExecFuture(
       'git -c user.name=%s -c user.email=%s commit --author %s -F - --',
-      $author_name,
-      $author_email,
+      $committer_info['name'],
+      $committer_info['email'],
       "{$author_name} <{$author_email}>");
 
     $future->write($commit_message);
