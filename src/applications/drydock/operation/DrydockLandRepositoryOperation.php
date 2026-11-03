@@ -79,19 +79,26 @@ final class DrydockLandRepositoryOperation
         $revision->getAuthorPHID());
 
       if (!$author_user) {
-        throw new Exception('Could not determine revision author identity');
+        throw new Exception(
+          pht(
+            'Could not determine revision author identity for PHID: %s',
+            $revision->getAuthorPHID()));
       }
       $author_name = $author_user->getUsername();
       $author_email = $author_user->loadPrimaryEmailAddress();
 
-      // The landed commit's committer should be the person who pushed the button to land the revision;
-      // they are the author of the landing operation.
+      // The landed commit's committer should be the person who pushed the
+      // button to land the revision; they are the author of the landing
+      // operation.
       $committer_user = id(new PhabricatorUser())->loadOneWhere(
         'phid = %s',
         $operation->getAuthorPHID());
 
       if (!$committer_user) {
-        throw new Exception('Could not determine revision committer identity');
+        throw new Exception(
+          pht(
+            'Could not determine revision committer identity for PHID: %s',
+            $operation->getAuthorPHID()));
       }
       $committer_name = $committer_user->getUsername();
       $committer_email = $committer_user->loadPrimaryEmailAddress();
