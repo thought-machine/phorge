@@ -78,6 +78,10 @@ final class DrydockLandRepositoryOperation
         'phid = %s',
         $revision->getAuthorPHID());
 
+      if (!($author_user instanceof PhabricatorUser)) {
+        throw new Exception('Could not determine revision author identity');
+      }
+
       $author_name = $author_user->getUsername();
       $author_email = $author_user->loadPrimaryEmailAddress();
 
@@ -164,27 +168,19 @@ final class DrydockLandRepositoryOperation
 
   private function getCommitterInfo(DrydockRepositoryOperation $operation) {
     $viewer = $this->getViewer();
-
-    $committer_name = null;
-
     $author_phid = $operation->getAuthorPHID();
     $object = id(new PhabricatorObjectQuery())
       ->setViewer($viewer)
       ->withPHIDs(array($author_phid))
       ->executeOne();
 
-    if ($object) {
-      if ($object instanceof PhabricatorUser) {
-        $committer_name = $object->getUsername();
-        $committer_email = $object->loadPrimaryEmailAddress();
-      }
+    if (!($object instanceof PhabricatorUser)){
+      throw new Exception('Could not determine committer identity');
     }
 
-    // TODO: Probably let users choose a VCS email address in settings. For
-    // now just make something up so we don't leak anyone's stuff.
     return array(
-      'name' => $committer_name,
-      'email' => $committer_email,
+      'name' => $object->getUsername(),
+      'email' => $object->loadPrimaryEmailAddress(),
     );
   }
 
