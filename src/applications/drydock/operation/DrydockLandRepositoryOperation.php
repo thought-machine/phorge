@@ -74,10 +74,11 @@ final class DrydockLandRepositoryOperation
       $revision = $object;
 
       $diff = $this->loadDiff($operation);
-
-      $dict = $diff->getDiffAuthorshipDict();
-      $author_name = idx($dict, 'authorName');
-      $author_email = idx($dict, 'authorEmail');
+      $author_user = id(new PhabricatorUser())->loadOneWhere(
+      'phid = %s',
+      $revision->getAuthorPHID());
+      $author_name = $author_user->getFullName();
+      $author_email = $author_user->loadPrimaryEmailAddress();
 
       $api_method = 'differential.getcommitmessage';
       $api_params = array(
