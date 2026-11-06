@@ -560,7 +560,13 @@ final class DrydockWorkingCopyBlueprintImplementation
       }
 
       try {
-        $interface->execx('git rebase -');
+        // NOTE: This should not generate a new commit but git sometimes runs code to check
+        // that a username and email are configured anyway.
+        $interface->execx(
+          'git -c user.name=%s -c user.email=%s rebase -',
+          'drydock',
+          'drydock@phabricator',
+        );
       } catch (CommandException $ex) {
         $error = DrydockCommandError::newFromCommandException($ex)
           ->setPhase(self::PHASE_REBASE)
