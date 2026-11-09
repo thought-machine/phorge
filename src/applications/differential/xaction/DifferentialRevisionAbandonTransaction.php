@@ -64,13 +64,14 @@ final class DifferentialRevisionAbandonTransaction
     }
 
     $config_key = 'differential.always-allow-abandon';
-    if (!PhabricatorEnv::getEnvConfig($config_key)) {
+    if (!PhabricatorEnv::getEnvConfig($config_key) && !$viewer->getIsAdmin()) {
       if (!$this->isViewerRevisionAuthor($object, $viewer)) {
         throw new Exception(
           pht(
             'You can not abandon this revision because you are not the '.
-            'author. You can only abandon revisions you own. You can change '.
-            'this behavior by adjusting the "%s" setting in Config.',
+            'author. You can only abandon revisions you own, unless you '.
+            'are an administrator. You can change this behavior by '.
+            'adjusting the "%s" setting in Config.',
             $config_key));
       }
     }
