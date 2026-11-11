@@ -326,6 +326,13 @@ class PHPMailerLite {
    */
   public $Version         = 'Lite 5.1';
 
+  /**
+   * Sets the custom mailer used to send messages using Amazon SES.
+   *
+   * Must have a `executeSend` method taking the message to be sent as a string.
+   */
+  public $customMailer    = null;
+
   /////////////////////////////////////////////////
   // PROPERTIES, PRIVATE AND PROTECTED
   /////////////////////////////////////////////////
