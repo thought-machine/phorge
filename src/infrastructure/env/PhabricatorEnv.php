@@ -85,11 +85,6 @@ final class PhabricatorEnv extends Phobject {
     PhutilServiceProfiler::getInstance()->enableDiscardMode();
     DarkConsoleErrorLogPluginAPI::enableDiscardMode();
     DarkConsoleEventPluginAPI::enableDiscardMode();
-
-    // Opt in to collapse logs to stop stack traces spanning multiple lines.
-    // This is because we don't use structured logging and have no better way
-    // of grouping logs.
-    PhutilErrorHandler::enableCollapsedLogs();
   }
 
 
