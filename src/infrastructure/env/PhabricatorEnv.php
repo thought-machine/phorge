@@ -85,11 +85,6 @@ final class PhabricatorEnv extends Phobject {
     PhutilServiceProfiler::getInstance()->enableDiscardMode();
     DarkConsoleErrorLogPluginAPI::enableDiscardMode();
     DarkConsoleEventPluginAPI::enableDiscardMode();
-
-    // Opt in to collapse logs to stop stack traces spanning multiple lines.
-    // This is because we don't use structured logging and have no better way
-    // of grouping logs.
-    PhutilErrorHandler::enableCollapsedLogs();
   }
 
 
@@ -145,6 +140,11 @@ final class PhabricatorEnv extends Phobject {
     // requests this loaded earlier, but we want to load it for non-web
     // requests so that unit tests can call these functions.
     require_once $phabricator_path.'/support/startup/preamble-utils.php';
+
+    // Opt in to collapse logs to stop stack traces spanning multiple lines.
+    // This is because we don't use structured logging and have no better way
+    // of grouping logs.
+    PhutilErrorHandler::enableCollapsedLogs();
   }
 
   public static function beginScopedLocale($locale_code) {
