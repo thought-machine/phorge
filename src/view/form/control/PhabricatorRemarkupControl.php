@@ -100,6 +100,7 @@ final class PhabricatorRemarkupControl
       array(
         'type' => 'hidden',
         'id' => $metadata_id,
+        'sigil' => 'remarkup-metadata',
         'name' => $metadata_name,
         'value' => $metadata_string,
       ));

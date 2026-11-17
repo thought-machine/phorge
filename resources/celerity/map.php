@@ -9,11 +9,11 @@ return array(
   'names' => array(
     'conpherence.pkg.css' => 'b2d6f4b8',
     'conpherence.pkg.js' => '020aebcf',
-    'core.pkg.css' => '96104c33',
+    'core.pkg.css' => '4c41a3d5',
     'core.pkg.js' => '9250c090',
     'dark-console.pkg.js' => '187792c2',
     'differential.pkg.css' => 'abdb4fe9',
-    'differential.pkg.js' => '46fcb3af',
+    'differential.pkg.js' => '23706874',
     'diffusion.pkg.css' => '91e57dc1',
     'diffusion.pkg.js' => 'd06aa1f7',
     'maniphest.pkg.css' => '31ad4266',
@@ -109,7 +109,7 @@ return array(
     'rsrc/css/diviner/diviner-shared.css' => '4bd263b0',
     'rsrc/css/font/font-awesome.css' => 'a8d83a0c',
     'rsrc/css/font/font-lato.css' => '23631304',
-    'rsrc/css/font/phui-font-icon-base.css' => 'b7608e58',
+    'rsrc/css/font/phui-font-icon-base.css' => '4195da19',
     'rsrc/css/fuel/fuel-grid.css' => '66697240',
     'rsrc/css/fuel/fuel-handle-list.css' => '2c4cbeca',
     'rsrc/css/fuel/fuel-map.css' => 'd6e31510',
@@ -334,8 +334,8 @@ return array(
     'rsrc/js/application/dashboard/behavior-dashboard-tab-panel.js' => '0116d3e8',
     'rsrc/js/application/diff/DiffChangeset.js' => 'd7d3ba75',
     'rsrc/js/application/diff/DiffChangesetList.js' => 'cc2c5de5',
-    'rsrc/js/application/diff/DiffInline.js' => '9c775532',
-    'rsrc/js/application/diff/DiffInlineContentState.js' => 'aa51efb4',
+    'rsrc/js/application/diff/DiffInline.js' => '4edb4aea',
+    'rsrc/js/application/diff/DiffInlineContentState.js' => '823edc17',
     'rsrc/js/application/diff/DiffPathView.js' => '8207abf9',
     'rsrc/js/application/diff/DiffTreeView.js' => '5d83623b',
     'rsrc/js/application/differential/behavior-diff-radios.js' => '925fe8cd',
@@ -728,8 +728,8 @@ return array(
     'phabricator-dashboard-css' => '5a205b9d',
     'phabricator-diff-changeset' => 'd7d3ba75',
     'phabricator-diff-changeset-list' => 'cc2c5de5',
-    'phabricator-diff-inline' => '9c775532',
-    'phabricator-diff-inline-content-state' => 'aa51efb4',
+    'phabricator-diff-inline' => '4edb4aea',
+    'phabricator-diff-inline-content-state' => '823edc17',
     'phabricator-diff-path-view' => '8207abf9',
     'phabricator-diff-tree-view' => '5d83623b',
     'phabricator-drag-and-drop-file-upload' => '4370900d',
@@ -792,7 +792,7 @@ return array(
     'phui-document-view-css' => 'a9154763',
     'phui-document-view-pro-css' => 'c3211f4e',
     'phui-feed-story-css' => '1dd2e4c0',
-    'phui-font-icon-base-css' => 'b7608e58',
+    'phui-font-icon-base-css' => '4195da19',
     'phui-fontkit-css' => '1ec937e5',
     'phui-form-css' => 'aa7692fe',
     'phui-form-view-css' => '029b1ef9',
@@ -1323,6 +1323,10 @@ return array(
       'javelin-sound',
       'phabricator-notification',
     ),
+    '4edb4aea' => array(
+      'javelin-dom',
+      'phabricator-diff-inline-content-state',
+    ),
     '4feea7d3' => array(
       'trigger-rule-control',
     ),
@@ -1564,6 +1568,10 @@ return array(
     '8207abf9' => array(
       'javelin-dom',
     ),
+    '823edc17' => array(
+      'javelin-dom',
+      'javelin-json',
+    ),
     83754533 => array(
       'javelin-install',
       'javelin-util',
@@ -1711,10 +1719,6 @@ return array(
       'javelin-dom',
       'javelin-workflow',
     ),
-    '9c775532' => array(
-      'javelin-dom',
-      'phabricator-diff-inline-content-state',
-    ),
     '9cec214e' => array(
       'javelin-behavior',
       'javelin-stratcom',
@@ -1786,9 +1790,6 @@ return array(
       'javelin-workflow',
       'javelin-dom',
       'phabricator-draggable-list',
-    ),
-    'aa51efb4' => array(
-      'javelin-dom',
     ),
     'aa6d2308' => array(
       'javelin-behavior',
