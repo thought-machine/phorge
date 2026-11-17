@@ -94,6 +94,7 @@ final class PHUIDiffInlineCommentEditView
       ->setViewer($viewer)
       ->setSigil('inline-content-text')
       ->setValue($state->getContentText())
+      ->setRemarkupMetadata($state->getContentMetadata())
       ->setDisableFullScreen(true);
   }
 

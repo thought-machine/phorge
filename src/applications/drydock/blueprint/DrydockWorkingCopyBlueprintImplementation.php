@@ -565,7 +565,7 @@ final class DrydockWorkingCopyBlueprintImplementation
         $interface->execx(
           'git -c user.name=%s -c user.email=%s rebase -',
           'drydock',
-          'drydock@phabricator',
+          'drydock@phabricator'
         );
       } catch (CommandException $ex) {
         $error = DrydockCommandError::newFromCommandException($ex)

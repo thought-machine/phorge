@@ -1211,6 +1211,7 @@ JX.install('DiffInline', {
     _newContentState: function() {
       return {
         text: '',
+        metadata: null,
         suggestionText: '',
         hasSuggestion: false
       };

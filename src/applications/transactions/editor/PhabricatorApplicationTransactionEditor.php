@@ -5409,6 +5409,10 @@ abstract class PhabricatorApplicationTransactionEditor
     foreach ($inlines as $key => $inline) {
       $xactions[] = $object->getApplicationTransactionTemplate()
         ->setTransactionType($transaction_type)
+        ->setMetadataValue(
+          'remarkup.control',
+          $inline->newInlineCommentObject()->getContentState()
+            ->getContentMetadata())
         ->attachComment($inline);
     }
 

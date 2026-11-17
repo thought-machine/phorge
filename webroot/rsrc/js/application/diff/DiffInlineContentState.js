@@ -1,6 +1,7 @@
 /**
  * @provides phabricator-diff-inline-content-state
  * @requires javelin-dom
+ *           javelin-json
  * @javelin
  */
 
@@ -12,6 +13,7 @@ JX.install('DiffInlineContentState', {
 
   properties: {
     text: null,
+    metadata: null,
     suggestionText: null,
     hasSuggestion: false
   },
@@ -27,6 +29,13 @@ JX.install('DiffInlineContentState', {
         this.setText(null);
       }
 
+      try {
+        node = JX.DOM.find(row, 'input', 'remarkup-metadata');
+        this.setMetadata(node.value);
+      } catch (ex) {
+        this.setMetadata(null);
+      }
+
       node = this._getSuggestionNode(row);
       if (node) {
         this.setSuggestionText(node.value);
@@ -40,6 +49,7 @@ JX.install('DiffInlineContentState', {
     getWireFormat: function() {
       return {
         text: this.getText(),
+        metadata: this.getMetadata(),
         suggestionText: this.getSuggestionText(),
         hasSuggestion: this.getHasSuggestion()
       };
@@ -47,6 +57,15 @@ JX.install('DiffInlineContentState', {
 
     readWireFormat: function(map) {
       this.setText(map.text || null);
+
+      // The server sends metadata as a structure, but we send it back as a
+      // JSON string.
+      var metadata = map.metadata;
+      if (metadata && (typeof metadata !== 'string')) {
+        metadata = JX.JSON.stringify(metadata);
+      }
+      this.setMetadata(metadata || null);
+
       this.setSuggestionText(map.suggestionText || null);
       this.setHasSuggestion(!!map.hasSuggestion);
 
