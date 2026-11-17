@@ -95,7 +95,7 @@ final class PhabricatorRemarkupControl
     $metadata_string = phutil_json_encode($metadata_value);
 
     $metadata_id = celerity_generate_unique_node_id();
-    $metadata_input = phutil_tag(
+    $metadata_input = javelin_tag(
       'input',
       array(
         'type' => 'hidden',
