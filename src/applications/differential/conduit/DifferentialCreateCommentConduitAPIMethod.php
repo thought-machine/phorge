@@ -64,6 +64,7 @@ final class DifferentialCreateCommentConduitAPIMethod
       'request_review' =>
         DifferentialRevisionRequestReviewTransaction::TRANSACTIONTYPE,
       'rethink' => DifferentialRevisionPlanChangesTransaction::TRANSACTIONTYPE,
+      'draft' => DifferentialRevisionMarkDraftTransaction::TRANSACTIONTYPE,
     );
 
     $action = $request->getValue('action');
