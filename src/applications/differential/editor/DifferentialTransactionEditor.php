@@ -1517,6 +1517,17 @@ final class DifferentialTransactionEditor
       ->withObjectPHIDs(array($object->getPHID()))
       ->execute();
 
+    // The query returns newest transactions first. If the revision was
+    // returned to draft after being published, only include activity since
+    // then: earlier activity was already broadcast.
+    $draft_type = DifferentialRevisionMarkDraftTransaction::TRANSACTIONTYPE;
+    foreach ($xactions as $key => $xaction) {
+      if ($xaction->getTransactionType() === $draft_type) {
+        $xactions = array_slice($xactions, 0, $key);
+        break;
+      }
+    }
+
     return array_reverse($xactions);
   }
 
