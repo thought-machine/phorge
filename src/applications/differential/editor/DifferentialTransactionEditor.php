@@ -643,10 +643,10 @@ final class DifferentialTransactionEditor
   protected function getTransactionsForMail(
     PhabricatorLiskDAO $object,
     array $xactions) {
-    // If this is the first time we're sending mail about this revision, we
-    // generate mail for all prior transactions, not just whatever is being
-    // applied now. This gets the "added reviewers" lines and other relevant
-    // information into the mail.
+    // If this is the first broadcast since the revision was created, or since
+    // it was last returned to draft, we generate mail for all transactions
+    // from that point, not just whatever is being applied now. This gets the
+    // "added reviewers" lines and other relevant information into the mail.
     if ($this->isFirstBroadcast()) {
       return $this->loadUnbroadcastTransactions($object);
     }
