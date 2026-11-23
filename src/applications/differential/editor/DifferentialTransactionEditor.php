@@ -643,10 +643,10 @@ final class DifferentialTransactionEditor
   protected function getTransactionsForMail(
     PhabricatorLiskDAO $object,
     array $xactions) {
-    // If this is the first time we're sending mail about this revision, we
-    // generate mail for all prior transactions, not just whatever is being
-    // applied now. This gets the "added reviewers" lines and other relevant
-    // information into the mail.
+    // If this is the first broadcast since the revision was created, or since
+    // it was last returned to draft, we generate mail for all transactions
+    // from that point, not just whatever is being applied now. This gets the
+    // "added reviewers" lines and other relevant information into the mail.
     if ($this->isFirstBroadcast()) {
       return $this->loadUnbroadcastTransactions($object);
     }
@@ -1516,6 +1516,17 @@ final class DifferentialTransactionEditor
       ->setViewer($viewer)
       ->withObjectPHIDs(array($object->getPHID()))
       ->execute();
+
+    // The query returns newest transactions first. If the revision was
+    // returned to draft after being published, only include activity since
+    // then: earlier activity was already broadcast.
+    $draft_type = DifferentialRevisionMarkDraftTransaction::TRANSACTIONTYPE;
+    foreach ($xactions as $key => $xaction) {
+      if ($xaction->getTransactionType() === $draft_type) {
+        $xactions = array_slice($xactions, 0, $key);
+        break;
+      }
+    }
 
     return array_reverse($xactions);
   }
