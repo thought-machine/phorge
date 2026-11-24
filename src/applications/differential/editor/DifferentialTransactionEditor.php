@@ -1521,14 +1521,14 @@ final class DifferentialTransactionEditor
     // returned to draft after being published, only include activity since
     // then: earlier activity was already broadcast.
     $draft_type = DifferentialRevisionMarkDraftTransaction::TRANSACTIONTYPE;
-    foreach ($xactions as $key => $xaction) {
+    $since_draft = array();
+    foreach ($xactions as $xaction) {
       if ($xaction->getTransactionType() === $draft_type) {
-        $xactions = array_slice($xactions, 0, $key);
         break;
       }
+      $since_draft[] = $xaction;
     }
-
-    return array_reverse($xactions);
+    return array_reverse($since_draft);
   }
 
 
