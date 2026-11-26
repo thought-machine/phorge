@@ -149,6 +149,19 @@ final class DifferentialChangesetParser extends Phobject {
   }
 
   private function newRenderer() {
+    switch ($this->newRendererKey()) {
+      case '1up':
+        $renderer = new DifferentialChangesetOneUpRenderer();
+        break;
+      default:
+        $renderer = new DifferentialChangesetTwoUpRenderer();
+        break;
+    }
+
+    return $renderer;
+  }
+
+  public function newRendererKey() {
     $viewer = $this->getViewer();
     $viewstate = $this->getViewstate();
 
@@ -161,21 +174,57 @@ final class DifferentialChangesetParser extends Phobject {
 
       if ($is_unified) {
         $renderer_key = '1up';
+      } else if ($this->shouldRenderOneSidedAsUnified()) {
+        $renderer_key = '1up';
       } else {
         $renderer_key = $viewstate->getDefaultDeviceRendererKey();
       }
     }
 
-    switch ($renderer_key) {
-      case '1up':
-        $renderer = new DifferentialChangesetOneUpRenderer();
-        break;
-      default:
-        $renderer = new DifferentialChangesetTwoUpRenderer();
-        break;
+    return $renderer_key;
+  }
+
+  private function shouldRenderOneSidedAsUnified() {
+    $viewer = $this->getViewer();
+
+    $is_enabled = $viewer->compareUserSetting(
+      PhabricatorOneSidedUnifiedDiffsSetting::SETTINGKEY,
+      PhabricatorOneSidedUnifiedDiffsSetting::VALUE_ONE_SIDED_UNIFIED_ENABLED);
+    if (!$is_enabled) {
+      return false;
     }
 
-    return $renderer;
+    return self::isOneSidedChangeset($this->changeset);
+  }
+
+  public static function isOneSidedChangeset(DifferentialChangeset $changeset) {
+    // Added and deleted files are one-sided even if they have no hunks, like
+    // images and other binary files.
+    switch ($changeset->getChangeType()) {
+      case DifferentialChangeType::TYPE_ADD:
+      case DifferentialChangeType::TYPE_DELETE:
+        return true;
+    }
+
+    // Use the hunks rather than the changeset line counts, because synthetic
+    // changesets built for interdiffs do not set those counts.
+    $has_add = false;
+    $has_del = false;
+    foreach ($changeset->getHunks() as $hunk) {
+      if ($hunk->getAddedLines()) {
+        $has_add = true;
+      }
+
+      if ($hunk->getRemovedLines()) {
+        $has_del = true;
+      }
+
+      if ($has_add && $has_del) {
+        break;
+      }
+    }
+
+    return ($has_add xor $has_del);
   }
 
   const CACHE_VERSION = 14;

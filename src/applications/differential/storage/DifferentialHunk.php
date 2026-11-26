@@ -278,6 +278,13 @@ final class DifferentialHunk
 
   public function forceEncoding($encoding) {
     $this->forcedEncoding = $encoding;
+
+    // Discard any lines we've already split out of the changes, since they
+    // were decoded using the old encoding.
+    $this->splitLines = null;
+    $this->structuredLines = null;
+    $this->structuredFiles = array();
+
     return $this;
   }
 
